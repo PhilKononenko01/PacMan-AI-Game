@@ -4,10 +4,34 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD s
 
 ---
 
+## Team rulings — PRD v0.2 → v0.3
+
+**Date:** 2026-10-26
+**Answered:** OQ-1 to OQ-8 (PRD §6). No question is open after this round.
+
+| Question | Ruling | What changed in v0.3 |
+|---|---|---|
+| OQ-1 Start positions | As proposed: Pac-Man `(0, 0)`, ghost `(4, 4)`, start corner visited. | Nothing; marked answered. |
+| OQ-2 Pac-Man's knowledge | Changed from the proposal: Pac-Man senses only the four cells next to him, remembers what he has sensed, and plans as if unknown cells are open. He still always knows where the ghost is. | §2.6 sensing, memory and optimistic planning; §2.4 adds a sensing step; §2.8 observation carries the remembered map and the pathfinding agent re-plans each step; ADR-2 features use the remembered map; new FR-16; NFR-7 tests that no observation leaks an unsensed wall. |
+| OQ-3 Wall type | As proposed: whole-cell walls. | Nothing; marked answered. |
+| OQ-4 Turn limit | Hitting `max_steps` is a **tie**, reported alongside wins and losses. An idea to end the game when Pac-Man's score goes negative was raised and dropped: the step cost is only meant to keep him moving. | "Timeout" renamed "tie" throughout; FR-10, FR-11 and §5 report and test ties. |
+| OQ-5 Ghost explore | As proposed: pursue the last sighting, then visit least recently visited cells. | Renamed "search" for clarity. |
+| OQ-6 Ghost speed | As proposed: same speed. | Faster-ghost note moved to §2.7. |
+| OQ-7 Corner reward | +1 for the first visit to each corner (the start corner gives nothing). | §2.6 reward table and rationale. |
+| OQ-8 Visuals | Watched games are animated as pixel art in the terminal; simulations have no graphics and end with a summary of wins, losses and ties. No window, no human play. | New §2.9; FR-13 and FR-14 rewritten for watch mode; new FR-17 for the simulation summary; non-goals updated. |
+
+**Consequences checked:**
+- *Reward ordering still holds.* The best possible tie scores 3 - 0.05 x 100 = -2, so any win scores far above any tie, and any tie scores far above any loss.
+- *Partial knowledge makes two features optimistic.* With unknown cells counted as open, the ghost's path distance can look shorter than it is, and the line-of-sight feature can say "seen" when an unsensed wall actually blocks the ghost. ADR-2 states this. It is accepted: it errs toward caution.
+- *The pathfinding baseline still exists.* It plans on the remembered map and re-plans when it senses a wall, so P4's comparison still holds.
+- *No new dependency.* Terminal pixel art uses ANSI colour codes and Unicode block characters from the standard library (ADR-1).
+
+---
+
 ## Round 1 — PRD v0.1 → v0.2
 
 **Date:** 2026-10-26
-**Reviewed:** `phase-1-grid-world-prd.md` v0.1 at commit `8a1c699`, against `Design/project-proposal.md` (P1–P4).
+**Reviewed:** `phase-1-grid-world-prd.md` v0.1 at commit `be5efa8`, against `Design/project-proposal.md` (P1–P4).
 **Method:** a full read for logical errors, internal contradictions and unsupported claims. Finding R1-01 was checked by simulating the v0.1 map generator (200,000 training seeds, 1,000 test seeds, `wall_density` 0.20).
 **Outcome:** 13 findings. All fixed in v0.2. Team rulings on four of them are recorded under each finding.
 
@@ -58,7 +82,7 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD s
 
 ### Still open
 
-OQ-1 through OQ-8 (PRD §6) await the team.
+OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were answered the same day; see Team rulings above.
 
 ---
 
@@ -66,5 +90,6 @@ OQ-1 through OQ-8 (PRD §6) await the team.
 
 | Version | Date | Change |
 |---|---|---|
-| v0.1 | 2026-10-26 | First draft (`8a1c699`). |
-| v0.2 | 2026-10-26 | Review round 1 fixes (R1-01 to R1-13); OQ-9 added and answered. |
+| v0.1 | 2026-10-26 | First draft (`be5efa8`). |
+| v0.2 | 2026-10-26 | Review round 1 fixes (R1-01 to R1-13); OQ-9 added and answered (`29928fa`). |
+| v0.3 | 2026-10-26 | OQ-1 to OQ-8 answered; partial wall knowledge, ties, corner reward, watch and simulation modes. |
