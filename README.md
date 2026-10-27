@@ -57,6 +57,11 @@ Python 3.11+, NumPy and pytest, with Matplotlib for plots. Every run is determin
 | [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md>) | Review findings and team decisions behind the PRD. |
 | [`AGENTS.md`](AGENTS.md) | Git rules for AI coding agents working in this repo. |
 
+## Team
+
+- Christian Gore
+- Phillip Kononenko ([@PhilKononenko01](https://github.com/PhilKononenko01))
+
 ## Roadmap
 
 1. ~~Project proposal~~
