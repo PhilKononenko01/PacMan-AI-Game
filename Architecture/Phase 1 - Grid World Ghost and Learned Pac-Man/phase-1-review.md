@@ -4,6 +4,24 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD s
 
 ---
 
+## Team rulings — PRD v0.4 → v0.5
+
+**Date:** 2026-10-27
+**Answered:** OQ-10 to OQ-12 (PRD §6), raised in round 2. Each was answered as proposed. No question is open after this round.
+
+| Question | Ruling | What changed in v0.5 |
+|---|---|---|
+| OQ-10 Difficulty knobs | Add `ghost_move_prob` (default 1.0): each step the ghost moves with this probability, drawn from its seeded generator. It is the primary knob. Ghost speed and search rule are no longer knobs. | §2.5 move-probability rule (vision and last sighting still update on a step the ghost stays put; its visit record does not); §2.7 knob list; FR-6; NFR-7 tests the stay-put case; OQ-6 note updated. |
+| OQ-11 Retraining | The quick check runs the baselines only, beside the stored policy's last validation results and the knobs it was trained under. Retrain when a knob setting is considered final, and before the test maps. | §2.7 tuning loop; FR-15. |
+| OQ-12 Evaluation sizes | All 1,000 seeds per split; learning-curve check every 2,500 episodes on the first 200 validation seeds, counted in NFR-4; the final table is evaluated. | §2.8 evaluation sizes; FR-10, FR-12, NFR-4. |
+
+**Consequences checked:**
+- *The turn order is unchanged.* A ghost that stays put still triggers §2.4 step 6, which cannot fire because Pac-Man was not on its cell after step 2.
+- *Determinism holds.* The move draw comes from the ghost's own generator (ADR-3) and is made every step, including at 1.0.
+- *Learning-curve cost is small.* 20 checks of 200 greedy games is 4,000 games against 50,000 training episodes.
+
+---
+
 ## Round 2 — PRD v0.3 → v0.4
 
 **Date:** 2026-10-27
@@ -149,4 +167,5 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.1 | 2026-10-26 | First draft (`be5efa8`). |
 | v0.2 | 2026-10-26 | Review round 1 fixes (R1-01 to R1-13); OQ-9 added and answered (`29928fa`). |
 | v0.3 | 2026-10-26 | OQ-1 to OQ-8 answered; partial wall knowledge, ties, corner reward, watch and simulation modes (`39df5a3`). |
-| v0.4 | 2026-10-27 | Review round 2 fixes (R2-04 to R2-11); OQ-10 to OQ-12 opened with proposals; architecture-doc handoff list in §7. |
+| v0.4 | 2026-10-27 | Review round 2 fixes (R2-04 to R2-11); OQ-10 to OQ-12 opened with proposals; architecture-doc handoff list in §7 (`80fcb4f`). |
+| v0.5 | 2026-10-27 | OQ-10 to OQ-12 answered; `ghost_move_prob`, no retrain in the quick check, evaluation sizes. |

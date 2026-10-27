@@ -1,8 +1,8 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.4**. OQ-1 to OQ-9 are answered and written into the sections they name. OQ-10 to OQ-12 are open, each with a proposal (§6); the team's answers are owed before the architecture doc.
+**Status:** DRAFT **v0.5**. Every open question (OQ-1 to OQ-12) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
 **Date:** 2026-10-27
-**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `58b9f9e`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.3 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
+**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `80fcb4f`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.4 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
 **Form.** This document states what is decided and what is to be built. Review findings, provenance and version history go in `phase-1-review.md`. The question state lives in §6 and nowhere else.
 
@@ -81,8 +81,9 @@ Because moves are sequential, the two can never pass through each other unseen: 
 - **Vision (P2).** The ghost sees Pac-Man when they share a row or a column and every cell strictly between them is open. Vision is checked at the start of each ghost move. The ghost knows the whole map.
 - **Chase.** When it sees Pac-Man, the ghost takes the first step of a shortest path to Pac-Man's current cell, found by breadth-first search. It also records that cell as Pac-Man's last known position.
 - **Pursue last sighting.** When it cannot see Pac-Man but has a last known position it has not yet reached, it takes the first step of a shortest path to that cell. Reaching it clears the record (OQ-5).
-- **Search.** Otherwise it moves to the adjacent open cell it has visited least recently. A cell it has never visited counts as less recent than any cell it has. Its start cell counts as visited at step 0, and every cell the ghost moves onto counts as visited at that step, whichever mode moved it there. Ties are broken by a seeded random draw. It never stands still while a move exists (OQ-5).
-- **Speed.** The ghost moves one cell per step, the same as Pac-Man (OQ-6).
+- **Search.** Otherwise it moves to the adjacent open cell it has visited least recently. A cell it has never visited counts as less recent than any cell it has. Its start cell counts as visited at step 0, and every cell the ghost moves onto counts as visited at that step, whichever mode moved it there. Ties are broken by a seeded random draw. On a step when it moves, it never stands still while a move exists (OQ-5).
+- **Speed.** The ghost moves at most one cell per step, the same as Pac-Man (OQ-6).
+- **Move probability (OQ-10).** Each step, after checking vision and updating its last known position, the ghost draws from its seeded generator and moves with probability `ghost_move_prob` (default 1.0, a §2.7 game knob). Otherwise it stays where it is for that step. The draw is made every step, including at 1.0. A step on which the ghost stays put does not change its visit record.
 - **Shortest-path ties** are broken by a fixed direction order (up, right, down, left), so the ghost is deterministic given the seed.
 
 ### 2.6 Pac-Man's knowledge and rewards
@@ -107,9 +108,9 @@ The win and loss rewards are what P1 specifies. The corner reward gives a little
 
 ### 2.7 Game knobs, learner settings and map splits
 
-**Game knobs** change how hard the game is: `wall_density`, `max_steps`, and the ghost's speed and search rule (OQ-5, OQ-6). **Learner settings** change how well the agent learns, not how hard the game is: the reward table, the learning rate, the discount factor, the exploration schedule and the number of training episodes (§2.8). Both live in one configuration object, and no value of either is written anywhere else in the code. Only game knobs are turned to adjust difficulty. Turning learner settings to move the win rate into the band would measure the agent's tuning, not the game's balance.
+**Game knobs** change how hard the game is: `ghost_move_prob`, `wall_density` and `max_steps` (OQ-10). `ghost_move_prob` is the primary knob: raising it only ever makes the game harder, and it can be set finely. The ghost's speed and search rule are fixed (§2.5), not knobs. **Learner settings** change how well the agent learns, not how hard the game is: the reward table, the learning rate, the discount factor, the exploration schedule and the number of training episodes (§2.8). Both live in one configuration object, and no value of either is written anywhere else in the code. Only game knobs are turned to adjust difficulty. Turning learner settings to move the win rate into the band would measure the agent's tuning, not the game's balance.
 
-**The team decides difficulty.** Tooling makes the decision cheap. A single command runs both baselines and the current learned policy on the validation maps and prints their results side by side, so one knob change can be judged in minutes. If the game proves too easy, a faster ghost is the first knob to try; the turn order in §2.4 then needs a collision check after each ghost sub-move (OQ-6). Two questions about this loop are open: whether the knob set can move difficulty in both directions (OQ-10), and whether the learned policy is retrained after each knob change (OQ-11).
+**The team decides difficulty.** Tooling makes the decision cheap. A single command runs both baselines on the validation maps under the current knob values and prints their results side by side, next to the stored learned policy's last validation results and the knob values it was trained under. One knob change can therefore be judged in minutes without retraining. The learned agent is retrained, and run on the validation maps again, when the team considers a knob setting final, and always before the test maps are played (OQ-11).
 
 **Tuning uses validation maps only.** If knobs are tuned against the maps that produce the final numbers, the final win rate is fitted to those maps and no longer measures anything.
 
@@ -138,6 +139,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 - **Nearest-corner ties.** When two unvisited corners are equally near, the first in the fixed order `(0, 4)`, `(4, 0)`, `(4, 4)` is chosen. Path ties use the ghost's direction order (§2.5). The ADR-2 features use the same rules.
 - **Learned agent.** Tabular Q-learning over the features in ADR-2, with epsilon-greedy exploration during training and a greedy policy at evaluation. Greedy ties are broken by the direction order. The trained table is saved to disk with the configuration and seed range that produced it.
 - **Learner settings** (defaults, §2.7): learning rate 0.1, discount factor 0.99, epsilon decaying linearly from 1.0 to 0.05 over the first half of training then held, and 50,000 training episodes. The learning curve (FR-12) is the evidence for changing any of them.
+- **Evaluation sizes (OQ-12).** Validation and test evaluations each play all 1,000 seeds of their split. The learning curve checks the current table, greedily, every 2,500 training episodes on the first 200 validation seeds. The table saved at the end of training is the one evaluated; no checkpoint is picked by its validation score.
 
 ### 2.9 Watch mode and simulation mode
 
@@ -180,16 +182,16 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | FR-3 | Pac-Man starts at `(0, 0)` and the ghost at `(4, 4)`. Pac-Man's start corner is visited at step 0 (§2.2). |
 | FR-4 | Each step follows the order in §2.4 and ends in win, loss or tie exactly as stated there. |
 | FR-5 | Ghost vision follows §2.5. The ghost sees Pac-Man only along a shared row or column with no wall between them. |
-| FR-6 | The ghost chases, pursues the last sighting, and searches exactly as in §2.5, and is deterministic for a given seed. |
+| FR-6 | The ghost chases, pursues the last sighting, and searches exactly as in §2.5, moves with probability `ghost_move_prob`, and is deterministic for a given seed. |
 | FR-7 | The reward table in §2.6 is applied each step. Every value is read from the configuration (§2.7). |
 | FR-8 | The random, pathfinding and learned agents implement one interface with reset, act and observe operations (§2.8). The environment does not branch on agent type. |
 | FR-9 | Training runs Q-learning on training-split maps (§2.7) and saves the table with its configuration and seed range. |
-| FR-10 | Evaluation plays every agent from the same starting conditions: the same maps and the same episode seeds. It reports, per agent, the win, loss and tie rates, each with a 95% Wilson confidence interval, and the mean steps to a win. |
+| FR-10 | Evaluation plays every agent from the same starting conditions: the same maps and the same episode seeds, all 1,000 seeds of the split (§2.8). It reports, per agent, the win, loss and tie rates, each with a 95% Wilson confidence interval, and the mean steps to a win. |
 | FR-11 | Evaluation reports a one-sided exact McNemar test of the learned agent against each baseline. Each episode's outcome is reduced to win or not-win (loss and tie both count as not-win), and outcomes are paired by episode seed. A paired test is required because every agent starts each game from the same conditions; the games then differ only through the agents' choices. |
-| FR-12 | Training records a learning curve: validation win rate every fixed number of episodes, saved and plotted. |
+| FR-12 | Training records a learning curve: the greedy validation win rate every 2,500 episodes on the first 200 validation seeds (§2.8), saved and plotted. |
 | FR-13 | Watch mode animates a game as terminal pixel art, one frame per step, as in §2.9, with a plain-text fallback. |
 | FR-14 | Any evaluated episode can be replayed in watch mode from its seed, agent and configuration, plus the saved policy file for the learned agent. |
-| FR-15 | One command runs the §2.7 difficulty check: both baselines and the current policy on validation maps, with results side by side. |
+| FR-15 | One command runs the §2.7 difficulty check: both baselines on validation maps under the current knobs, shown beside the stored policy's last validation results and the knob values it was trained under. It does not retrain. |
 | FR-16 | Pac-Man senses and remembers walls as in §2.6. Observations carry the remembered map, never the true map, and memory resets each episode. |
 | FR-17 | Simulation mode plays any number of games without graphics and ends with the per-agent summary in §2.9: wins, losses and ties. |
 
@@ -200,10 +202,10 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | NFR-1 | The same seed, configuration and learner settings produce identical maps, ghost moves, training results and evaluation numbers on any machine (ADR-3). |
 | NFR-2 | No game knob or learner setting is written outside the configuration object (§2.7). |
 | NFR-3 | The full test suite runs headless in under 30 seconds. A slower test is a bug. |
-| NFR-4 | A full training run at the default episode count (§2.8) finishes in under 10 minutes on a team member's laptop. The architecture doc measures this before the episode count is fixed. |
+| NFR-4 | A full training run at the default episode count (§2.8), including its learning-curve checks, finishes in under 10 minutes on a team member's laptop. The architecture doc measures this before the episode count is fixed. |
 | NFR-5 | Dependencies are limited to those in ADR-1 unless the team agrees otherwise. |
 | NFR-6 | No map appears in more than one split, and a test asserts it: the generator never returns a map outside its requested split, and a sample of each split shares no layout with the others (§2.7). |
-| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, each ghost mode and its transitions, all tie-break rules, and reward accounting for every outcome. |
+| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, each ghost mode and its transitions, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
 
 ## 5. Acceptance gate
 
@@ -216,25 +218,25 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 
 ## 6. Questions
 
-OQ-10 to OQ-12 are open; each carries a proposal and names the sections it would change. OQ-1 to OQ-9 were answered by the team on 2026-10-26, and each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
+No question is open. OQ-1 to OQ-9 were answered on 2026-10-26 and OQ-10 to OQ-12 on 2026-10-27, and each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
 
-- **OQ-10: Can the game knobs move difficulty in both directions?** *Open.* §2.7's knobs are weak for tuning. More walls do not reliably make the game easier or harder, `max_steps` only sets how long a game runs before it is a tie, a ghost speed above 1 has no defined meaning and is a large jump, and only one search rule exists. Nothing makes the game easier if it proves too hard. *Proposal:* add `ghost_move_prob` (default 1.0). Each step, the ghost moves with this probability, drawn from its seeded generator, and otherwise stays put. Raising it only ever makes the game harder, it can be set finely, and it needs no change to §2.4. Drop ghost speed and search rule from the knob list; if a faster ghost is kept, define it now: vision and the collision check run after each sub-move. *Changes:* §2.5, §2.7, FR-6.
-- **OQ-11: Is the learned policy retrained after each knob change?** *Open.* FR-15 runs "the current learned policy", but after a knob changes that policy was trained on a different game, and a retrain takes up to 10 minutes (NFR-4). *Proposal:* the quick check (FR-15) runs the two baselines only and reports the stored policy's numbers with the knob values it was trained under. A full retrain and validation run is done when the team considers a knob setting final, and before the test maps are played. *Changes:* §2.7, FR-15.
-- **OQ-12: How many games does each evaluation play, and which policy is evaluated?** *Open.* The seed table implies 1,000 games per split, but FR-10 does not say so, FR-12 gives no checkpoint interval, and nothing says whether the final table or the best checkpoint is evaluated. *Proposal:* validation and test evaluations play all 1,000 seeds of their split. The learning curve checks every 2,500 training episodes on the first 200 validation seeds, and that time counts toward NFR-4. The final table is the one evaluated, so validation noise is never used to pick a checkpoint. *Changes:* §2.8, FR-10, FR-12, NFR-4.
 
 - **OQ-1: Start positions.** *Answered:* Pac-Man at `(0, 0)`, ghost at `(4, 4)`, and Pac-Man's start corner counts as visited (§2.2).
 - **OQ-2: How much does Pac-Man know?** *Answered:* he always knows where the ghost is, but senses only the walls next to him. He remembers walls he has sensed and plans as if unknown cells are open (§2.6). The agent learns from computed features, not from the raw board (ADR-2).
 - **OQ-3: Cell walls or edge walls?** *Answered:* whole-cell walls (§2.1).
 - **OQ-4: What does hitting the turn limit count as?** *Answered:* a tie, reported alongside wins and losses and never counted as a win (§2.4). An earlier idea, ending the game when Pac-Man's score goes negative, was dropped: the step cost is only there to keep him moving.
 - **OQ-5: What does "explore" mean for the ghost?** *Answered:* go to where it last saw Pac-Man, then visit the cells it has visited least recently (§2.5).
-- **OQ-6: Does the ghost move at Pac-Man's speed?** *Answered:* yes, one cell per step. A faster ghost is the first knob to try if the game proves too easy (§2.7).
+- **OQ-6: Does the ghost move at Pac-Man's speed?** *Answered:* yes, at most one cell per step. A faster ghost was considered as a difficulty knob and replaced by `ghost_move_prob` (OQ-10).
 - **OQ-7: Corner rewards?** *Answered:* +1 for the first visit to each corner (§2.6).
 - **OQ-8: A playable or graphical version?** *Answered:* watched games are animated as pixel art in the terminal; simulations have no graphics and print a summary of wins, losses and ties at the end. No graphical window and no human play (§2.9).
 - **OQ-9: How does the learned agent sense where the ghost is?** *Answered:* its state carries the ghost's position as a row and column offset from Pac-Man (ADR-2).
+- **OQ-10: Can the game knobs move difficulty in both directions?** *Answered:* add `ghost_move_prob` (default 1.0), the chance the ghost moves on a given step. It is the primary knob. Ghost speed and search rule are no longer knobs (§2.5, §2.7).
+- **OQ-11: Is the learned policy retrained after each knob change?** *Answered:* no. The quick check runs the baselines only and shows the stored policy's last results with the knob values it was trained under. The learned agent is retrained when a knob setting is considered final, and before the test maps are played (§2.7, FR-15).
+- **OQ-12: How many games does each evaluation play, and which policy is evaluated?** *Answered:* all 1,000 seeds per split; a learning-curve check every 2,500 episodes on 200 validation seeds, counted in NFR-4; the final table is evaluated (§2.8, FR-10, FR-12).
 
 ## 7. SDLC state
 
-PRD v0.4. Review rounds 1 and 2 and the team's answers to §6 are logged in `phase-1-review.md`. Next: the team answers OQ-10 to OQ-12, then the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
+PRD v0.5. Review rounds 1 and 2 and the team's answers to §6 are logged in `phase-1-review.md`. Next: the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
 
 The architecture doc must settle these, which this PRD leaves to it:
 
