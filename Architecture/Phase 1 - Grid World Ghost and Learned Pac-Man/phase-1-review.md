@@ -1,6 +1,40 @@
 # Phase 1 — Review Log
 
-Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD states what is decided; this file records how it got there. Newest round first.
+Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase-1-architecture.md`. The phase documents state what is decided; this file records how it got there. Newest round first.
+
+---
+
+## Architecture v0.1, and PRD v0.8 → v0.9
+
+**Date:** 2026-10-28
+**Written against:** PRD v0.8 at commit `dbc3077`.
+**Method.** Before the document was written, a throwaway probe implemented its rules: the §5 seed derivation and `random()`-only draws, the §6 generator and split encoding, the §7 turn order, the §8 ghost, the three agents, the §10.4 state index, Q-learning with both tie settings, Wilson intervals and the exact McNemar test. It ran on the team laptop's Python 3.9.6, in a scratch environment with NumPy 2.0.2. The probe is not kept. Every number in the architecture doc comes from it.
+
+### Measurements
+
+- *Generator:* draws per accepted map, worst cases and distinct layouts per split (architecture §6.4); the golden hashes and seed-to-map rows (§6.3); an impossible configuration fails in 0.84 s.
+- *Training, both tie settings, 50,000 episodes:* 330 s each, with four probe processes sharing the machine. Validation wins 69.1% (bootstrap) and 68.0% (terminal), against 14.2% for pathfinding and 0.0% for random; McNemar `p` below 1e-130 against both. Architecture §11.3.
+- *Knob sweep:* both baselines on 1,000 validation seeds per setting. Architecture §15.
+- *Replay:* a trained table played on 50 validation seeds twice gave identical records.
+- The test split was not played.
+
+### Findings while writing
+
+**A1-01: The machine that ran the probe has no Python 3.11.** Its only Python is the macOS system 3.9.6, without NumPy, while ADR-1 requires 3.11+. *Fix:* architecture §2 says each team member installs 3.11+. The probe uses nothing newer than 3.9, so its numbers stand.
+
+**A1-02: The PRD's `ghost_move_prob` figure at 1.0 changed with the final split encoding.** Round 3's probe used a provisional encoding and put the pathfinding agent at 12%; under the architecture §6.3 encoding it is 14.2%. The other three figures agree. *Fix:* PRD v0.9 changes the figure in §2.7 to 14% and cites architecture §15. Nothing else in the PRD changes.
+
+**A1-03: Fixed evaluation sizes would break NFR-3.** A `test_cli` run of `train`, `check` and `evaluate` at the PRD's sizes (1,000 seeds each, 200-seed curve checks) would take well over 30 s. *Fix:* the sizes are constants (architecture §11.1) that tests lower with `monkeypatch`.
+
+**A1-04: No test reached a learning-curve point.** CLI tests train for a few episodes, fewer than 2,500. *Fix:* `test_train.py` lowers `CURVE_EVERY` and checks the points.
+
+**A1-05: Training printed nothing.** PRD §2.9 says training runs in simulation mode, which ends with a summary. *Fix:* architecture §14.1 prints each curve point and the final validation summary.
+
+**A1-06: `.gitignore` was missing from the file inventory** that D-6 relies on. *Fix:* added.
+
+### For the team
+
+Architecture §16 lists seven stated defaults (D-1 to D-7) to accept or override before the epics doc. The first validation reading at the default knobs puts the learned agent inside the 50% to 90% band (architecture §11.3); this is not a result, since the test maps have not been played.
 
 ---
 
@@ -257,4 +291,5 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.5 | 2026-10-27 | OQ-10 to OQ-12 answered; `ghost_move_prob`, no retrain in the quick check, evaluation sizes (`d25782e`). |
 | v0.6 | 2026-10-27 | OQ-13 answered; random maps must be winnable under the configured ghost rules and turn limit; verification, ghost randomness and bounded failure handed to architecture (`835ba30`). |
 | v0.7 | 2026-10-28 | OQ-13 revised: winnability is a map-generator rule (`max_walls`, `min_loops`), independent of Pac-Man and the ghost (`caf9415`). |
-| v0.8 | 2026-10-28 | Review round 3 fixes (R3-01 to R3-09): `ghost_move_prob` is not monotonic, bounded map generation, 0% alarm scoped, four items added to the architecture handoff. |
+| v0.8 | 2026-10-28 | Review round 3 fixes (R3-01 to R3-09): `ghost_move_prob` is not monotonic, bounded map generation, 0% alarm scoped, four items added to the architecture handoff (`dbc3077`). |
+| v0.9 | 2026-10-28 | §2.7 pathfinding figure at `ghost_move_prob` 1.0 corrected to 14% under the final split encoding (A1-02); §7 points to the architecture doc. Architecture v0.1 written. |

@@ -1,8 +1,8 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.8**. Every open question (OQ-1 to OQ-13) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
+**Status:** DRAFT **v0.9**. Every open question (OQ-1 to OQ-13) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
 **Date:** 2026-10-28
-**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `caf9415`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.7 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
+**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `dbc3077`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.8 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
 **Form.** This document states what is decided and what is to be built. Review findings, provenance and version history go in `phase-1-review.md`. The question state lives in §6 and nowhere else.
 
@@ -115,7 +115,7 @@ The win and loss rewards are what P1 specifies. The corner reward gives a little
 
 ### 2.7 Game knobs, learner settings and map splits
 
-**Game knobs** change how hard the game is: `ghost_move_prob`, `wall_density`, `max_walls`, `min_loops` and `max_steps` (OQ-10, OQ-13). The three generator knobs, `wall_density`, `max_walls` and `min_loops`, also change which maps exist, so a change to any of them changes every split's maps. `ghost_move_prob` is the primary knob, and it can be set finely. Its effect is not monotonic. Lowering it from 1.0 makes the game easier at first, but a ghost that rarely moves rarely leaves `(4, 4)`, a corner Pac-Man must reach, so below some value the game gets harder again, and at 0 it cannot be won. The pathfinding agent's win rate is about 0% at 0, 10% at 0.25, 20% at 0.75 and 12% at 1.0 (simulated, 1,000 validation seeds at the other defaults). Tuning searches the range above that floor. The ghost's speed and search rule are fixed (§2.5), not knobs. **Learner settings** change how well the agent learns, not how hard the game is: the reward table, the learning rate, the discount factor, the exploration schedule and the number of training episodes (§2.8). Both live in one configuration object, and no value of either is written anywhere else in the code. Only game knobs are turned to adjust difficulty. Turning learner settings to move the win rate into the band would measure the agent's tuning, not the game's balance.
+**Game knobs** change how hard the game is: `ghost_move_prob`, `wall_density`, `max_walls`, `min_loops` and `max_steps` (OQ-10, OQ-13). The three generator knobs, `wall_density`, `max_walls` and `min_loops`, also change which maps exist, so a change to any of them changes every split's maps. `ghost_move_prob` is the primary knob, and it can be set finely. Its effect is not monotonic. Lowering it from 1.0 makes the game easier at first, but a ghost that rarely moves rarely leaves `(4, 4)`, a corner Pac-Man must reach, so below some value the game gets harder again, and at 0 it cannot be won. The pathfinding agent's win rate is about 0% at 0, 10% at 0.25, 20% at 0.75 and 14% at 1.0 (simulated, 1,000 validation seeds at the other defaults; architecture §15). Tuning searches the range above that floor. The ghost's speed and search rule are fixed (§2.5), not knobs. **Learner settings** change how well the agent learns, not how hard the game is: the reward table, the learning rate, the discount factor, the exploration schedule and the number of training episodes (§2.8). Both live in one configuration object, and no value of either is written anywhere else in the code. Only game knobs are turned to adjust difficulty. Turning learner settings to move the win rate into the band would measure the agent's tuning, not the game's balance.
 
 **The team decides difficulty.** Tooling makes the decision cheap. A single command runs both baselines on the validation maps under the current knob values and prints their results side by side, next to the stored learned policy's last validation results and the knob values it was trained under. One knob change can therefore be judged in minutes without retraining. The learned agent is retrained, and run on the validation maps again, when the team considers a knob setting final, and always before the test maps are played (OQ-11).
 
@@ -243,9 +243,9 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on
 
 ## 7. SDLC state
 
-PRD v0.8. Review rounds 1 to 3 and the team's answers to §6 are logged in `phase-1-review.md`. Next: the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
+PRD v0.9. Review rounds 1 to 3 and the team's answers to §6 are logged in `phase-1-review.md`. The architecture doc (`phase-1-architecture.md`) v0.1 is written and settles each item below (its §1 maps them). Next: the team's ruling on its stated defaults, then epics, the coding plan, implementation and the §5 gate.
 
-The architecture doc must settle these, which this PRD leaves to it:
+The architecture doc settles these, which this PRD leaves to it:
 
 - The exact bytes hashed with SHA-256 to put a map in a split (§2.7). A different encoding sends maps to different splits, so it is fixed once and tested.
 - How each component's generator is derived from the episode seed (ADR-3), which generator algorithm is used and the version pin that keeps its stream identical across machines, and a rule that nothing depends on Python's per-process string hashing or set iteration order (NFR-1).
