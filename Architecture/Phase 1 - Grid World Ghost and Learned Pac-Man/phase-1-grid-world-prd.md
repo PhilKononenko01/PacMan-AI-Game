@@ -1,8 +1,8 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.7**. Every open question (OQ-1 to OQ-13) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
+**Status:** DRAFT **v0.8**. Every open question (OQ-1 to OQ-13) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
 **Date:** 2026-10-28
-**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `11c1a5b`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.6 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
+**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `caf9415`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.7 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
 **Form.** This document states what is decided and what is to be built. Review findings, provenance and version history go in `phase-1-review.md`. The question state lives in §6 and nowhere else.
 
@@ -39,7 +39,7 @@ Build the game, the ghost, three agents, training, and evaluation, in that order
 - No learning ghost. The ghost is scripted (P3).
 - No grid larger than 5x5 in any reported result. Grid size is a parameter so tests can use small grids, but only 5x5 is evaluated.
 - No graphical window and no human-playable mode (OQ-8). The terminal is the only view.
-- No deep reinforcement learning unless the tabular agent fails to beat both baselines (ADR-2 states when that fallback opens).
+- No deep reinforcement learning unless the tabular agent fails to beat at least one baseline (ADR-2 states when that fallback opens).
 
 ## 2. Design
 
@@ -67,6 +67,7 @@ Build the game, the ghost, three agents, training, and evaluation, in that order
   The loop rule is what guarantees a choice of routes: more loops means more places Pac-Man can turn away from the ghost and still reach a corner. Winnability does not guarantee that any agent can win a given game.
 - At the defaults, about 70% of all draws are accepted before the split check (about 1.4 draws per accepted map), and accepted maps average about 3.4 walls (simulated, 20,000 draws). Every accepted map has at least 4 loops, so none is a single corridor.
 - Generation takes an integer seed and a split, and nothing else random. The seed is recorded with every episode result.
+- **Bounded generation.** Some generator configurations accept no map in a split: `min_loops` above 16 accepts nothing, and `max_walls` 0 accepts only the empty map, which belongs to one split, so the other two accept nothing. The generator therefore stops after a fixed number of draws and fails with an error naming the configuration and split. It never retries forever.
 
 ### 2.4 Turn order and outcomes
 
@@ -114,7 +115,7 @@ The win and loss rewards are what P1 specifies. The corner reward gives a little
 
 ### 2.7 Game knobs, learner settings and map splits
 
-**Game knobs** change how hard the game is: `ghost_move_prob`, `wall_density`, `max_walls`, `min_loops` and `max_steps` (OQ-10, OQ-13). The three generator knobs, `wall_density`, `max_walls` and `min_loops`, also change which maps exist, so a change to any of them changes every split's maps. `ghost_move_prob` is the primary knob: raising it only ever makes the game harder, and it can be set finely. The ghost's speed and search rule are fixed (§2.5), not knobs. **Learner settings** change how well the agent learns, not how hard the game is: the reward table, the learning rate, the discount factor, the exploration schedule and the number of training episodes (§2.8). Both live in one configuration object, and no value of either is written anywhere else in the code. Only game knobs are turned to adjust difficulty. Turning learner settings to move the win rate into the band would measure the agent's tuning, not the game's balance.
+**Game knobs** change how hard the game is: `ghost_move_prob`, `wall_density`, `max_walls`, `min_loops` and `max_steps` (OQ-10, OQ-13). The three generator knobs, `wall_density`, `max_walls` and `min_loops`, also change which maps exist, so a change to any of them changes every split's maps. `ghost_move_prob` is the primary knob, and it can be set finely. Its effect is not monotonic. Lowering it from 1.0 makes the game easier at first, but a ghost that rarely moves rarely leaves `(4, 4)`, a corner Pac-Man must reach, so below some value the game gets harder again, and at 0 it cannot be won. The pathfinding agent's win rate is about 0% at 0, 10% at 0.25, 20% at 0.75 and 12% at 1.0 (simulated, 1,000 validation seeds at the other defaults). Tuning searches the range above that floor. The ghost's speed and search rule are fixed (§2.5), not knobs. **Learner settings** change how well the agent learns, not how hard the game is: the reward table, the learning rate, the discount factor, the exploration schedule and the number of training episodes (§2.8). Both live in one configuration object, and no value of either is written anywhere else in the code. Only game knobs are turned to adjust difficulty. Turning learner settings to move the win rate into the band would measure the agent's tuning, not the game's balance.
 
 **The team decides difficulty.** Tooling makes the decision cheap. A single command runs both baselines on the validation maps under the current knob values and prints their results side by side, next to the stored learned policy's last validation results and the knob values it was trained under. One knob change can therefore be judged in minutes without retraining. The learned agent is retrained, and run on the validation maps again, when the team considers a knob setting final, and always before the test maps are played (OQ-11).
 
@@ -149,7 +150,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 
 ### 2.9 Watch mode and simulation mode
 
-- **Watch mode** plays one game and animates it in the terminal as pixel art: each cell is drawn as a small coloured block sprite using ANSI colour codes and Unicode block characters, with distinct sprites for Pac-Man, the ghost, walls, unknown cells, and visited and unvisited corners. One frame is drawn per step, with a short delay between frames. Each frame also shows the step number, the corners visited, whether the ghost can see Pac-Man, and at the end the outcome. Any evaluated game can be replayed this way from its seed and agent.
+- **Watch mode** plays one game and animates it in the terminal as pixel art: each cell is drawn as a small coloured block sprite using ANSI colour codes and Unicode block characters, with distinct sprites for Pac-Man, the ghost, walls, unknown cells, and visited and unvisited corners. One frame is drawn per step, with a short delay between frames. Each frame also shows the step number, the corners visited, whether the ghost can see Pac-Man, and at the end the outcome. Any evaluated game can be replayed this way (FR-14).
 - **Simulation mode** plays many games with no graphics at all, then prints a summary per agent: wins, losses and ties as counts and percentages, with their 95% intervals, and the mean steps to a win. Training and evaluation run in this mode.
 - Both modes use the standard library only (ADR-1). Watch mode has a plain-text fallback for terminals without colour and for tests.
 
@@ -173,7 +174,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 
   That is 4 x 16 x 80 x 4 x 2 x 3 = 122,880 table rows, about 4 MB as a NumPy array of four 64-bit values per row. Most combinations cannot occur, because the offset limits the path distance and the open moves; the states actually reached are a small fraction, and the learning curve (FR-12) shows whether training visits them often enough. The offset tells Pac-Man where the ghost is; the path distance tells him how far that is once known walls are counted. Because unknown cells count as open, the distance and the line-of-sight feature can be optimistic: the ghost may be farther than it looks, and a wall Pac-Man has not sensed may in fact block the ghost's view. A state describes the situation relative to Pac-Man rather than in map coordinates, which is what lets the policy carry over to held-out maps. It is a summary, so situations that differ in detail can share a state, and the table learns the best action on average across them. In particular, the state does not say whether the ghost is chasing, pursuing or searching, or where it last saw Pac-Man, so two situations that call for different moves can look the same. On a game this small tabular Q-learning usually copes with this; the learning curve (FR-12) is where a failure would show.
 - *The cost.* The features use breadth-first search on the remembered map, which the pathfinding baseline also uses. The comparison is therefore "does learning when to deviate from the shortest known path beat always taking it", which is the question P4 asks. The agent sees the direction to the nearest unvisited corner only, so it cannot plan a different corner order; it can only learn when to step away from the shortest route.
-- *Fallback.* If the tabular agent fails to beat both baselines (§5 item 3) on validation maps after tuning, a small deep Q-network over the full grid becomes in scope. That needs a dependency, so ADR-1's agreement rule applies.
+- *Fallback.* If the tabular agent fails to beat at least one baseline (§5 item 3) on validation maps after tuning, a small deep Q-network over the full grid becomes in scope. That needs a dependency, so ADR-1's agreement rule applies.
 
 **ADR-3: Determinism is an interface rule.** Every function that uses randomness takes a seeded generator as an argument. Nothing reads a global random state. Map generation, the ghost's tie-breaks, the random agent and training exploration each get their own generator, derived from the episode seed. This is what makes a reported game reproducible and the agent comparison paired.
 
@@ -184,7 +185,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | ID | Requirement |
 |---|---|
 | FR-1 | The grid is 5x5 with whole-cell walls (§2.1). Moves into walls or off the grid leave the mover in place. |
-| FR-2 | Map generation follows §2.3. Corners are never walls, and every accepted map is fully connected, has at most `max_walls` walls, has at least `min_loops` loops and belongs to its requested split. Other maps are rejected and redrawn. The generator does not depend on Pac-Man, the ghost or any non-generator knob. For a fixed generator configuration, a seed and split always produce the same map. |
+| FR-2 | Map generation follows §2.3. Corners are never walls, and every accepted map is fully connected, has at most `max_walls` walls, has at least `min_loops` loops and belongs to its requested split. Other maps are rejected and redrawn. The generator does not depend on Pac-Man, the ghost or any non-generator knob. For a fixed generator configuration, a seed and split always produce the same map. If no map is accepted within the draw limit, generation fails with an error (§2.3). |
 | FR-3 | Pac-Man starts at `(0, 0)` and the ghost at `(4, 4)`. Pac-Man's start corner is visited at step 0 (§2.2). |
 | FR-4 | Each step follows the order in §2.4 and ends in win, loss or tie exactly as stated there. |
 | FR-5 | Ghost vision follows §2.5. The ghost sees Pac-Man only along a shared row or column with no wall between them. |
@@ -199,7 +200,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | FR-14 | Any evaluated episode can be replayed in watch mode from its seed, agent and configuration, plus the saved policy file for the learned agent. |
 | FR-15 | One command runs the §2.7 difficulty check: both baselines on validation maps under the current knobs, shown beside the stored policy's last validation results and the knob values it was trained under. It does not retrain. |
 | FR-16 | Pac-Man senses and remembers walls as in §2.6. Observations carry the remembered map, never the true map, and memory resets each episode. |
-| FR-17 | Simulation mode plays any number of games without graphics and ends with the per-agent summary in §2.9: wins, losses and ties. |
+| FR-17 | Simulation mode plays any number of games without graphics and ends with the per-agent summary in §2.9: wins, losses and ties with their 95% intervals, and the mean steps to a win. |
 
 ### Non-functional
 
@@ -211,7 +212,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | NFR-4 | A full training run at the default episode count (§2.8), including its learning-curve checks, finishes in under 10 minutes on a team member's laptop. The architecture doc measures this before the episode count is fixed. |
 | NFR-5 | Dependencies are limited to those in ADR-1 unless the team agrees otherwise. |
 | NFR-6 | No map appears in more than one split, and a test asserts it: the generator never returns a map outside its requested split, and a sample of each split shares no layout with the others (§2.7). |
-| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, the winnability rules (including rejection of a map over the wall cap, and of a connected map with fewer than `min_loops` loops such as the ring around a 3x3 wall block), wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, each ghost mode and its transitions, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
+| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, the winnability rules (including rejection of a map over the wall cap, and of a connected map with fewer than `min_loops` loops such as the ring around a 3x3 wall block), the error when no map is accepted within the draw limit, wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, each ghost mode and its transitions, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
 
 ## 5. Acceptance gate
 
@@ -220,12 +221,11 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 3. **Learning beats both baselines.** The learned agent's win rate is higher than the random agent's and the pathfinding agent's, each with a one-sided McNemar p-value below 0.05 (FR-11, P4). Both tests must pass, so no correction for running two tests is needed.
 4. **The team signs off** the final knob values and the report tables. Difficulty is a judgement, and the numbers above are its evidence, not a replacement for it.
 
-**Results to distrust.** A win rate of exactly 0% or 100%, identical rates for two different agents, or a test rate well above the validation rate each point to a broken measurement before they point to a result. Check for a map appearing in two splits, a ghost that never moves, ties counted as wins, an observation that leaks the true map, or an agent evaluated on its training maps.
+**Results to distrust.** A win rate of exactly 0% for the pathfinding or learned agent, a win rate of exactly 100% for any agent, identical rates for two different agents, or a test rate well above the validation rate each point to a broken measurement before they point to a result. The random agent winning about 0% is expected (simulated: 0 of 1,000 validation games at the defaults). Check for a map appearing in two splits, a ghost that never moves, ties counted as wins, an observation that leaks the true map, or an agent evaluated on its training maps.
 
 ## 6. Questions
 
 No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on 2026-10-27, and OQ-13 on 2026-10-27 and revised on 2026-10-28. Each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
-
 
 - **OQ-1: Start positions.** *Answered:* Pac-Man at `(0, 0)`, ghost at `(4, 4)`, and Pac-Man's start corner counts as visited (§2.2).
 - **OQ-2: How much does Pac-Man know?** *Answered:* he always knows where the ghost is, but senses only the walls next to him. He remembers walls he has sensed and plans as if unknown cells are open (§2.6). The agent learns from computed features, not from the raw board (ADR-2).
@@ -243,12 +243,15 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on
 
 ## 7. SDLC state
 
-PRD v0.7. Review rounds 1 and 2 and the team's answers to §6 are logged in `phase-1-review.md`. Next: the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
+PRD v0.8. Review rounds 1 to 3 and the team's answers to §6 are logged in `phase-1-review.md`. Next: the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
 
 The architecture doc must settle these, which this PRD leaves to it:
 
 - The exact bytes hashed with SHA-256 to put a map in a split (§2.7). A different encoding sends maps to different splits, so it is fixed once and tested.
-- How each component's generator is derived from the episode seed (ADR-3), and a rule that nothing depends on Python's per-process string hashing or set iteration order (NFR-1).
+- How each component's generator is derived from the episode seed (ADR-3), which generator algorithm is used and the version pin that keeps its stream identical across machines, and a rule that nothing depends on Python's per-process string hashing or set iteration order (NFR-1).
 - Which training seeds the training episodes use (§2.7, §2.8).
-- The saved-policy file format: table, configuration and seed range (FR-9, FR-14).
+- The saved-policy file format: table, configuration, seed range, and the last validation results that the difficulty check shows (FR-9, FR-14, FR-15).
+- The draw limit after which map generation fails (§2.3).
+- Whether the Q-learning update on a tie step treats it as terminal or bootstraps from the next state. The state has no step count, so the turn limit is invisible to the agent. Stated as a default for team veto.
+- A measured sweep of each game knob's effect on both baselines' validation win rates, including the floor of `ghost_move_prob` (§2.7), so tuning starts from known directions.
 - The command-line entry points for training, evaluation, the difficulty check, watch mode and simulation mode.

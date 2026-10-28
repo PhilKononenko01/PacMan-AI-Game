@@ -4,6 +4,62 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD s
 
 ---
 
+## Round 3 — PRD v0.7 → v0.8
+
+**Date:** 2026-10-28
+**Reviewed:** `phase-1-grid-world-prd.md` v0.7 at commit `caf9415`, against `Design/project-proposal.md` (P1–P4) and rounds 1 and 2 of this log.
+**Method:** a full read for architecture readiness, plus a throwaway probe that implements the PRD's generator, turn order, ghost and both baselines (Python standard library, `random.Random`, a provisional split encoding). The probe is not kept; the architecture doc re-runs whatever it relies on.
+**Outcome:** 9 findings, all fixed in v0.8. None needed a team ruling: each corrects a claim or closes a gap without changing a decision. Four items added to the §7 handoff list.
+
+### Probe results
+
+- *Generator, 20,000 draws at the defaults:* 68.1% accepted before the split check (1.47 draws per map), mean 3.40 walls, empty map 1.25% of accepted maps. The empty grid has 16 loops and the ring around a 3x3 block has 1. The densest connected map with at least 4 loops had 8 walls. These match §2.3 and the v0.7 ruling.
+- *Baselines, 1,000 validation seeds, other knobs at defaults:*
+
+| `ghost_move_prob` | Random W / L / T | Pathfinding W / L / T |
+|---|---|---|
+| 0 | 0% / 45% / 55% | 0% / 100% / 0% |
+| 0.05 | 1% / 78% / 21% | 2% / 98% / 0% |
+| 0.1 | 1% / 90% / 9% | 4% / 96% / 0% |
+| 0.25 | 0% / 99% / 0% | 10% / 90% / 0% |
+| 0.5 | 0% / 100% / 0% | 18% / 82% / 0% |
+| 0.75 | 0% / 100% / 0% | 20% / 80% / 0% |
+| 1.0 | 0% / 100% / 0% | 12% / 88% / 0% |
+
+### Serious
+
+**R3-01: `ghost_move_prob` is not monotonic.** §2.7 said "raising it only ever makes the game harder". At 0 the ghost never leaves `(4, 4)`, a corner Pac-Man must reach, so no game can be won, and the pathfinding agent's win rate rises from 0% at 0 to 20% at 0.75, then falls to 12% at 1.0. Tuning that assumed one direction would have misread results below the peak.
+*Fix:* §2.7 states the effect, the floor and the measured rates; §7 hands a measured knob sweep to the architecture doc. The OQ-10 decision, that `ghost_move_prob` is the primary knob, is unchanged.
+*Watch:* the pathfinding agent peaks near 20%. Whether any knob setting lets the learned agent reach the 50% band is not known until it exists. The knob sweep should include the generator knobs and `max_steps`, so other levers toward an easier game are known early.
+
+### Moderate
+
+**R3-02: The 0% alarm fires on a true result.** §5 called any win rate of exactly 0% a sign of a broken measurement, but the random agent wins about 0% of games (0 of 1,000 at the defaults). *Fix:* the 0% alarm is scoped to the pathfinding and learned agents, and §5 says a near-0% random agent is expected.
+
+**R3-03: The generator could loop forever.** v0.7 made `max_walls` and `min_loops` knobs, and some settings accept no map in a split (`min_loops` above 16, or `max_walls` 0, which accepts only the empty map, in one split). The v0.6 handoff item on bounded generation failure was dropped with the v0.6 rule. *Fix:* §2.3 adds a draw limit and an error, FR-2 and NFR-7 cover it, and §7 hands the limit's value to the architecture doc.
+
+### Minor
+
+**R3-04: §2.9 still said a game replays "from its seed and agent".** R2-09 fixed FR-14 but not §2.9. *Fix:* §2.9 points to FR-14.
+
+**R3-05: The policy file did not hold what FR-15 shows.** FR-15 displays the stored policy's last validation results, but the §7 file-format item named only table, configuration and seed range. *Fix:* §7 adds the last validation results.
+
+**R3-06: The tie update was unstated.** The state has no step count, so a tie is a time limit the agent cannot see. Whether the Q update treats it as terminal or bootstraps changes training results (NFR-1). *Fix:* handed to the architecture doc in §7 as a default for team veto.
+
+**R3-07: "Fails to beat both baselines" could read as "beats neither".** §5 item 3 needs both tests to pass, so the fallback opens when either fails. *Fix:* the non-goal and ADR-2 say "fails to beat at least one baseline".
+
+**R3-08: NFR-1 depends on the generator's stream staying fixed.** Some random-number generators do not promise the same stream across library versions. *Fix:* the §7 generator item now includes the algorithm and a version pin.
+
+**R3-09: FR-17's summary was shorter than §2.9's.** *Fix:* FR-17 lists the intervals and mean steps to a win. Also: the status line now cites `caf9415`, and a stray blank line in §6 is removed.
+
+### Checked and sound
+
+- Table size, reward bounds (best tie -3, worst tie -5, every win at least 98, every loss at most -98.05), and the turn order are as stated.
+- The ghost always has an open neighbour on an accepted map, and a ghost next to Pac-Man always sees him, so search mode never steps onto Pac-Man unseen.
+- Probe speed: about 2.7 ms per game in pure Python including validation-map generation, consistent with NFR-3 and NFR-4.
+
+---
+
 ## Team ruling — PRD v0.6 → v0.7
 
 **Date:** 2026-10-28
@@ -198,6 +254,7 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.2 | 2026-10-26 | Review round 1 fixes (R1-01 to R1-13); OQ-9 added and answered (`29928fa`). |
 | v0.3 | 2026-10-26 | OQ-1 to OQ-8 answered; partial wall knowledge, ties, corner reward, watch and simulation modes (`39df5a3`). |
 | v0.4 | 2026-10-27 | Review round 2 fixes (R2-04 to R2-11); OQ-10 to OQ-12 opened with proposals; architecture-doc handoff list in §7 (`80fcb4f`). |
-| v0.5 | 2026-10-27 | OQ-10 to OQ-12 answered; `ghost_move_prob`, no retrain in the quick check, evaluation sizes. |
+| v0.5 | 2026-10-27 | OQ-10 to OQ-12 answered; `ghost_move_prob`, no retrain in the quick check, evaluation sizes (`d25782e`). |
 | v0.6 | 2026-10-27 | OQ-13 answered; random maps must be winnable under the configured ghost rules and turn limit; verification, ghost randomness and bounded failure handed to architecture (`835ba30`). |
-| v0.7 | 2026-10-28 | OQ-13 revised: winnability is a map-generator rule (`max_walls`, `min_loops`), independent of Pac-Man and the ghost. |
+| v0.7 | 2026-10-28 | OQ-13 revised: winnability is a map-generator rule (`max_walls`, `min_loops`), independent of Pac-Man and the ghost (`caf9415`). |
+| v0.8 | 2026-10-28 | Review round 3 fixes (R3-01 to R3-09): `ghost_move_prob` is not monotonic, bounded map generation, 0% alarm scoped, four items added to the architecture handoff. |
