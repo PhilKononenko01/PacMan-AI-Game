@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD s
 
 ---
 
+## Team ruling — PRD v0.5 → v0.6
+
+**Date:** 2026-10-27
+**Answered:** OQ-13. The team requires randomly generated maps to be winnable, not merely connected, and approved adding the requirement to the PRD.
+
+**Ruling:** every accepted map must allow Pac-Man to visit all four corners without capture within `max_steps`, accounting for the configured ghost behaviour and turn order. Unwinnable maps are rejected and regenerated. An agent can still lose through its choices.
+
+**Changes:** §2.3 and FR-2 add the winnability requirement; NFR-7 requires coverage of the check, including a connected single-corridor map that cannot be won. OQ-13 records the decision. §7 assigns the verification method, treatment of ghost randomness and bounded generation failure to the architecture doc. Connectivity or loops alone cannot certify winnability, and failure of a baseline agent does not prove a map unwinnable.
+
+**Architecture follow-up:** acceptance must not rely on an unusually lucky ghost sequence. A configuration with `ghost_move_prob=0` cannot produce a winnable map because the ghost permanently occupies a required corner; generation must fail clearly rather than retry forever in configurations that cannot be certified.
+
+---
+
 ## Team rulings — PRD v0.4 → v0.5
 
 **Date:** 2026-10-27
@@ -169,3 +182,4 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.3 | 2026-10-26 | OQ-1 to OQ-8 answered; partial wall knowledge, ties, corner reward, watch and simulation modes (`39df5a3`). |
 | v0.4 | 2026-10-27 | Review round 2 fixes (R2-04 to R2-11); OQ-10 to OQ-12 opened with proposals; architecture-doc handoff list in §7 (`80fcb4f`). |
 | v0.5 | 2026-10-27 | OQ-10 to OQ-12 answered; `ghost_move_prob`, no retrain in the quick check, evaluation sizes. |
+| v0.6 | 2026-10-27 | OQ-13 answered; random maps must be winnable under the configured ghost rules and turn limit; verification, ghost randomness and bounded failure handed to architecture. |

@@ -1,6 +1,6 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.5**. Every open question (OQ-1 to OQ-12) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
+**Status:** DRAFT **v0.6**. Every open question (OQ-1 to OQ-13) is answered, and the answers are written into the sections they name. The architecture doc must define how map winnability is verified (§7).
 **Date:** 2026-10-27
 **Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `80fcb4f`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.4 of this PRD and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
@@ -59,7 +59,8 @@ Build the game, the ghost, three agents, training, and evaluation, in that order
 
 - Every non-corner cell becomes a wall independently with probability `wall_density` (default 0.20, a §2.7 game knob).
 - Corners are never walls.
-- A map is accepted only if every open cell is reachable from every other open cell, and the map belongs to the requested split (§2.7). A rejected map is redrawn from the same seeded random stream, so a seed and split still map to exactly one map.
+- A map is accepted only if every open cell is reachable from every other open cell, the map belongs to the requested split (§2.7), and it passes the winnability check below. A rejected map is redrawn from the same seeded random stream, so a seed and split still map to exactly one map for a fixed game configuration.
+- **Winnability (OQ-13).** Every accepted map must allow Pac-Man to visit all four corners without capture within `max_steps`, accounting for the configured ghost behaviour and turn order. Connectedness alone does not establish playability: a single corridor can connect all corners while making it impossible to pass the ghost. Unwinnable maps are rejected and regenerated. This guarantees a winning opportunity, not that every agent or every choice will win. Requiring loops alone is insufficient. The architecture doc must define the solvability check, including how ghost randomness is handled so acceptance does not rely on an unusually lucky sequence (§7).
 - Generation takes an integer seed and a split, and nothing else random. The seed is recorded with every episode result.
 
 ### 2.4 Turn order and outcomes
@@ -178,7 +179,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | ID | Requirement |
 |---|---|
 | FR-1 | The grid is 5x5 with whole-cell walls (§2.1). Moves into walls or off the grid leave the mover in place. |
-| FR-2 | Map generation follows §2.3. Corners are never walls, every accepted map is fully connected and belongs to its requested split, and a seed and split always produce the same map. |
+| FR-2 | Map generation follows §2.3. Corners are never walls, every accepted map is fully connected, belongs to its requested split and passes the winnability check under the configured ghost behaviour and `max_steps`. Unwinnable maps are rejected and regenerated. For a fixed game configuration, a seed and split always produce the same map. |
 | FR-3 | Pac-Man starts at `(0, 0)` and the ghost at `(4, 4)`. Pac-Man's start corner is visited at step 0 (§2.2). |
 | FR-4 | Each step follows the order in §2.4 and ends in win, loss or tie exactly as stated there. |
 | FR-5 | Ghost vision follows §2.5. The ghost sees Pac-Man only along a shared row or column with no wall between them. |
@@ -205,7 +206,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | NFR-4 | A full training run at the default episode count (§2.8), including its learning-curve checks, finishes in under 10 minutes on a team member's laptop. The architecture doc measures this before the episode count is fixed. |
 | NFR-5 | Dependencies are limited to those in ADR-1 unless the team agrees otherwise. |
 | NFR-6 | No map appears in more than one split, and a test asserts it: the generator never returns a map outside its requested split, and a sample of each split shares no layout with the others (§2.7). |
-| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, each ghost mode and its transitions, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
+| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, the winnability check (including rejection of a connected single-corridor map where the ghost prevents reaching a required corner), wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, each ghost mode and its transitions, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
 
 ## 5. Acceptance gate
 
@@ -218,7 +219,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 
 ## 6. Questions
 
-No question is open. OQ-1 to OQ-9 were answered on 2026-10-26 and OQ-10 to OQ-12 on 2026-10-27, and each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
+No product question is open. OQ-1 to OQ-9 were answered on 2026-10-26 and OQ-10 to OQ-13 on 2026-10-27, and each answer is written into the section it names. The winnability verification method remains an architecture decision (§7). A new question goes here first, with a proposal, before any section changes.
 
 
 - **OQ-1: Start positions.** *Answered:* Pac-Man at `(0, 0)`, ghost at `(4, 4)`, and Pac-Man's start corner counts as visited (§2.2).
@@ -233,13 +234,15 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26 and OQ-10 to OQ-12
 - **OQ-10: Can the game knobs move difficulty in both directions?** *Answered:* add `ghost_move_prob` (default 1.0), the chance the ghost moves on a given step. It is the primary knob. Ghost speed and search rule are no longer knobs (§2.5, §2.7).
 - **OQ-11: Is the learned policy retrained after each knob change?** *Answered:* no. The quick check runs the baselines only and shows the stored policy's last results with the knob values it was trained under. The learned agent is retrained when a knob setting is considered final, and before the test maps are played (§2.7, FR-15).
 - **OQ-12: How many games does each evaluation play, and which policy is evaluated?** *Answered:* all 1,000 seeds per split; a learning-curve check every 2,500 episodes on 200 validation seeds, counted in NFR-4; the final table is evaluated (§2.8, FR-10, FR-12).
+- **OQ-13: Can a connected but unwinnable map be accepted?** *Answered:* no. Random maps must allow all four corners to be visited without capture within `max_steps` under the configured ghost behaviour and turn order. Unwinnable maps are rejected and regenerated. The architecture doc defines the solvability check and its treatment of ghost randomness (§2.3, FR-2, NFR-7, §7).
 
 ## 7. SDLC state
 
-PRD v0.5. Review rounds 1 and 2 and the team's answers to §6 are logged in `phase-1-review.md`. Next: the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
+PRD v0.6. Review rounds 1 and 2 and the team's answers to §6, including the winnability requirement, are logged in `phase-1-review.md`. Next: the architecture doc (`phase-1-architecture.md`), then epics, the coding plan, implementation and the §5 gate.
 
 The architecture doc must settle these, which this PRD leaves to it:
 
+- How the generator verifies winnability under the configured ghost behaviour, turn order and `max_steps`, including ghost randomness, the evidence required to accept a map, and bounded failure behaviour when no map can be certified (for example, `ghost_move_prob=0` permanently blocks a required corner). Connectivity checks, loops alone and failure of a baseline agent do not establish whether a map is winnable (§2.3).
 - The exact bytes hashed with SHA-256 to put a map in a split (§2.7). A different encoding sends maps to different splits, so it is fixed once and tested.
 - How each component's generator is derived from the episode seed (ADR-3), and a rule that nothing depends on Python's per-process string hashing or set iteration order (NFR-1).
 - Which training seeds the training episodes use (§2.7, §2.8).
