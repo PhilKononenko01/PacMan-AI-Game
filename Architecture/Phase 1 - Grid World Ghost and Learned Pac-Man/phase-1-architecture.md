@@ -1,8 +1,8 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: Architecture
 
-**Status:** DRAFT **v0.1**. Implements `phase-1-grid-world-prd.md` v0.9. Owed: the team's veto or acceptance of the stated defaults in §16.
+**Status:** DRAFT **v0.2**. Implements `phase-1-grid-world-prd.md` v0.10. Owed: the team's veto or acceptance of the stated defaults in §16.
 **Date:** 2026-10-28
-**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `dbc3077`, which holds PRD v0.8 and its review log; PRD v0.9 changes only one measured figure, in §2.7. No code exists yet. Every module, type and command below is to be built. Every measured number comes from a throwaway probe that implemented this document's rules (Python 3.9.6 with NumPy 2.0.2, on a team member's laptop, see `phase-1-review.md`). The probe is not kept.
+**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `63f3971`, which holds PRD v0.9, v0.1 of this document and the review log. PRD v0.10 adds the referee (OQ-14) and fixes the grid at 5x5 (OQ-15). Neither changes how a game plays, so the v0.1 measurements stand. No code exists yet. Every module, type and command below is to be built. Every measured number comes from a throwaway probe that implemented this document's rules (Python 3.9.6 with NumPy 2.0.2, on a team member's laptop, see `phase-1-review.md`). The probe is not kept.
 **Authority:** the PRD. This document decides only what PRD §7 leaves to it, plus the module, type and command structure needed to build the PRD. Where it seems to disagree with the PRD, the PRD wins and this document is wrong.
 **Form.** This document states what is decided and what is to be built. Review findings and version history go in `phase-1-review.md`.
 
@@ -45,6 +45,7 @@ pacman/
   mapgen.py          # GameMap, loop count, split bucket, generate(), MapGenerationError (§6)
   ghost.py           # Ghost (§8)
   env.py             # Environment, Observation, StepResult, Outcome, KnownCell (§7)
+  referee.py         # Referee: move count, max_steps, the tie call (§7.4)
   agents/
     __init__.py      # make_agent(name, ...) factory used by the CLI only
     base.py          # Agent protocol (§10.1)
@@ -64,7 +65,7 @@ tests/
 runs/                # outputs; git-ignored (§16)
 ```
 
-The environment, the ghost, the map generator and the agents never import the CLI, the renderer, the plot module or each other's internals. `agents/` sees the game only through `Observation`. `env.py` imports `mapgen`, `ghost`, `grid` and `config`, and never imports `agents` (FR-8).
+The environment, the ghost, the map generator and the agents never import the CLI, the renderer, the plot module or each other's internals. `agents/` sees the game only through `Observation`. `env.py` imports `mapgen`, `ghost`, `grid` and `config`, and never imports `agents` or `referee`. Only `episode.py` joins the environment, the referee and an agent (FR-8).
 
 ## 4. Core types
 
@@ -74,13 +75,13 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 
 | Type | Definition | Notes |
 |---|---|---|
-| `Cell` | `tuple[int, int]`, `(row, col)` | Row 0 at the top, col 0 at the left (PRD §2.1). |
+| `Cell` | `tuple[int, int]`, `(row, col)` | Row 0 at the top, col 0 at the left (PRD §2.1). The grid is fixed: `grid.ROWS = grid.COLS = 5` are constants, not configuration (PRD OQ-15). |
 | `Direction` | `IntEnum`: `UP=0`, `RIGHT=1`, `DOWN=2`, `LEFT=3` | The integer values are the action ids and the fixed tie-break order (PRD §2.5). Deltas `(-1,0)`, `(0,1)`, `(1,0)`, `(0,-1)`. |
 | `Outcome` | `Enum`: `WIN`, `LOSS`, `TIE` | |
 | `KnownCell` | `IntEnum`: `UNKNOWN=0`, `OPEN=1`, `WALL=2` | Pac-Man's memory of one cell. |
-| `GameMap` | frozen dataclass: `rows: int`, `cols: int`, `walls: frozenset[Cell]` | The true map. Never placed in an observation. |
-| `Observation` | frozen dataclass: `pacman: Cell`, `ghost: Cell`, `visited: frozenset[Cell]`, `known: tuple[KnownCell, ...]` | `known` is row-major, length `rows * cols`. It is a snapshot: later steps never change an observation already handed out. Exactly the fields of PRD §2.8. |
-| `StepResult` | frozen dataclass: `observation: Observation`, `reward: float`, `done: bool`, `outcome: Outcome \| None` | `outcome` is set exactly when `done`. The agent's `observe` receives only `reward`, `observation` and `done` (PRD §2.8). |
+| `GameMap` | frozen dataclass: `walls: frozenset[Cell]` | The true 5x5 map. Never placed in an observation. |
+| `Observation` | frozen dataclass: `pacman: Cell`, `ghost: Cell`, `visited: frozenset[Cell]`, `known: tuple[KnownCell, ...]` | `known` is row-major, length 25. It is a snapshot: later steps never change an observation already handed out. Exactly the fields of PRD §2.8. |
+| `StepResult` | frozen dataclass: `observation: Observation`, `reward: float`, `outcome: Outcome \| None` | From the environment, `outcome` is `WIN`, `LOSS` or `None`; the environment never returns `TIE`. The referee completes it (§7.4). |
 | `EpisodeRecord` | frozen dataclass: `seed: int`, `agent: str`, `outcome: Outcome`, `steps: int`, `episode_return: float` | One per played episode. `steps` is the number of the step the episode ended on. |
 
 ### 4.2 Splits
@@ -95,16 +96,7 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 
 ### 4.3 Configuration (PRD §2.7, NFR-2)
 
-`Config` is a frozen dataclass with three parts. It is the only place in the code where any game knob or learner setting has a value; every other module reads it from the `Config` it is given (NFR-2).
-
-**Grid** (test-only parameter, PRD non-goals):
-
-| Field | Type | Default | Valid | Unit |
-|---|---|---|---|---|
-| `rows` | int | 5 | 2 to 9 | cells |
-| `cols` | int | 5 | 2 to 9 | cells |
-
-Every CLI command refuses a configuration that is not 5x5. Smaller grids are reachable only from the Python API, for tests.
+`Config` is a frozen dataclass with two parts, `game` and `learner`. It is the only place in the code where any game knob or learner setting has a value; every other module reads it from the `Config` it is given (NFR-2).
 
 **Game knobs** (`GameKnobs`):
 
@@ -114,7 +106,7 @@ Every CLI command refuses a configuration that is not 5x5. Smaller grids are rea
 | `wall_density` | float | 0.20 | 0.0 to 1.0 | probability per non-corner cell |
 | `max_walls` | int | 6 | 0 or more | walls |
 | `min_loops` | int | 4 | 0 or more | independent loops |
-| `max_steps` | int | 100 | 1 or more | steps |
+| `max_steps` | int | 100 | 1 or more | moves; read only by the referee (§7.4) |
 
 **Learner settings** (`LearnerSettings`):
 
@@ -134,7 +126,7 @@ Every CLI command refuses a configuration that is not 5x5. Smaller grids are rea
 
 `tie_update` is a learner setting: it changes how the agent learns, not how hard the game is.
 
-**Serialisation.** `Config.to_json()` writes a JSON object with the keys `grid`, `game` and `learner`, each holding its fields by name, and `Config.from_json()` reads it back. Missing keys take their defaults, unknown keys are an error, and every field is checked against its valid range when a `Config` is built. A JSON file is the `--config` input of every command, and `--set name=value` overrides one field by its bare name (§14).
+**Serialisation.** `Config.to_json()` writes a JSON object with the keys `game` and `learner`, each holding its fields by name, and `Config.from_json()` reads it back. Missing keys take their defaults, unknown keys are an error, and every field is checked against its valid range when a `Config` is built. A JSON file is the `--config` input of every command, and `--set name=value` overrides one field by its bare name (§14).
 
 ## 5. Randomness (ADR-3, NFR-1)
 
@@ -148,7 +140,7 @@ derive(seed: int, component: str) -> random.Random
 
 | Component name | Used by | Draws per step |
 |---|---|---|
-| `"map"` | `mapgen.generate` | none during play; `rows * cols - 4` per draw of a candidate map (§6.1) |
+| `"map"` | `mapgen.generate` | none during play; 21 per candidate map, one per non-corner cell (§6.1) |
 | `"ghost"` | `Ghost` | one move draw every step, plus one tie draw when searching with tied candidates (§8.3) |
 | `"agent"` | the agent's `reset` (random agent's moves, learned agent's exploration) | random agent: one; learned agent in training: one or two (§10.5); otherwise none |
 
@@ -193,12 +185,12 @@ A rejected candidate is followed by the next candidate from the same stream. The
 ### 6.3 Split bucket: the hashed bytes
 
 ```
-layout_bytes(map) = f"{rows}x{cols}:".encode("ascii") + bytes of the row-major wall string
+layout_bytes(map) = b"5x5:" + bytes of the row-major wall string
                     where each cell is b"1" for a wall and b"0" for open
 split_bucket(map) = int.from_bytes(sha256(layout_bytes(map)).digest(), "big") % 100
 ```
 
-The grid size is part of the bytes, so a test map on a small grid can never share a bucket by accident with a 5x5 layout. These values are fixed by tests (§17) and never change:
+The `5x5:` prefix is a format tag. The grid never changes size (PRD OQ-15), so the prefix carries no information, but it is kept because the splits measured in this document were computed with it; removing it would move every map to a new split (D-2). These values are fixed by tests (§17) and never change:
 
 | Map | `layout_bytes` | SHA-256 | Bucket |
 |---|---|---|---|
@@ -230,30 +222,30 @@ The limit is 60 times the worst case seen. A configuration that accepts nothing 
 
 ### 7.1 Reset
 
-`reset(seed) -> Observation`:
+`reset(seed, game_map=None) -> Observation`:
 
-1. `split = split_of_seed(seed)` and `map = generate(seed, split, config)`.
-2. Pac-Man at `(0, 0)`, the ghost at `(rows - 1, cols - 1)`, `visited = {(0, 0)}`, step counter 0 (FR-3).
+1. `split = split_of_seed(seed)` and `map = generate(seed, split, config)`. A test may pass a hand-built `game_map` instead, which skips generation; no command passes one.
+2. Pac-Man at `(0, 0)`, the ghost at `(4, 4)`, `visited = {(0, 0)}` (FR-3). The environment holds no move count.
 3. Memory: every cell `UNKNOWN`.
 4. The ghost is built with `derive(seed, "ghost")` (§8).
 5. Pac-Man senses (§7.3), and the observation is returned.
 
 ### 7.2 Step
 
-`step(action: Direction) -> StepResult` runs PRD §2.4 exactly. `t` is the step number, starting at 1.
+`step(action: Direction, t: int) -> StepResult` runs PRD §2.4 steps 1 to 6. `t` is the move number, given by the referee (§7.4); the environment uses it only to stamp the ghost's visit record and never compares it with anything.
 
 | PRD §2.4 | Code |
 |---|---|
-| — | `t += 1`; `reward = reward_step` |
+| — | `reward = reward_step` |
 | 1 | `pacman = move(pacman, action, map)` |
 | 2 | if `pacman == ghost.cell`: `reward += reward_loss`; end `LOSS` |
 | 3 | if `pacman` is a corner not in `visited`: add it, `reward += reward_corner`; if all four are visited: `reward += reward_win`; end `WIN` |
 | 4 | sense (§7.3) |
 | 5 | `ghost.act(pacman, map, t)` (§8) |
 | 6 | if `ghost.cell == pacman`: `reward += reward_loss`; end `LOSS` |
-| 7 | if `t == max_steps`: end `TIE` |
+| 7 | not here: the referee (§7.4) |
 
-This is the PRD §2.6 accounting: every step pays `reward_step`, a first corner visit pays `reward_corner`, the ending step pays the win or loss reward, and a loss at row 2 never reaches row 3. Calling `step` after the episode has ended raises an error.
+This is the PRD §2.6 accounting: every step pays `reward_step`, a first corner visit pays `reward_corner`, the ending step pays the win or loss reward, and a loss at row 2 never reaches row 3. Calling `step` after a win or loss raises an error.
 
 ### 7.3 Sensing and memory
 
@@ -261,13 +253,28 @@ Sensing sets each in-grid neighbour of Pac-Man's cell to `OPEN` or `WALL` from t
 
 The observation is built from the memory, never from the map: `known` is copied into a new tuple each step.
 
+### 7.4 Referee (PRD §2.4 step 7, OQ-14)
+
+`Referee(max_steps)` is the only holder of the move count and the only reader of `max_steps`. It knows nothing else about the game.
+
+| Field | Type | Initial value |
+|---|---|---|
+| `max_steps` | int | from `config.game.max_steps` |
+| `moves` | int | 0 at each episode start |
+
+- `start()` sets `moves = 0`.
+- `next_move() -> int` adds 1 to `moves` and returns it. The episode loop passes it to `Environment.step`.
+- `rule(result) -> Outcome | None`: if `result.outcome` is `WIN` or `LOSS`, returns it unchanged; a win or loss on move `max_steps` stays a win or loss, as in PRD §2.4. Otherwise, if `moves == max_steps`, returns `TIE`: the referee stops the episode. Otherwise returns `None`.
+
+The referee's ruling is what the agent receives (§10.1) and what the record stores. After a ruling other than `None`, the episode loop asks the agent for no further move.
+
 ## 8. Ghost (PRD §2.5, FR-5, FR-6)
 
 ### 8.1 State
 
 | Field | Type | Initial value |
 |---|---|---|
-| `cell` | `Cell` | `(rows - 1, cols - 1)` |
+| `cell` | `Cell` | `(4, 4)` |
 | `last_seen` | `Cell \| None` | `None` |
 | `last_visit` | `dict[Cell, int]`, step of the most recent visit | `{start cell: 0}` |
 | `rng` | `random.Random` from `derive(seed, "ghost")` | |
@@ -302,7 +309,7 @@ No other draw is taken from the ghost's generator.
 
 All take a `passable(cell) -> bool` predicate, so the ghost (true map) and Pac-Man's side (memory, unknown counts as open) share one implementation.
 
-- `neighbours(cell, rows, cols)`: the in-grid neighbours in direction order.
+- `neighbours(cell)`: the in-grid neighbours in direction order.
 - `move(cell, direction, map)`: the neighbour, or `cell` itself if it is off the grid or a wall (FR-1).
 - `bfs(source, passable)`: distances from `source` to every reachable cell.
 - `first_step(source, target, passable) -> Direction`: with `d = bfs(target, passable)`, the first direction in `UP, RIGHT, DOWN, LEFT` whose neighbour `n` is passable and has `d[n] == d[source] - 1`. This is the PRD's "first step of a shortest path" with ties broken by direction order. It is only called with `source != target`.
@@ -321,10 +328,10 @@ class Agent(Protocol):
     name: str
     def reset(self, rng: random.Random) -> None
     def act(self, observation: Observation) -> Direction
-    def observe(self, reward: float, observation: Observation, done: bool) -> None
+    def observe(self, reward: float, observation: Observation, outcome: Outcome | None) -> None
 ```
 
-The episode loop (§10.6) is the only caller. The environment never sees an agent.
+`outcome` is the referee's ruling (§7.4): `None` while the episode goes on, otherwise `WIN`, `LOSS` or `TIE` (PRD §2.8, OQ-14). The episode loop (§10.6) is the only caller. The environment never sees an agent.
 
 ### 10.2 Random agent (`"random"`)
 
@@ -335,7 +342,7 @@ The episode loop (§10.6) is the only caller. The environment never sees an agen
 `plan(observation)`, shared with the features:
 
 1. `dist = bfs(pacman, Pac-Man's passable)`.
-2. Unvisited corners, in the fixed order `(0, cols-1)`, `(rows-1, 0)`, `(rows-1, cols-1)`. The target is the first with the smallest `dist`.
+2. Unvisited corners, in the fixed order `(0, 4)`, `(4, 0)`, `(4, 4)`. The target is the first with the smallest `dist`.
 3. Returns the target, `first_step(pacman, target, Pac-Man's passable)`, `dist`, and the number of unvisited corners.
 
 `act` returns the first step. The plan is rebuilt from the latest memory every step, which is the PRD's replanning on a newly sensed wall. `observe` does nothing. It never looks at the ghost.
@@ -348,37 +355,40 @@ From one observation, with `plan` as above:
 |---|---|---|
 | `step` | `int(first step to the nearest unvisited corner)` | 0 to 3 |
 | `open_mask` | bit `i` set when the neighbour in direction `i` is in the grid and `known == OPEN` | 0 to 15 |
-| `offset` | `k = (gr - pr + rows - 1) * (2*cols - 1) + (gc - pc + cols - 1)`, then `k - 1` if `k` is above the centre `(rows-1)*(2*cols-1) + (cols-1)` | 0 to 79 on 5x5 |
+| `offset` | `k = (gr - pr + 4) * 9 + (gc - pc + 4)`, then `k - 1` if `k` is above the centre, 40 | 0 to 79 |
 | `distance` | `min(dist[ghost], 4) - 1` | 0 to 3 |
 | `seen` | `1` if `line_of_sight(ghost, pacman, Pac-Man's passable)` else `0` | 0 to 1 |
 | `remaining` | number of unvisited corners minus 1 | 0 to 2 |
 
-`index = ((((step * 16 + open_mask) * O + offset) * 4 + distance) * 2 + seen) * 3 + remaining`, where `O = (2*rows - 1)(2*cols - 1) - 1`. On 5x5, `O = 80` and the table has 122,880 rows (PRD ADR-2). The ghost's distance is at least 1, because an observation with Pac-Man on the ghost's cell ends the episode and is never indexed.
+`index = ((((step * 16 + open_mask) * 80 + offset) * 4 + distance) * 2 + seen) * 3 + remaining`, so the table has 122,880 rows (PRD ADR-2). The ghost's distance is at least 1, because an observation with Pac-Man on the ghost's cell ends the episode and is never indexed.
 
 ### 10.5 Learned agent (`"learned"`)
 
-- **Table.** A `float64` NumPy array of shape `(rows_in_table, 4)`, column `i` for direction `i`, initialised to 0. About 3.9 MB on 5x5.
+- **Table.** A `float64` NumPy array of shape `(122880, 4)`, column `i` for direction `i`, initialised to 0. About 3.9 MB.
 - **Modes.** `training: bool`, set by its owner. `epsilon: float`, set by the training loop before each episode.
 - **`act`.** Computes the state index (or reuses the one cached by the last `observe`). In training, draws `u = rng.random()`; if `u < epsilon`, the action is `pick(rng, 4)`. Otherwise, and always outside training, the action is `argmax` of the row; `numpy.argmax` returns the first maximum, which is the direction-order tie-break (PRD §2.8).
 - **`observe`.** Does nothing outside training. In training, with the previous state `s` and action `a`:
-  - The episode ended in a win or a loss when `done` and the observation shows all four corners visited (win) or Pac-Man on the ghost's cell (loss). The agent reads this from the observation, so the interface stays as PRD §2.8 defines it.
-  - Target: `reward` alone at a win or a loss. At a non-final step, `reward + discount * max(Q[s'])` with `s'` the new observation's index. At a tie, the setting `tie_update` decides: `"bootstrap"` (default) treats it like a non-final step; `"terminal"` uses `reward` alone.
+  - The outcome comes from the referee's ruling; the agent never infers it.
+  - Target: `reward` alone at `WIN` or `LOSS`. At `None`, `reward + discount * max(Q[s'])` with `s'` the new observation's index. At `TIE`, the setting `tie_update` decides: `"bootstrap"` (default) uses the same target as at `None`; `"terminal"` uses `reward` alone.
   - Update: `Q[s, a] += learning_rate * (target - Q[s, a])`.
   - The index of `s'` is cached for the next `act`.
 
-**Why bootstrap at a tie (default, §16).** A tie is a time limit, and the state has no step count, so the agent cannot see it coming. Treating it as terminal teaches the agent that the state it happened to be in on step 100 is worth zero more reward, which is a fact about the clock, not about the state. Bootstrapping keeps the state's value unchanged by when the limit fell. Measured at the defaults, the two settings give results within noise of each other (§11.3), so the default is chosen on principle.
+**Why bootstrap at a tie (default, §16).** A tie is the referee stopping the game on the clock, and the state has no move count, so nothing in the state could have predicted it. Treating it as terminal teaches the agent that the state it happened to be in on step 100 is worth zero more reward, which is a fact about the clock, not about the state. Bootstrapping keeps the state's value unchanged by when the limit fell. Measured at the defaults, the two settings give results within noise of each other (§11.3), so the default is chosen on principle.
 
 ### 10.6 Episode loop (`episode.py`)
 
 ```
-play_episode(environment, agent, seed) -> EpisodeRecord
+play_episode(environment, referee, agent, seed) -> EpisodeRecord
     observation = environment.reset(seed)
+    referee.start()
     agent.reset(derive(seed, "agent"))
     loop:
-        result = environment.step(agent.act(observation))
-        agent.observe(result.reward, result.observation, result.done)
+        t = referee.next_move()
+        result = environment.step(agent.act(observation), t)
+        outcome = referee.rule(result)
+        agent.observe(result.reward, result.observation, outcome)
         add result.reward to the episode return
-        if result.done: return EpisodeRecord(seed, agent.name, result.outcome, t, return)
+        if outcome is not None: return EpisodeRecord(seed, agent.name, outcome, t, return)
         observation = result.observation
 ```
 
@@ -438,13 +448,13 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 
 | Key | dtype, shape | Content |
 |---|---|---|
-| `q` | `float64`, `(table rows, 4)` | The Q-table |
+| `q` | `float64`, `(122880, 4)` | The Q-table |
 | `meta` | `uint8`, `(n,)` | UTF-8 bytes of the JSON object below |
 
 ```json
 {
   "format_version": 1,
-  "config": { "grid": {...}, "game": {...}, "learner": {...} },
+  "config": { "game": {...}, "learner": {...} },
   "training_seeds": [0, 49999],
   "learning_curve": [[2500, 0.365], [5000, 0.41]],
   "validation": {
@@ -457,7 +467,7 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 
 `training_seeds` is the first and last seed, inclusive. `mean_steps_to_win` is `null` when there are no wins. The values in the example are placeholders.
 
-**Loading checks.** `load_policy` refuses a file whose `format_version` is not one it knows, whose `q` shape does not match the state count for `config.grid`, or that lacks any key above. There is one format version in phase 1. A later change to the file adds a version and keeps the loader for version 1, so policy files from earlier runs stay readable.
+**Loading checks.** `load_policy` refuses a file whose `format_version` is not one it knows, whose `q` shape is not `(122880, 4)`, or that lacks any key above. There is one format version in phase 1. A later change to the file adds a version and keeps the loader for version 1, so policy files from earlier runs stay readable.
 
 ## 13. Evaluation (FR-10, FR-11)
 
@@ -491,7 +501,7 @@ It also writes `runs/<name>/eval-<split>.json`: the configuration, and every `Ep
 
 ## 14. Command-line entry points
 
-`python -m pacman <command>`. Every command accepts `--config FILE` and repeatable `--set name=value` (§4.3), refuses a non-5x5 grid, and exits non-zero with a message on any error, including `MapGenerationError`.
+`python -m pacman <command>`. Every command accepts `--config FILE` and repeatable `--set name=value` (§4.3), and exits non-zero with a message on any error, including `MapGenerationError`.
 
 ### 14.1 `train`
 
@@ -515,7 +525,7 @@ It also writes `runs/<name>/eval-<split>.json`: the configuration, and every `Ep
 
 ### 14.6 Rendering (`render.py`, PRD §2.9)
 
-- **Frames.** One frame at reset and one after each step, through a callback from the episode loop. Each frame redraws the grid, then a status line: step `t` of `max_steps`, corners visited out of 4, and whether the ghost can see Pac-Man (line of sight on the true map at the end of the step). The last frame adds the outcome.
+- **Frames.** One frame at reset and one after each step, through a callback from the episode loop. Each frame redraws the grid, then a status line: the referee's move count `t` of `max_steps`, corners visited out of 4, and whether the ghost can see Pac-Man (line of sight on the true map at the end of the step). The last frame adds the referee's ruling.
 - **Pixel art.** Each cell is a 4-by-4-pixel sprite drawn with the upper half block `▀` (U+2580): every character shows two pixels, its foreground the upper and its background the lower, so a cell is 4 characters wide and 2 lines tall. Colours are 256-colour ANSI escapes (`ESC[38;5;Nm`, `ESC[48;5;Nm`). Sprites, each a constant 4x4 grid of colour indices: Pac-Man, ghost, wall, unknown cell, unvisited corner, visited corner, open floor. Pac-Man and the ghost are drawn over their cell's sprite.
 - **What is drawn.** Walls and unknown cells are drawn from Pac-Man's memory, so the viewer sees what he knows: a cell he has not sensed shows the unknown sprite, whether it is open or a wall. Pac-Man, the ghost and the corners are always drawn where they are (§16).
 - **Plain-text fallback.** One character per cell: `P` Pac-Man, `G` ghost, `#` known wall, `?` unknown, `o` unvisited corner, `*` visited corner, `.` known open. It is used when `--plain` is given, when standard output is not a terminal, when `NO_COLOR` is set, or when `TERM` is `dumb`, and it is what tests check. The renderer returns each frame as a string; only the CLI writes it and sleeps.
@@ -554,8 +564,8 @@ Each is a choice this document made where the PRD leaves room. The team accepts 
 
 | # | Default | Where | Alternative |
 |---|---|---|---|
-| D-1 | A tie bootstraps in the Q update (`tie_update = "bootstrap"`). | §10.5 | `"terminal"`: a tie ends the update like a win or loss. Measured within noise of the default (§11.3). |
-| D-2 | Split hashing includes the grid size: `"5x5:"` followed by the row-major wall string. | §6.3 | The wall string alone. Changing this later moves every map to a new split. |
+| D-1 | When the referee calls a tie, the Q update bootstraps (`tie_update = "bootstrap"`). | §10.5 | `"terminal"`: a tie ends the update like a win or loss. Measured within noise of the default (§11.3). |
+| D-2 | Split hashing keeps the `"5x5:"` tag before the row-major wall string, though the grid is fixed, so the measured splits stand. | §6.3 | The wall string alone. This moves every map to a new split and voids every measurement in this document, so it is only worth doing before code exists. |
 | D-3 | `MAX_DRAWS = 10_000` candidates per map. | §6.4 | Any limit well above the measured worst case of 167. |
 | D-4 | Training episode `k` uses training seed `k`. | §11.1 | Any fixed list of training seeds. |
 | D-5 | Watch mode draws walls and unknown cells from Pac-Man's memory, not the true map. | §14.6 | Draw the true map, marking unsensed cells with a tint. |
@@ -564,7 +574,7 @@ Each is a choice this document made where the PRD leaves room. The team accepts 
 
 ## 17. Tests (NFR-3, NFR-6, NFR-7)
 
-One test file per module. Every test is headless, needs no Matplotlib except `test_cli`'s `train` run, which writes `curve.png` with the `Agg` backend, and the whole suite runs in under 30 seconds (NFR-3). Measured costs to budget against: about 1.6 s to generate 1,000 validation maps, about 3 s for 1,000 pathfinding games, about 6 ms per training episode. Small grids (3x3 and 4x4) are used where a 5x5 map is not needed.
+One test file per module. Every test is headless, needs no Matplotlib except `test_cli`'s `train` run, which writes `curve.png` with the `Agg` backend, and the whole suite runs in under 30 seconds (NFR-3). Measured costs to budget against: about 1.6 s to generate 1,000 validation maps, about 3 s for 1,000 pathfinding games, about 6 ms per training episode. Every test uses the 5x5 grid (PRD OQ-15). Tests that need a particular layout build a `GameMap` by hand and pass it to `Environment.reset(seed, game_map=...)`.
 
 | File | Covers | PRD |
 |---|---|---|
@@ -573,15 +583,16 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 | `test_mapgen.py` | Corners never walls; connectivity; wall cap (a connected 7-wall map rejected at `max_walls` 6); loop count (empty 5x5 has 16, the ring round a 3x3 block has 1 and is rejected); split membership for many seeds of each split; `layout_bytes`, SHA-256 and bucket golden values (§6.3); golden maps for seeds 0, 1,000,000 and 2,000,000 (§6.3); draw-limit error with `max_draws` small; same seed and split give the same map; the generator's result does not change when a non-generator knob changes | FR-2, NFR-6, NFR-7 |
 | `test_splits.py` | No layout shared between a 1,000-seed sample of each split (NFR-6) | NFR-6 |
 | `test_grid.py` | `move` into walls and off the grid; `first_step` direction-order ties; line of sight in all four directions, blocked and clear, adjacent | FR-1, FR-5, NFR-7 |
-| `test_env.py` | Sensing at reset and after each move; memory resets; no observation's `known` ever shows a wall Pac-Man has not sensed (checked against the true map over many games); every row of the §7.2 table, including Pac-Man stepping onto the ghost's cell, a win before the ghost moves, a loss on the ghost's move, a tie on step `max_steps`; reward totals for each outcome | FR-3, FR-4, FR-7, FR-16, NFR-7 |
+| `test_env.py` | Sensing at reset and after each move; memory resets; no observation's `known` ever shows a wall Pac-Man has not sensed (checked against the true map over many games); every row of the §7.2 table, including Pac-Man stepping onto the ghost's cell, a win before the ghost moves and a loss on the ghost's move; the environment never returns `TIE`; reward totals for each outcome | FR-3, FR-4, FR-7, FR-16, NFR-7 |
+| `test_referee.py` | Counts from 1 after `start`; calls `TIE` exactly on move `max_steps` and not before; a win or loss on move `max_steps` stays a win or loss; the agent receives the ruling, and is asked for no move after one; the observation carries no move count | FR-4, NFR-7 |
 | `test_ghost.py` | Chase, pursue and search, and every transition between them; clearing `last_seen` on arrival; search least-recent rule and never-visited counts as least recent; random tie draw; stays put on a failed move draw with no visit recorded; draw order (§8.3) | FR-6, NFR-7 |
 | `test_agents.py` | Interface conformance of all three; pathfinding corner-order and path ties; a path always exists on memory; feature ranges and the 122,880-row index on 5x5; greedy tie-break; Q update arithmetic on hand-built steps, including win, loss and both `tie_update` settings | FR-8, ADR-2, NFR-7 |
 | `test_stats.py` | Wilson against known values; McNemar exact values for small `n`, and `n = 0` | FR-10, FR-11 |
 | `test_train.py` | Epsilon schedule values at the start, the decay end and after it; with `CURVE_EVERY` lowered, curve points at the right episode counts, on the right seeds, with the table unchanged by them; the final validation summary stored | FR-9, FR-12 |
 | `test_policy_io.py` | Round trip; refusal of a wrong version, wrong shape or missing key | FR-9 |
-| `test_determinism.py` | Records identical across two runs in-process and in a subprocess with a different `PYTHONHASHSEED`; a short training run (e.g. 200 episodes on 3x3) gives a byte-identical table twice | NFR-1 |
+| `test_determinism.py` | Records identical across two runs in-process and in a subprocess with a different `PYTHONHASHSEED`; a short training run (200 episodes) gives a byte-identical table twice | NFR-1 |
 | `test_render.py` | Plain-text frames for a hand-built state; a pixel-art frame contains only expected escape codes and the half-block character | FR-13 |
-| `test_cli.py` | Each command runs end to end with `--set episodes=5` and the §11.1 size constants lowered by `monkeypatch`, and writes its outputs; a non-5x5 configuration is refused; `evaluate` refuses a game knob that differs from the policy's; `watch --plain` replays a seed taken from `eval-<split>.json` | FR-9, FR-14, FR-15, FR-17 |
+| `test_cli.py` | Each command runs end to end with `--set episodes=5` and the §11.1 size constants lowered by `monkeypatch`, and writes its outputs; `evaluate` refuses a game knob that differs from the policy's; `watch --plain` replays a seed taken from `eval-<split>.json` | FR-9, FR-14, FR-15, FR-17 |
 
 ## 18. Traceability
 
@@ -590,11 +601,11 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 | FR-1 | `grid.move` | `test_grid` |
 | FR-2 | `mapgen.generate` | `test_mapgen` |
 | FR-3 | `Environment.reset` | `test_env` |
-| FR-4 | `Environment.step` | `test_env` |
+| FR-4 | `Environment.step`, `Referee` | `test_env`, `test_referee` |
 | FR-5 | `grid.line_of_sight`, `Ghost.act` | `test_grid`, `test_ghost` |
 | FR-6 | `Ghost` | `test_ghost` |
 | FR-7 | `Environment.step`, `Config` | `test_env` |
-| FR-8 | `agents/`, `episode.play_episode` | `test_agents` |
+| FR-8 | `agents/`, `episode.play_episode` | `test_agents`, `test_referee` |
 | FR-9 | `train`, `policy_io` | `test_train`, `test_policy_io`, `test_cli` |
 | FR-10 | `evaluate.run_split`, `stats.wilson` | `test_stats`, recorded run |
 | FR-11 | `stats.mcnemar_one_sided`, `evaluate` | `test_stats`, recorded run |
@@ -614,4 +625,4 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 
 ## 19. SDLC state
 
-Architecture v0.1, against PRD v0.9. Review findings and measurements are logged in `phase-1-review.md`. Next: the team's ruling on the §16 defaults, then the epics doc (`phase-1-epics.md`), the coding plan, implementation and the PRD §5 gate.
+Architecture v0.2, against PRD v0.10. Review findings and measurements are logged in `phase-1-review.md`. Next: the team's ruling on the §16 defaults, then the epics doc (`phase-1-epics.md`), the coding plan, implementation and the PRD §5 gate.

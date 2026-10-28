@@ -4,6 +4,22 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Team rulings — PRD v0.9 → v0.10, architecture v0.1 → v0.2
+
+**Date:** 2026-10-28
+**Answered:** OQ-14 and OQ-15, raised and ruled on by the team in one step.
+
+| Question | Ruling | What changed |
+|---|---|---|
+| OQ-14 Move count | The move count is a referee outside the game. It counts moves, stops the episode at `max_steps`, and tells the agents it was a tie. | PRD §2.4 step 7 and a referee paragraph; §2.8 `observe` receives the outcome instead of an ended flag; FR-4; NFR-7 tests the referee. Architecture §7.4 adds `Referee`; the environment no longer counts moves or returns `TIE`; `Environment.step` takes the move number; the agent interface passes the ruling (§10.1); the learned agent reads the ruling instead of inferring it (§10.5); the episode loop joins the three (§10.6); `test_referee.py`. |
+| OQ-15 Grid size | The grid is always 5x5, even in tests. | PRD non-goal. Architecture removes the grid configuration, writes the 5x5 numbers in directly (§4, §8, §10.4, §12), drops the CLI's size check, and has tests use hand-built 5x5 maps through `Environment.reset(seed, game_map=...)`. D-2 keeps the `5x5:` hash tag so the measured splits stand. |
+
+**Consequences checked.**
+- *No game plays differently.* The referee calls a tie at the same point the old step 7 did, after the ghost's move, and never overrides a win or loss on the last move. Checked by replaying 1,000 validation seeds per agent through a referee loop with the v0.1 trained table: identical records for all three agents, including the learned agent's 42 ties. No new training run was made; the v0.1 measurements stand.
+- *D-1 is still open.* The referee tells the agent that a tie happened. Whether the Q update then bootstraps or stops is still the team's call; the default stays `bootstrap`.
+
+---
+
 ## Architecture v0.1, and PRD v0.8 → v0.9
 
 **Date:** 2026-10-28
@@ -292,4 +308,5 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.6 | 2026-10-27 | OQ-13 answered; random maps must be winnable under the configured ghost rules and turn limit; verification, ghost randomness and bounded failure handed to architecture (`835ba30`). |
 | v0.7 | 2026-10-28 | OQ-13 revised: winnability is a map-generator rule (`max_walls`, `min_loops`), independent of Pac-Man and the ghost (`caf9415`). |
 | v0.8 | 2026-10-28 | Review round 3 fixes (R3-01 to R3-09): `ghost_move_prob` is not monotonic, bounded map generation, 0% alarm scoped, four items added to the architecture handoff (`dbc3077`). |
-| v0.9 | 2026-10-28 | §2.7 pathfinding figure at `ghost_move_prob` 1.0 corrected to 14% under the final split encoding (A1-02); §7 points to the architecture doc. Architecture v0.1 written. |
+| v0.9 | 2026-10-28 | §2.7 pathfinding figure at `ghost_move_prob` 1.0 corrected to 14% under the final split encoding (A1-02); §7 points to the architecture doc. Architecture v0.1 written (`63f3971`). |
+| v0.10 | 2026-10-28 | OQ-14 (referee owns the move count and calls the tie) and OQ-15 (grid fixed at 5x5) answered. Architecture v0.2. |
