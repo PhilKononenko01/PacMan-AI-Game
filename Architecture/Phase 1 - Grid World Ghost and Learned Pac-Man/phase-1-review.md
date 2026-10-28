@@ -36,7 +36,7 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ### Findings while writing
 
-**A1-01: The machine that ran the probe has no Python 3.11.** Its only Python is the macOS system 3.9.6, without NumPy, while ADR-1 requires 3.11+. *Fix:* architecture §2 says each team member installs 3.11+. The probe uses nothing newer than 3.9, so its numbers stand.
+**A1-01: The machine that ran the probe has no Python 3.11.** Its only Python is the macOS system 3.9.6, without NumPy, while ADR-1 requires 3.11+. *Fix:* architecture §2 says each team member installs 3.11+. The probe uses nothing newer than 3.9, so its numbers stand. *Resolved 2026-10-28:* Python 3.14.10 installed from python.org; the ADR-1 dependencies install on it, and the `derive` and seed-to-map golden values match those measured on 3.9.6.
 
 **A1-02: The PRD's `ghost_move_prob` figure at 1.0 changed with the final split encoding.** Round 3's probe used a provisional encoding and put the pathfinding agent at 12%; under the architecture §6.3 encoding it is 14.2%. The other three figures agree. *Fix:* PRD v0.9 changes the figure in §2.7 to 14% and cites architecture §15. Nothing else in the PRD changes.
 

@@ -23,7 +23,7 @@
 
 ## 2. Runtime and dependencies (ADR-1, NFR-5)
 
-- **Python 3.11 or later.** The team laptop that ran the probe has only the macOS system Python 3.9.6, so each team member installs 3.11+ before building. Nothing below uses a feature newer than 3.11.
+- **Python 3.11 or later.** The team laptop that ran the probe now has Python 3.14.10 from python.org, on which NumPy 2.5.4, Matplotlib 3.11.2 and pytest 9.2.0 install, and on which the §5.1 and §6.3 golden values hold. Each team member installs 3.11+ before building. Nothing below uses a feature newer than 3.11.
 - **NumPy** for the Q-table only. No NumPy randomness is used anywhere (§5).
 - **Matplotlib** for the learning-curve plot only. It is imported inside `pacman/plot.py` and nowhere else, with the `Agg` backend, so the game, the tests and the terminal views never load it.
 - **pytest** for tests.
