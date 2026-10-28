@@ -4,6 +4,23 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md`. The PRD s
 
 ---
 
+## Team ruling — PRD v0.6 → v0.7
+
+**Date:** 2026-10-28
+**Revised:** OQ-13. Winnability is scoped to the map generator. It has nothing to do with Pac-Man or the ghost, and the generator never simulates either.
+
+**Ruling:** a map is winnable if it has at most `max_walls` walls (default 6) and at least `min_loops` independent loops in its open cells (default 4), so it offers a choice of routes rather than one path around a central block. Both are game knobs. Other maps are rejected and redrawn.
+
+**Why the v0.6 rule was replaced.** Certifying a win against the ghost made the map sets depend on ghost knobs and `max_steps`, so tuning difficulty would also have changed which maps exist. It left "winnable" open (full or sensed map knowledge, every ghost sequence or likely ones), and it needed a deep search over the ghost's state for every candidate map, at a cost that counts against NFR-4. A structural rule has none of these problems.
+
+**Changes:** §2.3 states the wall cap and loop rule; §2.7 adds `max_walls` and `min_loops` as game knobs and notes that generator knobs change the maps; FR-2 and NFR-7 test the cap and the loop rule, including rejection of the ring around a 3x3 wall block; OQ-13 rewritten; the winnability item is removed from the §7 handoff list; status line updated.
+
+**Defaults checked (simulated, 20,000 draws at `wall_density` 0.20):** about 70% of all draws are connected and pass both rules, and accepted maps average about 3.4 walls, with the empty map about 1.3% of them. The loop floor is the rule that binds most: with at least 4 loops a map can still have up to 8 walls, so the cap of 6 removes the densest of them. The round 1 figure of 1.37 draws per accepted map becomes about 1.44 before the split check.
+
+**Not chosen:** requiring every corridor to have an alternative route (no bridges, so no dead ends) accepted only about 12% of all draws and averaged 2 walls per map, which leaves the maps nearly empty.
+
+---
+
 ## Team ruling — PRD v0.5 → v0.6
 
 **Date:** 2026-10-27
@@ -182,4 +199,5 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.3 | 2026-10-26 | OQ-1 to OQ-8 answered; partial wall knowledge, ties, corner reward, watch and simulation modes (`39df5a3`). |
 | v0.4 | 2026-10-27 | Review round 2 fixes (R2-04 to R2-11); OQ-10 to OQ-12 opened with proposals; architecture-doc handoff list in §7 (`80fcb4f`). |
 | v0.5 | 2026-10-27 | OQ-10 to OQ-12 answered; `ghost_move_prob`, no retrain in the quick check, evaluation sizes. |
-| v0.6 | 2026-10-27 | OQ-13 answered; random maps must be winnable under the configured ghost rules and turn limit; verification, ghost randomness and bounded failure handed to architecture. |
+| v0.6 | 2026-10-27 | OQ-13 answered; random maps must be winnable under the configured ghost rules and turn limit; verification, ghost randomness and bounded failure handed to architecture (`835ba30`). |
+| v0.7 | 2026-10-28 | OQ-13 revised: winnability is a map-generator rule (`max_walls`, `min_loops`), independent of Pac-Man and the ghost. |
