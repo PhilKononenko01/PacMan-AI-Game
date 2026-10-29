@@ -4,6 +4,21 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #15 — Training, validation checkpoints and learning-curve outputs
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §11, §12, §14.1. Branch `feature/15-train`, stacked on `feature/14-evaluate`.
+
+**Implemented:** `train.py` with `CURVE_EVERY = 2_500`, `CURVE_GAMES = 200`, `epsilon_for(episode, settings)` (the §11.1 linear schedule), `train(config, on_progress=None) -> TrainingResult(policy, curve, validation)`, `prepare_output_dir` and `write_outputs`. Episode `k` plays training seed `k` with its epsilon set first. A second `LearnedAgent` in evaluation mode shares the learner's table and plays every curve checkpoint and the final validation greedily, so the table is never written by an evaluation game and there is no training mode to restore, the arrangement §11.1 explicitly allows. The curve point is `(episodes completed, win rate)`; `FULL_GAMES` is read from `evaluate` at call time so tests can lower it. The policy carries the final table, the configuration, `(0, episodes - 1)`, the curve and the final validation summary over the seeds actually played. `write_outputs` refuses a directory that already holds `policy.npz` before writing anything, then writes `policy.npz`, `curve.csv` (`episodes,win_rate`), `curve.png` and `config.json`. `plot.py` is the only Matplotlib importer, selects Agg before `pyplot`, closes its figure, and is imported lazily by `write_outputs` so `import pacman.train` loads no Matplotlib.
+
+**R-08 (reviewer finding, fixed on `feature/14-evaluate`, commit `04585ff`):** `run_split` took the agent as given, so a learned agent left in training mode would have learned from the seeds it was evaluating, on the test split silently. It now raises `ValueError` for an agent whose `training` is true; one test on the test split proves nothing is learned and that the same agent runs once `training` is off.
+
+**Tests:** `test_train.py` (18): the constants; epsilon at the start, midway, the decay end and after it, and under other settings; episode `k` on seed `k` with its epsilon, in training mode; checkpoints at the right episodes on validation seeds, greedy, table unchanged; training continuing after a checkpoint and the last table saved; a checkpoint evaluation that raises propagates while the learner stays in training mode and still learns; the final validation stored with its seed range; the progress callback; an empty curve for a run shorter than a checkpoint; repeatability; the four outputs with exact `curve.csv` text and a loadable policy; refusal of an existing `policy.npz`; directory creation. `test_plot.py` (3): a PNG for a curve and for an empty curve; a subprocess check that `train`, `evaluate` and `policy_io` load no Matplotlib and `plot` selects Agg.
+
+**Timing:** the suite is 443 tests in about 17 s here (the reviewer measures about 23 s on its run). Matplotlib's first import in a fresh environment builds a font cache once, which took 44 s; it does not recur.
+
+---
+
 ## Issue #14 — Paired evaluation, simulation summaries and the difficulty check
 
 **Date:** 2026-10-29
