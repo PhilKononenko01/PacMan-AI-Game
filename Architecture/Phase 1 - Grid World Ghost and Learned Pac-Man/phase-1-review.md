@@ -4,6 +4,21 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #4 — Foundation implementation and confirmed decisions
+
+**Date:** 2026-10-28
+**Documents:** PRD v0.11, architecture v0.3 and `phase-1-foundation-handoff.md`.
+
+**Confirmed by Phillip:** keep bootstrap as the default tie update; reset per-game transition caches without deleting learned Q values; deliver an explicit final outcome and stop action requests. Earlier answers establish that exact cross-machine identity is unnecessary and failed final test targets are documented without test-driven retuning. D-2 through D-7 retain the architecture's existing implementation defaults; no separate approval by Christian is claimed.
+
+**Implemented:** editable Python package metadata, frozen/validated configuration and JSON round trips, component-local RNG helpers and golden value, shared enums and immutable snapshot types, and the Agent protocol. Gameplay entry points are explicit stubs assigned to their later tickets. `runs/` and local development artifacts are ignored. README setup instructions and the handoff document identify the module boundaries.
+
+**Validation:** foundation tests on Python 3.11.14 with NumPy 2.4.6, Matplotlib 3.11.2 and pytest 9.2.0; editable installation and dependency checks pass. Tests cover input failures, JSON round trips, immutable snapshot isolation, RNG golden value/independence, and subprocess repeatability with different hash seeds. Full-game and training performance are still unverified; the earlier probe timings are marked preliminary.
+
+**Scope:** win conditions, start cells, collision precedence, rewards, default structural map filters and ghost behavior are unchanged. No 2x2 wall-placement rule is introduced. No final test-split games were played.
+
+---
+
 ## Team rulings — PRD v0.9 → v0.10, architecture v0.1 → v0.2
 
 **Date:** 2026-10-28
@@ -310,3 +325,4 @@ OQ-1 through OQ-8 (PRD §6) awaited the team at the end of this round. They were
 | v0.8 | 2026-10-28 | Review round 3 fixes (R3-01 to R3-09): `ghost_move_prob` is not monotonic, bounded map generation, 0% alarm scoped, four items added to the architecture handoff (`dbc3077`). |
 | v0.9 | 2026-10-28 | §2.7 pathfinding figure at `ghost_move_prob` 1.0 corrected to 14% under the final split encoding (A1-02); §7 points to the architecture doc. Architecture v0.1 written (`63f3971`). |
 | v0.10 | 2026-10-28 | OQ-14 (referee owns the move count and calls the tie) and OQ-15 (grid fixed at 5x5) answered. Architecture v0.2. |
+| v0.11 | 2026-10-28 | Issue #4 foundation; confirmed bootstrap default, per-game cache reset and explicit end signals; relaxed cross-machine identity and final-test stopping rule recorded. Architecture v0.3 and foundation handoff. |

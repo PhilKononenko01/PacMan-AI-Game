@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pacman-ai-game"
+version = "0.1.0"
+description = "A fixed-grid Pac-Man reinforcement-learning course project"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["numpy", "matplotlib"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["pacman*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

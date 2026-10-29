@@ -2,7 +2,7 @@
 
 A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
 
-> **Status: design phase.** The requirements are written and agreed; no code exists yet. Everything below describes what is being built.
+> **Status: foundation implemented.** Issue #4 provides package setup, validated configuration, RNG helpers and shared interfaces. Gameplay, agents and commands are planned in the remaining tickets; the game is not playable yet.
 
 ## The game
 
@@ -46,7 +46,20 @@ Every agent plays the same 1,000 test maps, which are never seen during training
 
 ## Tech
 
-Python 3.11+, NumPy and pytest, with Matplotlib for plots. Every run is deterministic: the same seed gives the same map and the same game on any machine.
+Python 3.11+, NumPy and pytest, with Matplotlib for plots. Runs use explicit component seeds and recorded configuration for replay within a supported runtime. Exact results across machines or library versions are not required.
+
+## Development setup
+
+```sh
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+python -m pytest
+```
+
+Any Python 3.11+ interpreter can create the virtual environment. The foundation tests cover configuration validation, RNG repeatability and shared snapshot contracts. Gameplay and CLI tests arrive with their implementation tickets.
+
+See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-foundation-handoff.md>) for module ownership and interfaces, and the [implementation tracker](https://github.com/PhilKononenko01/PacMan-AI-Game/issues/19) for dependencies. Claim a ticket before editing its files.
 
 ## Repository layout
 
@@ -55,6 +68,8 @@ Python 3.11+, NumPy and pytest, with Matplotlib for plots. Every run is determin
 | [`Design/project-proposal.md`](Design/project-proposal.md) | The team's original proposal, the design authority. |
 | [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-grid-world-prd.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-grid-world-prd.md>) | Phase 1 requirements (PRD): rules, agents, evaluation and acceptance criteria. |
 | [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md>) | Review findings and team decisions behind the PRD. |
+| [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-architecture.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-architecture.md>) | Module contracts, algorithms, configuration and commands. |
+| `pacman/`, `tests/`, `pyproject.toml` | Foundation implementation, tests and package metadata. |
 | [`AGENTS.md`](AGENTS.md) | Git rules for AI coding agents working in this repo. |
 
 ## Team
@@ -66,6 +81,6 @@ Python 3.11+, NumPy and pytest, with Matplotlib for plots. Every run is determin
 
 1. ~~Project proposal~~
 2. ~~Phase 1 requirements (PRD), reviewed and all questions answered~~
-3. Architecture doc
-4. Build: environment, ghost, baselines, learned agent, evaluation
+3. ~~Architecture doc and implementation tickets~~
+4. Build: foundation implemented; environment, ghost, baselines, learned agent and evaluation next
 5. Tune difficulty, run the final evaluation, write the report

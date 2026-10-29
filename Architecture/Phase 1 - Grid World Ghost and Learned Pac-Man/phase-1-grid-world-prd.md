@@ -1,8 +1,8 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.10**. Every open question (OQ-1 to OQ-13) is answered, and the answers are written into the sections they name. Nothing is owed from the team before the architecture doc.
+**Status:** DRAFT **v0.11**. OQ-1 to OQ-15 are answered. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `phase-1-foundation-handoff.md`.
 **Date:** 2026-10-28
-**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `63f3971`, which holds `README.md`, `AGENTS.md`, `Design/project-proposal.md`, v0.9 of this PRD, `phase-1-architecture.md` v0.1 and `phase-1-review.md`. No code exists yet, so every statement below about behaviour is about what will be built, not about what the project does.
+**Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10 and architecture v0.2 before issue #4. The foundation handoff identifies implemented configuration, RNG and type contracts; gameplay and evaluation behavior below remains a requirement for subsequent tickets.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
 **Form.** This document states what is decided and what is to be built. Review findings, provenance and version history go in `phase-1-review.md`. The question state lives in §6 and nowhere else.
 
@@ -11,7 +11,7 @@
 ## Capabilities Delivered
 
 **Live on ship:**
-- A deterministic 5x5 grid game: random walls, one Pac-Man, one ghost, a four-corner objective, and win, loss and tie outcomes. Same seed and agent, same game, on any machine.
+- A repeatable 5x5 grid game: random walls, one Pac-Man, one ghost, a four-corner objective, and win, loss and tie outcomes. Record the seed, configuration, agent/policy and supported runtime for replay.
 - A Pac-Man who always knows where the ghost is but discovers walls only as he moves next to them (P2, OQ-2).
 - A ghost that chases with shortest-path search when it can see Pac-Man and searches when it cannot (P3).
 - Three Pac-Man agents behind one interface: a random agent, a pathfinding baseline, and a reinforcement-learning agent trained on generated maps (P3).
@@ -208,7 +208,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 
 | ID | Requirement |
 |---|---|
-| NFR-1 | The same seed, configuration and learner settings produce identical maps, ghost moves, training results and evaluation numbers on any machine (ADR-3). |
+| NFR-1 | The same seed, configuration, learner settings and agent/policy produce repeatable results within the recorded supported runtime (ADR-3). Record Python and dependency versions with reported runs. Exact equality across machines or library versions is not required. |
 | NFR-2 | No game knob or learner setting is written outside the configuration object (§2.7). |
 | NFR-3 | The full test suite runs headless in under 30 seconds. A slower test is a bug. |
 | NFR-4 | A full training run at the default episode count (§2.8), including its learning-curve checks, finishes in under 10 minutes on a team member's laptop. The architecture doc measures this before the episode count is fixed. |
@@ -222,6 +222,8 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 2. **Difficulty is roughly balanced (guideline).** On the test maps, with knobs frozen beforehand, the learned agent's win rate is reported with its 95% interval and compared with the 50% to 90% target from P4. The band is a rough guideline, not a pass/fail line: a result near or just outside it is discussed in the report, not treated as a failure.
 3. **Learning beats both baselines.** The learned agent's win rate is higher than the random agent's and the pathfinding agent's, each with a one-sided McNemar p-value below 0.05 (FR-11, P4). Both tests must pass, so no correction for running two tests is needed.
 4. **The team signs off** the final knob values and the report tables. Difficulty is a judgement, and the numbers above are its evidence, not a replacement for it.
+
+Freeze the policy and all settings before the final held-out evaluation. If a target is missed, document the outcome and limitations without further tuning against those test results.
 
 **Results to distrust.** A win rate of exactly 0% for the pathfinding or learned agent, a win rate of exactly 100% for any agent, identical rates for two different agents, or a test rate well above the validation rate each point to a broken measurement before they point to a result. The random agent winning about 0% is expected (simulated: 0 of 1,000 validation games at the defaults). Check for a map appearing in two splits, a ghost that never moves, ties counted as wins, an observation that leaks the true map, or an agent evaluated on its training maps.
 
@@ -247,7 +249,7 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on
 
 ## 7. SDLC state
 
-PRD v0.10. Review rounds 1 to 3 and the team's answers to §6 are logged in `phase-1-review.md`. The architecture doc (`phase-1-architecture.md`) v0.1 is written and settles each item below (its §1 maps them). Next: the team's ruling on its stated defaults, then epics, the coding plan, implementation and the §5 gate.
+PRD v0.11. Review rounds 1 to 3 and subsequent decisions are logged in `phase-1-review.md`. Architecture v0.3 and the issue #4 foundation handoff define the shared contracts. The GitHub implementation tracker (#19) records the remaining module owners and dependencies. Next: review and merge the foundation, implement the remaining tickets, then run the §5 gate.
 
 The architecture doc settles these, which this PRD leaves to it:
 
@@ -256,6 +258,6 @@ The architecture doc settles these, which this PRD leaves to it:
 - Which training seeds the training episodes use (§2.7, §2.8).
 - The saved-policy file format: table, configuration, seed range, and the last validation results that the difficulty check shows (FR-9, FR-14, FR-15).
 - The draw limit after which map generation fails (§2.3).
-- Whether the Q-learning update on a tie step treats it as terminal or bootstraps from the next state. The referee tells the agent it was a tie, but the state has no step count, so the limit is invisible in the state itself. Stated as a default for team veto.
+- The Q-learning update on a tie step supports both terminal and bootstrap modes. Phillip confirmed bootstrap as the default during issue #4. The referee still explicitly ends the episode and tells the agent the outcome.
 - A measured sweep of each game knob's effect on both baselines' validation win rates, including the floor of `ghost_move_prob` (§2.7), so tuning starts from known directions.
 - The command-line entry points for training, evaluation, the difficulty check, watch mode and simulation mode.
