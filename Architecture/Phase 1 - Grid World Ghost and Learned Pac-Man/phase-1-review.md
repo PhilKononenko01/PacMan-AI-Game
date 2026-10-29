@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #13 — Wilson intervals and paired exact McNemar statistics
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §13.2. Branch `feature/13-stats`, stacked on `feature/16-render`. Claimed by Christian as the shared ticket the tracker pairs with #4.
+
+**Implemented:** `stats.py` with `Z_95 = 1.959963984540054`, `wilson(k, n, z=Z_95)`, `mcnemar_one_sided(b, c)`, `discordant_pairs(learned_won, baseline_won)` and `mean_steps(steps)`. Pure functions on counts; the module imports nothing from the game. `wilson` returns exact `0.0` and `1.0` bounds for `0/n` and `n/n` and clamps to the unit interval otherwise; `n = 0`, `k > n`, negatives, floats and booleans raise `ValueError`. `mcnemar_one_sided` sums binomial coefficients exactly with `fractions.Fraction` and converts to float once; `p = 1.0` when `b + c = 0`. `discordant_pairs` takes per-seed win flags for the two agents and requires the same seed set, so #14 only reduces records to win or not-win. `mean_steps` returns `None` where the report prints `n/a`.
+
+**Measured:** the §13.3 example intervals reproduce at 0.1% precision (0/1000 → [0.0, 0.4]; 142/1000 → [12.2, 16.5]; 858/1000 → [83.5, 87.8]; 1000/1000 → [99.6, 100.0]).
+
+**Tests:** `test_stats.py` (36): the report's intervals, a textbook 5/10 value, exact end bounds, symmetry, coverage of the observed rate over every `k` for several `n`, a custom `z`, rejected counts; McNemar hand-computed values in both directions, exactness against `Fraction`, 1000 discordant pairs without overflow, rejected counts; discordant-pair counting and seed-set mismatch; mean steps; a subprocess check that `stats` loads no other game module.
+
+---
+
 ## Review of the environment lane (#5 to #9, #16)
 
 **Date:** 2026-10-29
