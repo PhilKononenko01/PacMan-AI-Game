@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #7 — Ghost vision, chase, pursuit and search
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §8. Branch `feature/7-ghost`, stacked on `feature/6-map-generation`.
+
+**Implemented:** `ghost.py` with `Ghost(rng, move_prob=1.0, start=GHOST_START)` holding the §8.1 fields (`cell`, `last_seen`, `last_visit`, `rng`) and `act(pacman, game_map, t)` running §8.2 in order: vision on the true map, the move draw every step, chase or pursue through `first_step`, else the least-recently-visited search with `pick` over tied candidates in direction order, then clearing `last_seen` on arrival and stamping `last_visit[cell] = t`. The ghost takes its generator and `ghost_move_prob` at construction, since `act` carries neither; the environment (#8) builds it with `derive(seed, "ghost")` and `config.game.ghost_move_prob`.
+
+**Tests:** `test_ghost.py` (23) with hand-built maps and scripted draws: start state; chase, blocked and non-aligned vision; pursue with direction-order ties and routing round walls; clearing on arrival, including arrival on Pac-Man's cell; the chase, pursue, search chain; search's never-visited and least-recent rules, single-draw ties at the `pick` boundaries, never standing still, skipping walls; a failed move draw refreshing vision without a visit stamp; the strict `<` on the move draw; a draw taken every step at 1.0 and at 0.0; same seed, same path.
+
+**Note for #8:** `first_step` is only defined for `source != target`, so the environment must end the episode on a collision before calling `act` again; a test that stepped past a collision hit that assertion.
+
+---
+
 ## Issue #6 — Map generation, structural filters and splits
 
 **Date:** 2026-10-29
