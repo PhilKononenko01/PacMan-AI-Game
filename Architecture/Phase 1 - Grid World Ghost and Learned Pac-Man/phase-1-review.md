@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #12 — Versioned policy save/load and replay metadata
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §12. Branch `feature/12-policy-io`, stacked on `feature/13-stats`.
+
+**Implemented:** `policy_io.py` with `FORMAT_VERSION = 1`, `TABLE_SHAPE = (122_880, 4)`, the frozen dataclasses `ValidationSummary(seeds, games, wins, losses, ties, mean_steps_to_win)` and `Policy(q, config, training_seeds, learning_curve, validation)`, and `save_policy(path, policy)` / `load_policy(path)`. The file is exactly §12: a `float64` `q` and a `uint8` `meta` holding UTF-8 JSON with the five documented keys, written with `numpy.savez` into an opened file so the path is used as given, read with `allow_pickle=False`. Both dataclasses validate on construction: table shape and dtype, seed ranges in order, counts summing to `games`, and `mean_steps_to_win` null exactly when there are no wins.
+
+**Persistence interface for #11, #14, #15 and #17:** build a `Policy` from the final table, the `Config` used, `(0, episodes - 1)`, the curve as `(episodes, win_rate)` pairs and a `ValidationSummary` of the final 1,000-seed greedy run, then `save_policy`. `load_policy` returns the same `Policy`; `policy.config` is a full `Config`, so `evaluate` and `check` compare knobs with `policy.config.game`. `TABLE_SHAPE` is the one definition of the table's shape; `features.py` (#10) should assert its state count against it.
+
+**Tests:** `test_policy_io.py` (29): round trip of table, config and metadata; the file holds exactly the two arrays with the documented dtypes and JSON; null mean for zero wins; empty curve; a pickled array is refused (proving `allow_pickle=False`); unknown version, wrong shape or dtype, each missing top-level and validation key, a missing `meta` array, invalid or unknown configuration keys, and malformed JSON all raise `ValueError` naming the problem; inconsistent metadata is refused at construction; non-finite values cannot be saved; `policy_io` loads only `config` from the package.
+
+---
+
 ## Issue #13 — Wilson intervals and paired exact McNemar statistics
 
 **Date:** 2026-10-29
