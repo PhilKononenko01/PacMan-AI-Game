@@ -4,6 +4,29 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Review of the environment lane (#5 to #9, #16)
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §4.1, §6, §7, §8, §9. Branch `feature/16-render`.
+
+**Reviewed:** every module of the lane against the PRD and architecture tables, plus a profile of the real episode loop (about 0.5 ms per random-agent episode; the ghost's per-step BFS is the only measurable cost). No behaviour of an accepted map, a played game or a golden value changed; the fixes below make caller errors fail loudly instead of silently.
+
+**R-01 (fixed):** `grid.move` indexed the delta table directly, so an action of `-1` wrapped to `LEFT` while `4` raised `IndexError`. Any value that is not a `Direction` now raises `ValueError`.
+
+**R-02 (fixed):** `GameMap` accepted walls on corners or off the grid, so a hand-built test map could break the generator's guarantees without warning. Both now raise `ValueError`; `GameMap.is_open` is the one passable predicate for the true map and replaces four inline copies.
+
+**R-03 (fixed):** `generate(seed, split, ...)` trusted the split it was given. It now raises `ValueError` unless `split` is `split_of_seed(seed)` (§4.2); every existing caller already passed the seed's own split.
+
+**R-04 (fixed):** `is_winnable` and `loop_count` are only correct for connected maps. `is_winnable` now raises `ValueError` on a disconnected map; `generate` keeps a single connectivity check per candidate.
+
+**R-05 (fixed):** `first_step` with `source == target`, and a ghost with no open neighbour, each raise a `ValueError` naming the precondition instead of an `AssertionError` or a bare `min()` error.
+
+**Hygiene:** `Environment` declares its episode fields in `__init__`; `play_episode` and `_frame` are typed; the renderer's memory lookup table is a module constant; two tests use `ast.literal_eval` rather than `eval` on subprocess output; one tautological assertion in `test_ghost.py` removed.
+
+**Tests:** 13 added across `test_grid.py` and `test_mapgen.py` for R-01 to R-04; 267 pass in about 3.4 s.
+
+---
+
 ## Issue #16 — Terminal pixel-art and plain-text rendering
 
 **Date:** 2026-10-29
