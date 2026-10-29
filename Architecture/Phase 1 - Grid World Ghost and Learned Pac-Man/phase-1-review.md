@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #10 — Baseline agents and the shared state feature encoder
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §10.2 to §10.4, PRD ADR-2 and §2.8. Branch `feature/10-baselines-features`, stacked on `feature/12-policy-io`.
+
+**Implemented:** `agents/random_agent.py` (`RandomAgent`: `Direction(pick(rng, 4))`, one draw per step); `agents/pathfinding.py` (`CORNER_ORDER`, `remembered_open(observation)` as Pac-Man's passable predicate, `plan(observation) -> Plan(target, step, distances, remaining)` and `PathfindingAgent`, which replans from the latest memory every step and never reads the ghost); `agents/features.py` (`Features` with the six ADR-2 fields and an `index` property, `features(observation)`, `state_index(observation)`, `STATES = 122_880`). `features` raises on a capture or when no corner remains, so terminal observations are never encoded. `agents/__init__.py` is untouched for #17.
+
+**Measured on the 1,000 validation seeds at the defaults:** random 0 wins, 1,000 losses; pathfinding 142 wins (14.2% [12.2, 16.5]), 858 losses, 0 ties, 13.6 mean steps per win. These are exactly the §13.3 figures from the exploratory probe, so the generator, ghost, environment, loop and baselines reproduce it end to end. Both runs took 4.2 s together (the architecture budgeted about 6 s).
+
+**Tests:** `test_baselines.py` (16): protocol conformance; the random agent's draws match `pick` on its stream, one per step, all four actions used; nearest-corner choice, fixed corner order, direction-order path ties, routing round remembered walls with unknown as open, replanning after a sensed wall, the ghost ignored, deterministic whole games, and the still-ghost loss on the nearest corner. `test_features.py` (26): the start observation's features and index by hand (44,156), the extreme features filling the table exactly, `step` from the plan, `open_mask` from known-open in-grid neighbours only, every offset 0 to 79 used exactly once with the centre skipped, distance buckets on the remembered map, sight on the remembered map, remaining corners, captures and finished games refused, immutability, and every observation of 30 random games indexing inside the table.
+
+---
+
 ## Issue #12 — Versioned policy save/load and replay metadata
 
 **Date:** 2026-10-29
