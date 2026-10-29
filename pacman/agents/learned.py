@@ -29,17 +29,20 @@ class LearnedAgent:
         self.training = training
         self.epsilon = 0.0  # the training loop sets it before each episode (§11.1)
         self.rng: random.Random | None = None
-        self._state: int | None = None      # index of the observation the next act sees
+        self._state: int | None = None      # state of the pending transition, set by act
         self._action: Direction | None = None
+        self._next_state: int | None = None  # cache for the next act; only a training observe fills it
 
     def reset(self, rng: random.Random) -> None:
         """New game: fresh generator and empty transition cache; the table is kept."""
         self.rng = rng
         self._state = None
         self._action = None
+        self._next_state = None
 
     def act(self, observation: Observation) -> Direction:
-        state = self._state if self._state is not None else state_index(observation)
+        state = self._next_state if self._next_state is not None else state_index(observation)
+        self._next_state = None
         if self.training and self.rng.random() < self.epsilon:
             action = Direction(pick(self.rng, 4))
         else:
@@ -61,5 +64,6 @@ class LearnedAgent:
         else:
             target = reward  # WIN, LOSS or a terminal TIE: the final observation is never encoded
         self.q[state, action] += settings.learning_rate * (target - self.q[state, action])
-        self._state = next_state if outcome is None else None
+        self._next_state = next_state if outcome is None else None
+        self._state = None
         self._action = None

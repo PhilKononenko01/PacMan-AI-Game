@@ -180,9 +180,10 @@ def test_no_transition_survives_a_final_outcome(monkeypatch, outcome, observatio
     agent.act(START)
     agent.observe(-0.05, observation, outcome)
     before = agent.q.copy()
+    encoded = len(calls)
     agent.reset(Scripted(0.9))
     agent.act(NEXT)
-    assert calls[-1] is NEXT                     # recomputed, not taken from a stale cache
+    assert len(calls) == encoded + 1 and calls[-1] is NEXT   # recomputed, not taken from a stale cache
     assert numpy.array_equal(agent.q, before)    # the table survives the reset
     with pytest.raises(RuntimeError):
         LearnedAgent(SETTINGS, training=True).observe(-0.05, NEXT, None)
@@ -235,3 +236,29 @@ def test_evaluation_draws_nothing_from_the_episode_stream():
     agent.reset(rng)
     agent.act(START)
     assert rng.getstate() == before
+
+
+def test_evaluation_acts_from_each_new_observation_not_a_stale_cache():
+    agent = LearnedAgent(SETTINGS)                 # evaluation mode: observe never fills the cache
+    agent.reset(Scripted())
+    agent.q[state_index(START)] = [0.0, 9.0, 0.0, 0.0]
+    agent.q[state_index(NEXT)] = [0.0, 0.0, 9.0, 0.0]
+    assert agent.act(START) == RIGHT
+    agent.observe(-0.05, NEXT, None)
+    assert agent.act(NEXT) == DOWN
+
+
+def test_an_evaluation_game_visits_more_than_one_state():
+    class Spy(LearnedAgent):
+        states = []
+
+        def act(self, observation):
+            action = super().act(observation)
+            self.states.append(self._state)
+            return action
+
+    config = Config()
+    agent = Spy(config.learner)
+    agent.q[:] = numpy.linspace(0.0, 1.0, agent.q.size).reshape(agent.q.shape)
+    play_episode(Environment(config), Referee(config.game.max_steps), agent, 1_000_000)
+    assert len(set(agent.states)) > 1
