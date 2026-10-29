@@ -155,3 +155,15 @@ def test_move_rejects_an_action_outside_the_four_directions(action):
 def test_first_step_with_source_equal_to_target_is_an_error():
     with pytest.raises(ValueError, match="target"):
         first_step((1, 1), (1, 1), lambda cell: True)
+
+
+def test_the_neighbour_table_covers_every_cell_in_direction_order():
+    from pacman.grid import NEIGHBOURS, in_grid
+
+    assert len(NEIGHBOURS) == 25
+    for (row, col), cells in NEIGHBOURS.items():
+        expected = tuple(
+            cell for cell in ((row - 1, col), (row, col + 1), (row + 1, col), (row, col - 1))
+            if in_grid(cell)
+        )
+        assert cells == expected

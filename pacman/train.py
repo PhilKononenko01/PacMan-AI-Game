@@ -82,10 +82,10 @@ def prepare_output_dir(out_dir: str | Path) -> Path:
 
 def write_outputs(out_dir: str | Path, result: TrainingResult) -> Path:
     """Write policy.npz, curve.csv, curve.png and config.json (§11.2)."""
+    out = prepare_output_dir(out_dir)
+    save_policy(out / "policy.npz", result.policy)  # first: the run must survive a plotting failure
     from pacman.plot import save_curve  # Matplotlib is loaded only when a curve is drawn
 
-    out = prepare_output_dir(out_dir)
-    save_policy(out / "policy.npz", result.policy)
     (out / "curve.csv").write_text(
         "episodes,win_rate\n" + "".join(f"{episodes},{rate}\n" for episodes, rate in result.curve)
     )

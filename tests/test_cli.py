@@ -233,3 +233,15 @@ def test_watch_replays_an_evaluated_game_from_the_json(run, trained):
     last = output.strip().split("\n\n")[-1]
     assert f"Outcome: {record.outcome.value}" in last
     assert f"Move {record.steps}/20" in last
+
+
+def test_ctrl_c_ends_a_command_quietly_with_exit_130(run, monkeypatch):
+    from pacman import cli as cli_module
+
+    def interrupted(environment, referee, agent, seed, on_frame=None):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(cli_module, "play_episode", interrupted)
+    code, output, err = run("watch", "--agent", "random", "--seed", 0, "--delay", 0)
+    assert code == 130
+    assert "Traceback" not in err and "error:" not in err

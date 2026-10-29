@@ -192,3 +192,23 @@ def test_prepare_output_dir_creates_missing_directories(tmp_path):
     assert prepare_output_dir(out) == out
     assert out.is_dir()
     assert prepare_output_dir(out) == out   # empty existing directory is fine
+
+
+def test_the_policy_is_saved_before_the_curve_is_drawn(small_sizes, tmp_path, monkeypatch):
+    """A broken plotting stack must not lose a finished training run."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def no_matplotlib(name, *args, **kwargs):
+        if name == "pacman.plot" or name.startswith("matplotlib"):
+            raise ImportError("no matplotlib")
+        return real_import(name, *args, **kwargs)
+
+    result = train(SHORT)
+    out = tmp_path / "run"
+    monkeypatch.setattr(builtins, "__import__", no_matplotlib)
+    with pytest.raises(ImportError):
+        write_outputs(out, result)
+    monkeypatch.setattr(builtins, "__import__", real_import)
+    assert numpy.array_equal(load_policy(out / "policy.npz").q, result.policy.q)

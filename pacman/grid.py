@@ -26,11 +26,22 @@ def in_grid(cell: Cell) -> bool:
     return 0 <= row < ROWS and 0 <= col < COLS
 
 
-def neighbours(cell: Cell) -> tuple[Cell, ...]:
-    """The in-grid neighbours of a cell, in direction order."""
+def _neighbours(cell: Cell) -> tuple[Cell, ...]:
     row, col = cell
     candidates = ((row + d_row, col + d_col) for d_row, d_col in DELTAS)
     return tuple(candidate for candidate in candidates if in_grid(candidate))
+
+
+# The grid never changes, so the neighbour lists are computed once; BFS is the
+# hot path of training and calls this millions of times.
+NEIGHBOURS: dict[Cell, tuple[Cell, ...]] = {
+    (row, col): _neighbours((row, col)) for row in range(ROWS) for col in range(COLS)
+}
+
+
+def neighbours(cell: Cell) -> tuple[Cell, ...]:
+    """The in-grid neighbours of a cell, in direction order."""
+    return NEIGHBOURS[cell]
 
 
 def move(cell: Cell, direction: Direction, passable: Passable) -> Cell:

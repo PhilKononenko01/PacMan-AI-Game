@@ -129,6 +129,7 @@ def parse_args(argv=None) -> argparse.Namespace:
 def _train(args: argparse.Namespace) -> None:
     config = load_config(args.config, args.set)
     out = training.prepare_output_dir(args.out)  # refuse an existing run before training
+    import pacman.plot  # noqa: F401  a missing Matplotlib fails here, not after the run
 
     def progress(episodes: int, win_rate: float) -> None:
         print(
@@ -218,6 +219,9 @@ def main(argv=None) -> int:
     args = parse_args(argv)
     try:
         COMMANDS[args.command](args)
+    except KeyboardInterrupt:  # Ctrl-C in watch or train: no traceback, the usual exit code
+        print(file=sys.stderr)
+        return 130
     except Exception as error:  # the command boundary: every failure is a message and exit 1
         if os.environ.get("PACMAN_DEBUG"):
             raise
