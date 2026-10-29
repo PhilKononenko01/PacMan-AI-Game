@@ -310,7 +310,7 @@ No other draw is taken from the ghost's generator.
 All take a `passable(cell) -> bool` predicate, so the ghost (true map) and Pac-Man's side (memory, unknown counts as open) share one implementation.
 
 - `neighbours(cell)`: the in-grid neighbours in direction order.
-- `move(cell, direction, map)`: the neighbour, or `cell` itself if it is off the grid or a wall (FR-1).
+- `move(cell, direction, passable)`: the neighbour, or `cell` itself if it is off the grid or not passable (FR-1).
 - `bfs(source, passable)`: distances from `source` to every reachable cell.
 - `first_step(source, target, passable) -> Direction`: with `d = bfs(target, passable)`, the first direction in `UP, RIGHT, DOWN, LEFT` whose neighbour `n` is passable and has `d[n] == d[source] - 1`. This is the PRD's "first step of a shortest path" with ties broken by direction order. It is only called with `source != target`.
 - `line_of_sight(a, b, passable)`: true when `a` and `b` share a row or a column and every cell strictly between them is passable. Adjacent cells have nothing between them, so they always see each other.

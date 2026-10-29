@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #5 — Grid primitives; environment lane claimed
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §9.
+
+**Lane claim:** Christian takes the environment lane of tracker #19 (#5 grid, #6 maps, #7 ghost, #8 environment, #9 referee and episode loop, #16 rendering), starting with #5 on branch `feature/5-grid-primitives`. The learning lane (#10 to #15) and the shared tickets (#13, #17, #18) are open for Phillip.
+
+**A5-01 (minor, fixed):** §9 opened with "all take a `passable` predicate" but listed `move(cell, direction, map)`. Issue #5 and the shared-predicate rule want `move(cell, direction, passable)`, so the signature is now the predicate; #8 passes the ghost's predicate `cell not in map.walls` where §7.2 writes `move(pacman, action, map)`.
+
+**Implemented:** `neighbours`, `move`, `bfs`, `first_step` and `line_of_sight` in `grid.py`, tested in `test_grid.py` (39 tests: off-grid and wall moves, Manhattan and routed BFS distances, unreachable cells omitted, direction-order ties for `first_step`, sight in every direction clear and blocked, adjacent and non-aligned cases, and a subprocess check that `grid` imports no other game module). `first_step` raises `ValueError` when no path exists rather than relying on the §9 no-path argument.
+
+---
+
 ## Issue #4 — Foundation implementation and confirmed decisions
 
 **Date:** 2026-10-28
