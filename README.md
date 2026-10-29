@@ -2,7 +2,7 @@
 
 A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
 
-> **Status: foundation implemented.** Issue #4 provides package setup, validated configuration, RNG helpers and shared interfaces. Gameplay, agents and commands are planned in the remaining tickets; the game is not playable yet.
+> **Status: Phase 1 implemented.** The game, the ghost, all three agents, training, evaluation and the five commands are built and tested (issues #4 to #17). Issue #18 records the final acceptance run; see [`reports/phase-1-results.md`](reports/phase-1-results.md).
 
 ## The game
 
@@ -39,10 +39,26 @@ Every agent plays the same 1,000 test maps, which are never seen during training
 - The learned agent wins roughly **50% to 90%** of games. This is a rough guide to whether the game is balanced, not a hard pass/fail line.
 - The learned agent beats **both** baselines, each with p < 0.05.
 
-## Planned modes
+## Commands
 
-- **Watch mode:** plays one game and animates it as pixel art in the terminal, step by step. Any evaluated game can be replayed.
-- **Simulation mode:** plays many games with no graphics and prints a summary of wins, losses and ties at the end. Used for training and evaluation.
+Everything runs as `python -m pacman <command>`. Every command takes `--config FILE` (a JSON file in the shape `config.json` below) and repeatable `--set name=value` overrides of one game knob or learner setting by its bare name, for example `--set max_steps=80`.
+
+| Command | What it does |
+|---|---|
+| `train --out DIR` | Trains the learned agent on the training maps, prints a learning-curve point every 2,500 episodes, and writes `policy.npz`, `curve.csv`, `curve.png` and `config.json` into `DIR`. Refuses a `DIR` that already holds a policy. |
+| `evaluate --split val\|test --policy FILE` | Plays all three agents on every seed of the split under the policy's configuration, prints the table with 95% intervals and the two McNemar tests, and writes `eval-<split>.json` beside the policy so any game can be replayed. |
+| `check [--policy FILE]` | Plays the two baselines on the validation maps under the given knobs, and with a policy shows its stored validation result and marks any knob that differs. Never trains. |
+| `simulate --agent NAME ... --split S --games N` | Plays the first `N` seeds of a split for each named agent with no graphics and prints the summary. |
+| `watch --agent NAME --seed SEED [--policy FILE] [--delay S] [--plain]` | Plays one game and animates it in the terminal as pixel art, one frame per step, with the move count, corners visited, whether the ghost can see Pac-Man and the outcome. `--plain` (or a non-terminal, `NO_COLOR` or `TERM=dumb`) draws plain text. |
+
+A game is identified by its seed: seeds 0 to 999,999 are training maps, 1,000,000 to 1,000,999 validation and 2,000,000 to 2,000,999 test. To replay an evaluated game, take its `seed` and `agent` from `eval-<split>.json` and pass the same `--policy`.
+
+```sh
+python -m pacman train --out runs/default
+python -m pacman evaluate --split val --policy runs/default/policy.npz
+python -m pacman watch --agent learned --seed 1000007 --policy runs/default/policy.npz
+python -m pacman simulate --agent random --agent pathfinding --split val --games 200
+```
 
 ## Tech
 
@@ -57,9 +73,9 @@ python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-Any Python 3.11+ interpreter can create the virtual environment. The foundation tests cover configuration validation, RNG repeatability and shared snapshot contracts. Gameplay and CLI tests arrive with their implementation tickets.
+Any Python 3.11+ interpreter can create the virtual environment. The suite is one test file per module plus `test_determinism.py` (same seeds, same games, in and across processes) and `test_integration.py` (train, save, load, evaluate, record, replay in one process); it runs headless in well under the 30-second budget. `PACMAN_DEBUG=1` makes a failing command raise with a traceback instead of printing `error: ...`.
 
-See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-foundation-handoff.md>) for module ownership and interfaces, and the [implementation tracker](https://github.com/PhilKononenko01/PacMan-AI-Game/issues/19) for dependencies. Claim a ticket before editing its files.
+See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-foundation-handoff.md>) for module ownership and interfaces, the [review log](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md>) for what each ticket built and decided, and the [implementation tracker](https://github.com/PhilKononenko01/PacMan-AI-Game/issues/19) for dependencies.
 
 ## Repository layout
 
@@ -69,7 +85,9 @@ See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learne
 | [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-grid-world-prd.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-grid-world-prd.md>) | Phase 1 requirements (PRD): rules, agents, evaluation and acceptance criteria. |
 | [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md>) | Review findings and team decisions behind the PRD. |
 | [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-architecture.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-architecture.md>) | Module contracts, algorithms, configuration and commands. |
-| `pacman/`, `tests/`, `pyproject.toml` | Foundation implementation, tests and package metadata. |
+| `pacman/` | The package: `grid`, `mapgen`, `ghost`, `env`, `referee`, `episode`, `agents/` (random, pathfinding, features, learned), `stats`, `evaluate`, `train`, `policy_io`, `render`, `plot`, `cli`. |
+| `tests/`, `pyproject.toml` | One test file per module, the determinism and integration suites, and package metadata. |
+| [`reports/phase-1-results.md`](reports/phase-1-results.md), `reports/phase-1/` | The Phase 1 acceptance report and the policy, configuration and evaluation files it cites. |
 | [`AGENTS.md`](AGENTS.md) | Git rules for AI coding agents working in this repo. |
 
 ## Team
@@ -82,5 +100,5 @@ See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learne
 1. ~~Project proposal~~
 2. ~~Phase 1 requirements (PRD), reviewed and all questions answered~~
 3. ~~Architecture doc and implementation tickets~~
-4. Build: foundation implemented; environment, ghost, baselines, learned agent and evaluation next
-5. Tune difficulty, run the final evaluation, write the report
+4. ~~Build: environment, ghost, baselines, learned agent, training, evaluation and the commands~~
+5. Final acceptance (#18): train at the defaults, freeze the knobs, run the held-out evaluation, write the report
