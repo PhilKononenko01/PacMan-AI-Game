@@ -4,6 +4,21 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #16 — Terminal pixel-art and plain-text rendering
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §14.6, D-5. Branch `feature/16-render`, stacked on `feature/9-referee-episode`.
+
+**Implemented:** `render.py` with `plain_frame(frame)`, `pixel_frame(frame)`, `render_frame(frame, plain)` and `use_plain(plain, isatty, environ)`. Both renderers take only the #9 `Frame` and return a string; nothing is written or slept. The plain grid uses the §14.6 characters; the pixel grid draws each cell as a 4x4 sprite over two `▀` lines with `ESC[38;5;Nm` / `ESC[48;5;Nm` colours and a reset at each line end. Walls and unknown cells come from memory (D-5); corners and actors are drawn where they are. The status line is `Move t/max_steps  Corners n/4  Ghost sees Pac-Man: yes|no`, with `Outcome: win|loss|tie` added on the last frame.
+
+**A16-01 (minor, decided):** §14.6 does not say which actor shows when both share a cell, which happens on every loss frame. The ghost is drawn over Pac-Man, so the final frame shows the catch; actors are drawn over corners and corners over memory.
+
+**A16-02 (minor, decided):** "when `NO_COLOR` is set" follows the no-color.org convention: set to a non-empty value. An empty `NO_COLOR` does not force plain text.
+
+**Tests:** `test_render.py` (20): a hand-built plain grid and status line; the ruling on the last frame only; overlay precedence; known versus unknown walls; the four fallback rules; pixel frames with exactly ten 20-character half-block lines after stripping the three allowed escape forms, the same status text as plain, no other control characters, and seven distinguishable cell kinds; dispatch on the plain flag; nothing written to standard output.
+
+---
+
 ## Issue #9 — Referee and the shared episode loop
 
 **Date:** 2026-10-29
