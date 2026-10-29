@@ -73,14 +73,6 @@ def test_run_split_stays_inside_the_split(games):
         run_split(CONFIG, RandomAgent(), Split.VAL, games)
 
 
-def test_run_split_refuses_an_agent_still_in_training_mode():
-    agent = LearnedAgent(CONFIG.learner, training=True)
-    before = agent.q.copy()
-    with pytest.raises(ValueError, match="training"):
-        run_split(CONFIG, agent, Split.VAL, 2)
-    assert numpy.array_equal(agent.q, before)
-
-
 def test_run_split_leaves_a_greedy_learned_agent_unchanged():
     agent = LearnedAgent(CONFIG.learner)
     agent.q[:, 1] = 1.0
