@@ -2,10 +2,15 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from pacman.env import Observation, Outcome
+from pacman.env import Environment, Observation, Outcome
 from pacman.grid import line_of_sight
+from pacman.referee import Referee
 from pacman.rng import derive
+
+if TYPE_CHECKING:  # the loop never imports a concrete agent at runtime
+    from pacman.agents.base import Agent
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +34,11 @@ class Frame:
 
 
 def play_episode(
-    environment, referee, agent, seed: int, on_frame: Callable[[Frame], None] | None = None,
+    environment: Environment,
+    referee: Referee,
+    agent: "Agent",
+    seed: int,
+    on_frame: Callable[[Frame], None] | None = None,
 ) -> EpisodeRecord:
     """Play one game to the referee's ruling; nothing here branches on the agent."""
     observation = environment.reset(seed)
@@ -51,7 +60,13 @@ def play_episode(
         observation = result.observation
 
 
-def _frame(environment, observation: Observation, t: int, outcome, max_steps: int) -> Frame:
-    walls = environment.game_map.walls
-    sees = line_of_sight(observation.ghost, observation.pacman, lambda cell: cell not in walls)
+def _frame(
+    environment: Environment,
+    observation: Observation,
+    t: int,
+    outcome: Outcome | None,
+    max_steps: int,
+) -> Frame:
+    assert environment.game_map is not None
+    sees = line_of_sight(observation.ghost, observation.pacman, environment.game_map.is_open)
     return Frame(observation, t, outcome, sees, max_steps)

@@ -12,6 +12,8 @@ from pacman.grid import COLS, CORNERS, ROWS, Cell
 
 HALF_BLOCK = "▀"  # upper half block: foreground is the upper pixel, background the lower
 
+MEMORY_KIND = {KnownCell.WALL: "wall", KnownCell.OPEN: "open", KnownCell.UNKNOWN: "unknown"}
+
 PLAIN = {
     "pacman": "P", "ghost": "G", "wall": "#", "unknown": "?",
     "unvisited": "o", "visited": "*", "open": ".",
@@ -107,8 +109,7 @@ def _base(observation: Observation, cell: Cell) -> str:
     if cell in CORNERS:
         return "visited" if cell in observation.visited else "unvisited"
     row, col = cell
-    memory = observation.known[row * COLS + col]
-    return {KnownCell.WALL: "wall", KnownCell.OPEN: "open"}.get(memory, "unknown")
+    return MEMORY_KIND[observation.known[row * COLS + col]]
 
 
 def _actor(observation: Observation, cell: Cell) -> str | None:

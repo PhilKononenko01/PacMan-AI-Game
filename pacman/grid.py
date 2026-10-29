@@ -34,8 +34,12 @@ def neighbours(cell: Cell) -> tuple[Cell, ...]:
 
 
 def move(cell: Cell, direction: Direction, passable: Passable) -> Cell:
-    """The neighbour in that direction, or the cell itself when blocked (FR-1)."""
-    d_row, d_col = DELTAS[direction]
+    """The neighbour in that direction, or the cell itself when blocked (FR-1).
+
+    Anything that is not one of the four directions is an error: a bad action
+    must fail loudly rather than wrap round to a valid move.
+    """
+    d_row, d_col = DELTAS[Direction(direction)]
     target = (cell[0] + d_row, cell[1] + d_col)
     return target if in_grid(target) and passable(target) else cell
 
@@ -55,13 +59,15 @@ def bfs(source: Cell, passable: Passable) -> dict[Cell, int]:
 
 def first_step(source: Cell, target: Cell, passable: Passable) -> Direction:
     """First direction of a shortest path; ties go to the earlier direction."""
+    if source == target:
+        raise ValueError(f"source and target are the same cell {source}")
     distances = bfs(target, passable)
     if source not in distances:
         raise ValueError(f"no path from {source} to {target}")
     for direction in Direction:
         if distances.get(move(source, direction, passable)) == distances[source] - 1:
             return direction
-    raise AssertionError("unreachable: a reachable source has a closer neighbour")
+    raise RuntimeError("unreachable: a reachable source has a closer neighbour")
 
 
 def line_of_sight(a: Cell, b: Cell, passable: Passable) -> bool:

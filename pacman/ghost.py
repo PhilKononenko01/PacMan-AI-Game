@@ -2,7 +2,7 @@
 
 import random
 
-from pacman.grid import Cell, first_step, line_of_sight, move, neighbours
+from pacman.grid import Cell, Passable, first_step, line_of_sight, move, neighbours
 from pacman.mapgen import GameMap
 from pacman.rng import pick
 
@@ -23,11 +23,7 @@ class Ghost:
 
     def act(self, pacman: Cell, game_map: GameMap, t: int) -> None:
         """One ghost move (§8.2): vision, the move draw, then chase, pursue or search."""
-        walls = game_map.walls
-
-        def passable(cell: Cell) -> bool:
-            return cell not in walls
-
+        passable = game_map.is_open
         if line_of_sight(self.cell, pacman, passable):
             self.last_seen = pacman
         if not self.rng.random() < self.move_prob:
@@ -40,9 +36,11 @@ class Ghost:
             self.last_seen = None
         self.last_visit[self.cell] = t
 
-    def _least_recent(self, passable) -> Cell:
+    def _least_recent(self, passable: Passable) -> Cell:
         """The least recently visited open neighbour; never visited counts as oldest."""
         candidates = [cell for cell in neighbours(self.cell) if passable(cell)]
+        if not candidates:
+            raise ValueError(f"the ghost at {self.cell} has no open neighbour to move to")
         oldest = min(self.last_visit.get(cell, -1) for cell in candidates)
         ties = [cell for cell in candidates if self.last_visit.get(cell, -1) == oldest]
         if len(ties) == 1:

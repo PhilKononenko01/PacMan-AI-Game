@@ -52,6 +52,11 @@ class Environment:
         self.config = config
         self.game_map: GameMap | None = None
         self.outcome: Outcome | None = None
+        # Episode state; `reset` gives every field its real value.
+        self.pacman: Cell = PACMAN_START
+        self.ghost: Ghost | None = None
+        self.visited: set[Cell] = set()
+        self.known: list[KnownCell] = []
 
     def reset(self, seed: int, game_map: GameMap | None = None) -> Observation:
         """Start an episode on the seed's map, or on a hand-built map for tests (§7.1)."""
@@ -63,19 +68,20 @@ class Environment:
         self.visited = {PACMAN_START}
         self.known = [KnownCell.UNKNOWN] * (ROWS * COLS)
         self.outcome = None
-        self._sense()
+        self._sense(game_map)
         return self._observation()
 
     def step(self, action: Direction, t: int) -> StepResult:
         """PRD §2.4 steps 1 to 6; `t` only stamps the ghost's visit record (§7.2)."""
-        if self.game_map is None:
+        game_map, ghost = self.game_map, self.ghost
+        if game_map is None or ghost is None:
             raise RuntimeError("reset the environment before stepping")
         if self.outcome is not None:
             raise RuntimeError(f"the episode ended in a {self.outcome.value}")
         rewards = self.config.learner
         reward = rewards.reward_step
-        self.pacman = move(self.pacman, action, self._passable)
-        if self.pacman == self.ghost.cell:
+        self.pacman = move(self.pacman, action, game_map.is_open)
+        if self.pacman == ghost.cell:
             reward += rewards.reward_loss
             return self._end(Outcome.LOSS, reward)
         if self.pacman in CORNERS and self.pacman not in self.visited:
@@ -84,24 +90,22 @@ class Environment:
             if len(self.visited) == len(CORNERS):
                 reward += rewards.reward_win
                 return self._end(Outcome.WIN, reward)
-        self._sense()
-        self.ghost.act(self.pacman, self.game_map, t)
-        if self.ghost.cell == self.pacman:
+        self._sense(game_map)
+        ghost.act(self.pacman, game_map, t)
+        if ghost.cell == self.pacman:
             reward += rewards.reward_loss
             return self._end(Outcome.LOSS, reward)
         return StepResult(self._observation(), reward, None)
 
-    def _passable(self, cell: Cell) -> bool:
-        return cell not in self.game_map.walls
-
-    def _sense(self) -> None:
+    def _sense(self, game_map: GameMap) -> None:
         """Record each in-grid neighbour of Pac-Man as open or a wall (§7.3)."""
         for row, col in neighbours(self.pacman):
             self.known[row * COLS + col] = (
-                KnownCell.OPEN if self._passable((row, col)) else KnownCell.WALL
+                KnownCell.OPEN if game_map.is_open((row, col)) else KnownCell.WALL
             )
 
     def _observation(self) -> Observation:
+        assert self.ghost is not None
         return Observation(self.pacman, self.ghost.cell, self.visited, self.known)
 
     def _end(self, outcome: Outcome, reward: float) -> StepResult:

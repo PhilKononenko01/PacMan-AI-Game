@@ -144,3 +144,14 @@ def test_grid_imports_no_other_game_module():
         [sys.executable, "-c", code], check=True, capture_output=True, text=True,
     )
     assert result.stdout.strip() == "['pacman', 'pacman.grid']"
+
+
+@pytest.mark.parametrize("action", [-1, 4, 7])
+def test_move_rejects_an_action_outside_the_four_directions(action):
+    with pytest.raises(ValueError):
+        move((2, 2), action, lambda cell: True)
+
+
+def test_first_step_with_source_equal_to_target_is_an_error():
+    with pytest.raises(ValueError, match="target"):
+        first_step((1, 1), (1, 1), lambda cell: True)

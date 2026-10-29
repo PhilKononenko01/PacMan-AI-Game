@@ -1,5 +1,6 @@
 """Reset, sensing, memory, turn order, collisions and rewards (FR-3, FR-4, FR-7, FR-16)."""
 
+import ast
 import subprocess
 import sys
 
@@ -276,7 +277,7 @@ def test_env_imports_only_the_game_modules():
     result = subprocess.run(
         [sys.executable, "-c", code], check=True, capture_output=True, text=True,
     )
-    loaded = eval(result.stdout)
+    loaded = ast.literal_eval(result.stdout)
     assert set(loaded) <= {
         "pacman", "pacman.config", "pacman.rng", "pacman.grid", "pacman.mapgen",
         "pacman.ghost", "pacman.env",

@@ -44,7 +44,6 @@ def test_a_wall_between_blocks_vision():
     ghost = Ghost(Scripted(0.5, 0.0))
     ghost.act((4, 0), GameMap({(4, 2)}), 1)
     assert ghost.last_seen is None
-    assert ghost.cell != (4, 3) or ghost.last_seen is None
 
 
 def test_vision_needs_a_shared_row_or_column():

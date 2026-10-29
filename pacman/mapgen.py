@@ -6,7 +6,7 @@ from hashlib import sha256
 import random
 
 from pacman.config import Config, GameKnobs
-from pacman.grid import COLS, CORNERS, ROWS, Cell, bfs
+from pacman.grid import COLS, CORNERS, ROWS, Cell, bfs, in_grid
 from pacman.rng import derive
 
 MAX_DRAWS = 10_000
@@ -36,10 +36,22 @@ NON_CORNERS: tuple[Cell, ...] = tuple(cell for cell in ALL_CELLS if cell not in 
 
 @dataclass(frozen=True, slots=True)
 class GameMap:
+    """The true map. Walls must be in-grid non-corner cells, hand-built or drawn."""
+
     walls: frozenset[Cell]
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "walls", frozenset(self.walls))
+        walls = frozenset(self.walls)
+        for wall in walls:
+            if not in_grid(wall):
+                raise ValueError(f"wall {wall} is off the grid")
+            if wall in CORNERS:
+                raise ValueError(f"wall {wall} is a corner; corners are never walls")
+        object.__setattr__(self, "walls", walls)
+
+    def is_open(self, cell: Cell) -> bool:
+        """The ghost's passable predicate: open on the true map."""
+        return cell not in self.walls
 
 
 class MapGenerationError(RuntimeError):
@@ -61,30 +73,43 @@ def draw_candidate(rng: random.Random, wall_density: float) -> GameMap:
 
 def is_connected(game_map: GameMap) -> bool:
     """Every open cell is reachable from the start corner (§6.2 check 1)."""
-    walls = game_map.walls
-    reached = bfs((0, 0), lambda cell: cell not in walls)
-    return len(reached) == ROWS * COLS - len(walls)
+    reached = bfs((0, 0), game_map.is_open)
+    return len(reached) == ROWS * COLS - len(game_map.walls)
 
 
 def loop_count(game_map: GameMap) -> int:
-    """Independent loops of a connected map: open edges minus open cells plus one."""
-    walls = game_map.walls
-    open_cells = [cell for cell in ALL_CELLS if cell not in walls]
+    """Independent loops of a connected map: open edges minus open cells plus one.
+
+    Edges are counted once each by looking only right and down from every open cell.
+    """
+    open_cells = [cell for cell in ALL_CELLS if game_map.is_open(cell)]
     edges = 0
     for row, col in open_cells:
-        edges += col + 1 < COLS and (row, col + 1) not in walls
-        edges += row + 1 < ROWS and (row + 1, col) not in walls
+        if col + 1 < COLS and game_map.is_open((row, col + 1)):
+            edges += 1
+        if row + 1 < ROWS and game_map.is_open((row + 1, col)):
+            edges += 1
     return edges - len(open_cells) + 1
 
 
 def is_winnable(game_map: GameMap, game: GameKnobs) -> bool:
-    """PRD §2.3 winnability: at most max_walls walls and at least min_loops loops."""
+    """PRD §2.3 winnability: at most max_walls walls and at least min_loops loops.
+
+    Defined only for connected maps; the loop formula undercounts otherwise.
+    """
+    if not is_connected(game_map):
+        raise ValueError("winnability is defined only for a connected map")
+    return _within_knobs(game_map, game)
+
+
+def _within_knobs(game_map: GameMap, game: GameKnobs) -> bool:
+    """The wall cap, then the loop floor (§6.2 checks 2 and 3); assumes connectivity."""
     return len(game_map.walls) <= game.max_walls and loop_count(game_map) >= game.min_loops
 
 
 def layout_bytes(game_map: GameMap) -> bytes:
     """The hashed form: a format tag plus row-major wall bits (§6.3)."""
-    bits = b"".join(b"1" if cell in game_map.walls else b"0" for cell in ALL_CELLS)
+    bits = b"".join(b"0" if game_map.is_open(cell) else b"1" for cell in ALL_CELLS)
     return b"5x5:" + bits
 
 
@@ -98,20 +123,29 @@ def split_of_map(game_map: GameMap) -> Split:
     for split, buckets in SPLIT_BUCKETS.items():
         if bucket in buckets:
             return split
-    raise AssertionError(f"unreachable: bucket {bucket} is outside 0..99")
+    raise RuntimeError(f"unreachable: bucket {bucket} is outside 0..99")
 
 
 def generate(
     seed: int, split: Split, config: Config, max_draws: int = MAX_DRAWS,
 ) -> GameMap:
-    """Return a structurally valid map in the requested layout split."""
+    """Return a structurally valid map in the requested layout split.
+
+    The split must be the seed's own (§4.2): a seed names its split everywhere,
+    so asking a training seed for a test map is a caller error, not a request.
+    """
+    if split_of_seed(seed) is not split:
+        raise ValueError(
+            f"seed {seed} belongs to the {split_of_seed(seed).value} split, "
+            f"not {split.value}"
+        )
     game = config.game
     rng = derive(seed, "map")
     for _ in range(max_draws):
         candidate = draw_candidate(rng, game.wall_density)
         if (
             is_connected(candidate)
-            and is_winnable(candidate, game)
+            and _within_knobs(candidate, game)
             and split_of_map(candidate) is split
         ):
             return candidate

@@ -191,3 +191,27 @@ def test_generate_draws_only_from_the_map_stream():
     before = random.getstate()
     generate(1, Split.TRAIN, DEFAULTS)
     assert random.getstate() == before
+
+
+@pytest.mark.parametrize("wall", [(0, 0), (0, 4), (4, 0), (4, 4)])
+def test_game_map_rejects_a_wall_on_a_corner(wall):
+    with pytest.raises(ValueError, match="corner"):
+        GameMap({wall})
+
+
+@pytest.mark.parametrize("wall", [(5, 0), (0, -1), (9, 9)])
+def test_game_map_rejects_a_wall_off_the_grid(wall):
+    with pytest.raises(ValueError, match="grid"):
+        GameMap({wall})
+
+
+def test_generate_rejects_a_split_that_is_not_the_seeds_own():
+    with pytest.raises(ValueError, match="split"):
+        generate(0, Split.TEST, DEFAULTS)
+
+
+def test_is_winnable_requires_a_connected_map():
+    sealed_corner = GameMap({(0, 1), (1, 0)})
+    assert not is_connected(sealed_corner)
+    with pytest.raises(ValueError, match="connected"):
+        is_winnable(sealed_corner, DEFAULTS.game)

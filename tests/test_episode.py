@@ -1,6 +1,7 @@
 """One shared episode loop: reset, act, step, rule, observe, explicit stop (FR-4, FR-8)."""
 
 import random
+import ast
 import subprocess
 import sys
 
@@ -188,6 +189,6 @@ def test_episode_imports_neither_the_renderer_nor_concrete_agents():
     result = subprocess.run(
         [sys.executable, "-c", code], check=True, capture_output=True, text=True,
     )
-    loaded = set(eval(result.stdout))
+    loaded = set(ast.literal_eval(result.stdout))
     assert "pacman.render" not in loaded
     assert not any(name.startswith("pacman.agents") for name in loaded)
