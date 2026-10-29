@@ -73,6 +73,14 @@ def test_run_split_stays_inside_the_split(games):
         run_split(CONFIG, RandomAgent(), Split.VAL, games)
 
 
+def test_run_split_refuses_an_agent_still_in_training_mode():
+    agent = LearnedAgent(CONFIG.learner, training=True)
+    before = agent.q.copy()
+    with pytest.raises(ValueError, match="training"):
+        run_split(CONFIG, agent, Split.VAL, 2)
+    assert numpy.array_equal(agent.q, before)
+
+
 def test_run_split_leaves_a_greedy_learned_agent_unchanged():
     agent = LearnedAgent(CONFIG.learner)
     agent.q[:, 1] = 1.0
@@ -224,3 +232,13 @@ def test_the_full_validation_run_reproduces_the_architecture_figures():
     assert (random_summary.wins, random_summary.losses, random_summary.ties) == (0, 1000, 0)
     assert (path_summary.wins, path_summary.losses, path_summary.ties) == (142, 858, 0)
     assert path_summary.mean_steps_to_win == pytest.approx(13.6, abs=0.05)
+
+
+def test_run_split_refuses_an_agent_still_in_training_mode():
+    agent = LearnedAgent(CONFIG.learner, training=True)
+    before = agent.q.copy()
+    with pytest.raises(ValueError, match="training"):
+        run_split(CONFIG, agent, Split.TEST, 2)
+    assert numpy.array_equal(agent.q, before)        # nothing was learned from held-out seeds
+    agent.training = False
+    assert len(run_split(CONFIG, agent, Split.TEST, 2)) == 2

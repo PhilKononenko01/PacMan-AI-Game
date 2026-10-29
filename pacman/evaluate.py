@@ -57,6 +57,12 @@ def run_split(config: Config, agent, split: Split, games: int) -> list[EpisodeRe
     seeds = SPLIT_SEEDS[split]
     if type(games) is not int or games < 1 or games > len(seeds):
         raise ValueError(f"games must be between 1 and {len(seeds)} for the {split.value} split")
+    if getattr(agent, "training", False):
+        # §13.1: evaluation is greedy. A training agent here would learn from held-out seeds.
+        raise ValueError(
+            f"{agent.name} is in training mode; evaluation plays greedily, so set"
+            " training = False or use a separate evaluation agent"
+        )
     environment = Environment(config)
     referee = Referee(config.game.max_steps)
     return [play_episode(environment, referee, agent, seed) for seed in seeds[:games]]
