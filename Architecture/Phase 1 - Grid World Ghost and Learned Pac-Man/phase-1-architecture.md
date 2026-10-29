@@ -1,8 +1,8 @@
 # Phase 1 — Grid World, Ghost and Learned Pac-Man: Architecture
 
-**Status:** DRAFT **v0.2**. Implements `phase-1-grid-world-prd.md` v0.10. Owed: the team's veto or acceptance of the stated defaults in §16.
+**Status:** DRAFT **v0.3**. Implements PRD v0.11. Issue #4 implements configuration, RNG and shared types; gameplay modules remain planned. D-1 is confirmed as bootstrap. D-2 through D-7 retain their existing implementation defaults; see `phase-1-foundation-handoff.md` for scope and ownership.
 **Date:** 2026-10-28
-**Describes the repository at:** `PhilKononenko01/PacMan-AI-Game` commit `63f3971`, which holds PRD v0.9, v0.1 of this document and the review log. PRD v0.10 adds the referee (OQ-14) and fixes the grid at 5x5 (OQ-15). Neither changes how a game plays, so the v0.1 measurements stand. No code exists yet. Every module, type and command below is to be built. Every measured number comes from a throwaway probe that implemented this document's rules (Python 3.9.6 with NumPy 2.0.2, on a team member's laptop, see `phase-1-review.md`). The probe is not kept.
+**Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10, architecture v0.2 and the review log before issue #4. The foundation handoff identifies implemented configuration, RNG and shared type contracts; all other modules and commands below remain planned. Game/training measurements come from a discarded exploratory probe (Python 3.9.6 with NumPy 2.0.2; see `phase-1-review.md`) and must be checked against the implementation.
 **Authority:** the PRD. This document decides only what PRD §7 leaves to it, plus the module, type and command structure needed to build the PRD. Where it seems to disagree with the PRD, the PRD wins and this document is wrong.
 **Form.** This document states what is decided and what is to be built. Review findings and version history go in `phase-1-review.md`.
 
@@ -17,7 +17,7 @@
 | Which training seeds the training episodes use | §11.1 |
 | Saved-policy file format, including the last validation results | §12 |
 | The draw limit after which map generation fails | §6.4 |
-| Whether the Q-learning update on a tie step is terminal or bootstraps (default for team veto) | §10.5, §16 |
+| Whether the Q-learning update on a tie step is terminal or bootstraps (bootstrap confirmed in issue #4) | §10.5, §16 |
 | Measured sweep of each game knob's effect on both baselines | §15 |
 | Command-line entry points | §14 |
 
@@ -112,10 +112,10 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 
 | Field | Type | Default | Valid | Unit |
 |---|---|---|---|---|
-| `reward_win` | float | 100.0 | any | reward |
-| `reward_loss` | float | -100.0 | any | reward |
-| `reward_corner` | float | 1.0 | any | reward per first corner visit |
-| `reward_step` | float | -0.05 | any | reward per step |
+| `reward_win` | float | 100.0 | any finite number | reward |
+| `reward_loss` | float | -100.0 | any finite number | reward |
+| `reward_corner` | float | 1.0 | any finite number | reward per first corner visit |
+| `reward_step` | float | -0.05 | any finite number | reward per step |
 | `learning_rate` | float | 0.1 | above 0, at most 1 | |
 | `discount` | float | 0.99 | 0 to 1 | |
 | `epsilon_start` | float | 1.0 | 0 to 1 | |
@@ -155,13 +155,13 @@ pick(rng, n) -> int        # uniform index in 0 .. n-1
     return min(int(rng.random() * n), n - 1)
 ```
 
-Choices among candidates use `pick` over the candidates listed in direction order. Probability tests use `rng.random() < p`. This is the version pin NFR-1 needs: any Python 3.11+, with no library stream involved. NumPy's random module is not used.
+Choices among candidates use `pick` over the candidates listed in direction order. Probability tests use `rng.random() < p`. The encoding and RNG construction are fixed and protected by golden-value tests. Reported runs record the supported runtime and dependency versions under NFR-1; exact cross-machine or cross-version training equality is not required. NumPy's random module is not used.
 
 ### 5.3 Rules (NFR-1)
 
 - No call to the built-in `hash()`, no `PYTHONHASHSEED` dependence, no global `random` functions, no `numpy.random`, no time or process-id seeding.
 - No decision depends on the iteration order of a `set` or `dict` keyed by cells. Every choice iterates cells in row-major order or neighbours in direction order. Sets are used for membership tests only.
-- Floating-point work is plain IEEE-754 double arithmetic (Python floats and `float64` NumPy element operations), which gives the same results on every supported machine.
+- Floating-point work uses Python floats and `float64` NumPy element operations. Verify repeatability within the recorded supported runtime; cross-machine bit-for-bit equality is not an acceptance requirement.
 
 A test plays the same seeds twice in one process and once in a fresh subprocess with a different `PYTHONHASHSEED`, and asserts identical episode records (§17).
 
@@ -333,6 +333,8 @@ class Agent(Protocol):
 
 `outcome` is the referee's ruling (§7.4): `None` while the episode goes on, otherwise `WIN`, `LOSS` or `TIE` (PRD §2.8, OQ-14). The episode loop (§10.6) is the only caller. The environment never sees an agent.
 
+`reset` clears previous state/action and cached next-state indices on every new game, while retaining learned Q values. The final `observe` delivers an explicit end signal; the runner never asks for another action after any final outcome. The configured tie update independently controls whether that last learning update bootstraps.
+
 ### 10.2 Random agent (`"random"`)
 
 `act` returns `Direction(pick(rng, 4))`. `observe` does nothing.
@@ -371,9 +373,9 @@ From one observation, with `plan` as above:
   - The outcome comes from the referee's ruling; the agent never infers it.
   - Target: `reward` alone at `WIN` or `LOSS`. At `None`, `reward + discount * max(Q[s'])` with `s'` the new observation's index. At `TIE`, the setting `tie_update` decides: `"bootstrap"` (default) uses the same target as at `None`; `"terminal"` uses `reward` alone.
   - Update: `Q[s, a] += learning_rate * (target - Q[s, a])`.
-  - The index of `s'` is cached for the next `act`.
+  - Cache `s'` only while the episode continues. At a final outcome clear the transition cache after the update; never index a WIN/LOSS observation. At a bootstrap TIE, compute the target from the final observation, then clear the cache because the next action belongs to a new game.
 
-**Why bootstrap at a tie (default, §16).** A tie is the referee stopping the game on the clock, and the state has no move count, so nothing in the state could have predicted it. Treating it as terminal teaches the agent that the state it happened to be in on step 100 is worth zero more reward, which is a fact about the clock, not about the state. Bootstrapping keeps the state's value unchanged by when the limit fell. Measured at the defaults, the two settings give results within noise of each other (§11.3), so the default is chosen on principle.
+**Why bootstrap at a tie (confirmed default, §16).** Phillip chose to estimate continuation value when the referee stops on the clock, while still ending the episode and all action requests. The state has no move count, so bootstrapping avoids assigning zero continuation solely because a particular visit fell on step 100. This is a learning choice, not a change to the game's tie outcome; terminal mode remains available. The exploratory results for the two settings are similar (§11.3), without establishing equivalence across training runs.
 
 ### 10.6 Episode loop (`episode.py`)
 
@@ -402,6 +404,7 @@ The same function serves training, evaluation, the difficulty check, simulation 
 - Before episode `k`: `epsilon = max(epsilon_end, epsilon_start - (epsilon_start - epsilon_end) * k / (episodes * epsilon_decay_fraction))`. At the defaults it falls linearly from 1.0 at episode 0 to 0.05 at episode 25,000 and stays there.
 - **Evaluation sizes** are the PRD §2.8 numbers, held as constants: `train.CURVE_EVERY = 2_500`, `train.CURVE_GAMES = 200` and `evaluate.FULL_GAMES = 1_000`. They are not knobs or learner settings: they set how much is measured, not what is played or learned. Tests lower them with `monkeypatch` to stay inside NFR-3 (§17).
 - **Learning curve (FR-12).** After every 2,500th episode (episodes 2,500, 5,000, ..., 50,000: 20 points at the defaults), the table is played greedily (`training = False`) on validation seeds 1,000,000 to 1,000,199. The point is `(episodes completed, win rate)`. The table is not changed by these games.
+- Restore training mode after each checkpoint, including when validation raises an error; a separate evaluation agent sharing the table without writes is also acceptable. Reset episode caches for each validation and subsequent training game. Tests must show that training updates resume after validation.
 - **Final validation.** After the last episode, the table is played greedily on all 1,000 validation seeds. Its summary is stored in the policy file (§12) and shown by the difficulty check (FR-15). The table saved is the final one; no checkpoint is chosen by its score (PRD §2.8).
 
 ### 11.2 Outputs
@@ -417,7 +420,7 @@ The same function serves training, evaluation, the difficulty check, simulation 
 
 ### 11.3 Measured
 
-Two full training runs at the default configuration, one per `tie_update` setting. Both were run at the same time as each other and two knob sweeps, on Python 3.9.6, so the times are an upper bound for one run on 3.11.
+Two exploratory probe training runs at the default configuration, one per `tie_update` setting. Both ran alongside two knob sweeps on Python 3.9.6. These are feasibility measurements, not an upper bound or verification of the production implementation on another runtime. Issue #18 measures the implemented default run on the supported runtime.
 
 | | `bootstrap` (default) | `terminal` |
 |---|---|---|
@@ -435,7 +438,7 @@ On the same validation seeds the random agent won 0.0% and the pathfinding agent
 
 What this settles:
 
-- **NFR-4 holds** with room to spare: about 5.7 minutes against the 10-minute limit, so the default of 50,000 episodes stands.
+- **NFR-4 appears feasible:** the probe took about 5.7 minutes against the 10-minute target. The default remains 50,000 episodes, with acceptance pending measurement of the actual implementation in issue #18.
 - **The two tie settings agree within their intervals.** D-1 (§16) is a choice on principle, not on results.
 - **The curve flattens from about 32,500 episodes**, after epsilon reaches its floor, between about 65% and 73%.
 - **ADR-2's state count is not a problem.** Training reaches about 4% of the table's rows; most rows cannot occur (PRD ADR-2).
@@ -558,9 +561,9 @@ What this settles for tuning (PRD §1 step 6, §2.7):
 - `min_loops` and `max_steps` have no measurable effect on the pathfinding agent. It never ties, so `max_steps` cannot matter to it; its effect on the learned agent, which can wait, is unmeasured.
 - These are baseline readings. The learned agent's response to each knob is measured only when it is retrained (PRD §2.7, OQ-11).
 
-## 16. Stated defaults for team veto
+## 16. Implementation defaults
 
-Each is a choice this document made where the PRD leaves room. The team accepts or overrides each one before the epics doc.
+Each is a choice this document made where the PRD leaves room. Phillip confirmed D-1 as bootstrap while implementing issue #4. D-2 through D-7 retain the architecture v0.2 defaults under the instruction to build the foundation; later tickets implement their behavior. This does not record a separate sign-off by Christian. Changes to these defaults need a recorded decision before dependent work changes its contracts.
 
 | # | Default | Where | Alternative |
 |---|---|---|---|
@@ -580,6 +583,7 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 |---|---|---|
 | `test_config.py` | Defaults equal the PRD's; JSON round trip; unknown key and out-of-range value rejected | §2.7, NFR-2 |
 | `test_rng.py` | `derive` golden value (`derive(0, "map").random() == 0.8442537128977315`); components independent; `pick` range | ADR-3 |
+| `test_contracts.py` | Fixed grid/action ids; immutable snapshots copy caller-owned containers; 25-cell observation memory; explicit outcome types and Agent protocol | FR-8, NFR-7 |
 | `test_mapgen.py` | Corners never walls; connectivity; wall cap (a connected 7-wall map rejected at `max_walls` 6); loop count (empty 5x5 has 16, the ring round a 3x3 block has 1 and is rejected); split membership for many seeds of each split; `layout_bytes`, SHA-256 and bucket golden values (§6.3); golden maps for seeds 0, 1,000,000 and 2,000,000 (§6.3); draw-limit error with `max_draws` small; same seed and split give the same map; the generator's result does not change when a non-generator knob changes | FR-2, NFR-6, NFR-7 |
 | `test_splits.py` | No layout shared between a 1,000-seed sample of each split (NFR-6) | NFR-6 |
 | `test_grid.py` | `move` into walls and off the grid; `first_step` direction-order ties; line of sight in all four directions, blocked and clear, adjacent | FR-1, FR-5, NFR-7 |
@@ -625,4 +629,4 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 
 ## 19. SDLC state
 
-Architecture v0.2, against PRD v0.10. Review findings and measurements are logged in `phase-1-review.md`. Next: the team's ruling on the §16 defaults, then the epics doc (`phase-1-epics.md`), the coding plan, implementation and the PRD §5 gate.
+Architecture v0.3, against PRD v0.11. Issue #4 implements the shared foundation; see `phase-1-foundation-handoff.md`. The GitHub tracker (#19) provides the remaining implementation tickets and dependencies. Next: review and merge the foundation, then the grid and policy-persistence work can proceed in parallel; finish with the PRD §5 gate. Full-game measurements remain pending implementation.
