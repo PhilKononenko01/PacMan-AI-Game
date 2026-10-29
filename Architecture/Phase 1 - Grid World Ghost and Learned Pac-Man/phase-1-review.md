@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #8 — Environment, partial wall memory and reward accounting
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §7.1 to §7.3. Branch `feature/8-environment`, stacked on `feature/7-ghost`.
+
+**Implemented:** `Environment.reset(seed, game_map=None)` generates the seed's map through `split_of_seed` unless a hand-built map is passed (then the seed only seeds the ghost), places Pac-Man at `(0, 0)` and the ghost at `(4, 4)` with `derive(seed, "ghost")` and `ghost_move_prob`, rebuilds memory and senses. `step(action, t)` runs the §7.2 table in order and returns `WIN`, `LOSS` or `None`; `t` goes only to `Ghost.act`. Stepping before `reset` or after a win or loss raises `RuntimeError`. The true map is held as `env.game_map`; nothing in an observation comes from it except through sensing.
+
+**Tests:** `test_env.py` (25): reset state and start sensing (the start cell stays `UNKNOWN`); generation versus hand-built maps; sensing after a move, memory kept across steps and rebuilt at reset; snapshot observations; 40 random games checked against the true map for unsensed-wall leaks; every row of §7.2, including Pac-Man stepping onto the ghost's cell (no corner reward, ghost never moves), the last corner winning before the ghost moves, a loss on the ghost's move, a corner and a loss paying on the same step, and no sensing after a win; `ghost_move_prob` reaching the ghost; `t` stamping visits and otherwise ignored; never `TIE`; errors before reset and after the end; reward totals for a full win; rewards read from the learner settings; `env` importing only game modules.
+
+Tests that need a mid-game state reset on a hand-built map and then set `env.pacman`, `env.visited` and `env.ghost.cell` directly; the environment carries no test-only entry points.
+
+---
+
 ## Issue #7 — Ghost vision, chase, pursuit and search
 
 **Date:** 2026-10-29
