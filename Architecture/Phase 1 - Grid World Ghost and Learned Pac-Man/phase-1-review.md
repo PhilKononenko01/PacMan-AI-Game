@@ -4,6 +4,21 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #14 — Paired evaluation, simulation summaries and the difficulty check
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §13, §14.3, §14.4. Branch `feature/14-evaluate`, stacked on `feature/11-learned`.
+
+**Implemented:** `evaluate.py` with `FULL_GAMES = 1_000`; `run_split(config, agent, split, games)` playing the first `games` seeds of the split in seed order through one environment and referee, with the agent exactly as given (callers pass a greedy learned agent; nothing branches on the agent); `summarise(agent, records) -> Summary` and `summary_of_validation(validation)` for the summary a policy file stores; `compare(learned, baseline) -> Comparison(b, c, p)` paired by seed through `stats.discordant_pairs` and `mcnemar_one_sided`; `format_header`, `format_summary_row`, `format_comparison` and `format_report` producing the §13.3 text; `write_eval_json` / `read_eval_json` with the configuration and every record (FR-14); `knob_differences(current, stored)`; `difficulty_check(config, policy=None)` playing the two baselines on the validation split and, with a policy, returning its stored validation summary and the game knobs that differ, never training (FR-15); `simulate(config, agents, split, games)` (FR-17). Printing belongs to the CLI (#17).
+
+**A14-01 (cosmetic, kept):** the §13.3 example rows give the losses count one more column than the wins and ties counts. The rows are reproduced verbatim, widths 5, 6 and 5, so the documented example is exactly what the command prints.
+
+**R-06 and R-07 (fixed by the reviewer session, commits `ea07cd3` and `04c7990`):** in evaluation mode `LearnedAgent.observe` returned before refreshing the cached state, so every greedy `act` after the first reused the first observation's row; training was unaffected and the #11 tests passed because the greedy test acted twice on one observation. The agent now keeps the pending transition apart from the cache for the next `act`, with two regression tests. `policy_io` was hardened without interface change: `Policy` is `eq=False` (value equality crashed on the array field), metadata is parsed with `config.py`'s duplicate-key and NaN rejection, a boolean `format_version` is refused, a non-archive file raises `ValueError` naming the path, and `save_policy` writes `<name>.partial` then `os.replace`s it; six regression tests.
+
+**Tests:** `test_evaluate.py` (20): seed order and identical seeds per agent, records equal to direct `play_episode` results, split bounds, a greedy learned agent's table unchanged; summary counts, intervals and steps, no wins, empty input; pairing by seed independent of record order, seed-set mismatch; the two §13.3 example rows verbatim; header, comparison and report assembly; JSON round trip with every field; knob differences; the difficulty check with `FULL_GAMES` lowered, with and without a policy, table untouched; simulation per agent; and the full 1,000-seed validation run reproducing random 0 and pathfinding 142 wins with 13.6 steps per win.
+
+---
+
 ## Issue #11 — Tabular Q-learning, epsilon-greedy actions and per-game cache reset
 
 **Date:** 2026-10-29
