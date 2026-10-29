@@ -4,6 +4,17 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #11 — Tabular Q-learning, epsilon-greedy actions and per-game cache reset
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §10.1, §10.5, §16 D-1; foundation handoff (per-game cache reset, explicit end signal). Branch `feature/11-learned`, stacked on `feature/10-baselines-features`.
+
+**Implemented:** `agents/learned.py` with `LearnedAgent(settings, q=None, training=False)`. The table is a zero `float64` `(122880, 4)` array or a shared one of that shape (`policy_io.TABLE_SHAPE`); `training` and `epsilon` are public fields for the training loop. `act` reuses the index cached by the last continuing `observe`, else encodes the observation; in training it draws `u` and explores with `pick(rng, 4)` when `u < epsilon`, otherwise and always outside training it takes `numpy.argmax`, whose first maximum is the direction-order tie-break. `observe` does nothing outside training; in training the target is `reward` at `WIN` or `LOSS` (the final observation is never encoded), `reward + discount * max Q[s']` at `None`, and at `TIE` the same bootstrap under the confirmed default or `reward` alone under `"terminal"`; then `Q[s, a] += learning_rate * (target - Q[s, a])`. `s'` is cached only while the game continues; every final outcome clears the cache, `reset` clears it again for the next game and keeps the table, and an `observe` with nothing pending raises `RuntimeError`.
+
+**Tests:** `test_learned.py` (19): protocol and zero table; shared table and shape checks; greedy first-best action with no draws and no learning; exploration on a second draw, strict `<` on epsilon; update arithmetic on a continuing step and with other settings; win and loss using the reward alone on observations that cannot be encoded; tie bootstrap by default and terminal by setting; the cached next index reused by the next `act`; no transition surviving any final outcome or a `reset`; whole training games changing the table while evaluation games do not; byte-identical tables from two 25-episode trainings; no draws from the episode stream in evaluation.
+
+---
+
 ## Issue #10 — Baseline agents and the shared state feature encoder
 
 **Date:** 2026-10-29
