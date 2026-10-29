@@ -51,6 +51,20 @@ def test_unknown_keys_are_rejected_instead_of_silently_ignored(text):
         Config.from_json(text)
 
 
+@pytest.mark.parametrize("text,duplicate", [
+    ('{"game": {"max_walls": 3}, "game": {"ghost_move_prob": 0.75}}', "game"),
+    ('{"learner": {"episodes": 10}, "learner": {}}', "learner"),
+    ('{"game": {"max_walls": 3, "max_walls": 6}}', "max_walls"),
+    ('{"game": {"max_steps": 0, "max_steps": 100}}', "max_steps"),
+    ('{"learner": {"tie_update": "terminal", "tie_update": "bootstrap"}}', "tie_update"),
+    ('{"game": {"max_walls": 6, "max_walls": 6}}', "max_walls"),
+    (r'{"game": {"max_walls": 3, "max_\u0077alls": 6}}', "max_walls"),
+])
+def test_duplicate_json_keys_are_rejected_at_every_level(text, duplicate):
+    with pytest.raises(ValueError, match=f"Duplicate JSON key: {duplicate}"):
+        Config.from_json(text)
+
+
 @pytest.mark.parametrize("text", [
     "null", "[]", '"config"', '{"game": null}',
     '{"game": []}', '{"learner": 3}', '{',

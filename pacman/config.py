@@ -90,6 +90,15 @@ def _reject_json_constant(value: str) -> None:
     raise ValueError(f"Non-finite JSON value is not allowed: {value}")
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def _section(data: Any, model: type, name: str) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{name} must be a JSON object")
@@ -116,8 +125,12 @@ class Config:
 
     @classmethod
     def from_json(cls, text: str) -> "Config":
-        """Read settings; omitted keys use defaults, unknown keys are errors."""
-        data = json.loads(text, parse_constant=_reject_json_constant)
+        """Read settings; unknown or duplicate keys fail, omitted keys default."""
+        data = json.loads(
+            text,
+            parse_constant=_reject_json_constant,
+            object_pairs_hook=_unique_json_object,
+        )
         data = _section(data, cls, "configuration")
         game = _section(data.get("game", {}), GameKnobs, "game")
         learner = _section(data.get("learner", {}), LearnerSettings, "learner")
