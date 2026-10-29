@@ -1,0 +1,22 @@
+{
+  "game": {
+    "ghost_move_prob": 1.0,
+    "max_steps": 100,
+    "max_walls": 6,
+    "min_loops": 4,
+    "wall_density": 0.2
+  },
+  "learner": {
+    "discount": 0.99,
+    "episodes": 50000,
+    "epsilon_decay_fraction": 0.5,
+    "epsilon_end": 0.05,
+    "epsilon_start": 1.0,
+    "learning_rate": 0.1,
+    "reward_corner": 1.0,
+    "reward_loss": -100.0,
+    "reward_step": -0.05,
+    "reward_win": 100.0,
+    "tie_update": "bootstrap"
+  }
+}

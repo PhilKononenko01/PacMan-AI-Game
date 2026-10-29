@@ -1,0 +1,27 @@
+episodes 2500: validation win rate 0.5% (200 games)
+episodes 5000: validation win rate 1.0% (200 games)
+episodes 7500: validation win rate 2.0% (200 games)
+episodes 10000: validation win rate 0.0% (200 games)
+episodes 12500: validation win rate 3.5% (200 games)
+episodes 15000: validation win rate 10.5% (200 games)
+episodes 17500: validation win rate 26.0% (200 games)
+episodes 20000: validation win rate 41.0% (200 games)
+episodes 22500: validation win rate 52.5% (200 games)
+episodes 25000: validation win rate 59.0% (200 games)
+episodes 27500: validation win rate 60.0% (200 games)
+episodes 30000: validation win rate 66.0% (200 games)
+episodes 32500: validation win rate 67.5% (200 games)
+episodes 35000: validation win rate 68.5% (200 games)
+episodes 37500: validation win rate 67.0% (200 games)
+episodes 40000: validation win rate 67.5% (200 games)
+episodes 42500: validation win rate 69.5% (200 games)
+episodes 45000: validation win rate 70.0% (200 games)
+episodes 47500: validation win rate 70.5% (200 games)
+episodes 50000: validation win rate 72.5% (200 games)
+agent         wins                  losses                ties                  steps/win
+learned       691  69.1% [66.2, 71.9]   267  26.7% [24.1, 29.5]   42   4.2% [ 3.1,  5.6]   37.4
+wrote runs/default/policy.npz, curve.csv, curve.png and config.json
+real 234.55
+user 217.88
+sys 2.34
+exit=0

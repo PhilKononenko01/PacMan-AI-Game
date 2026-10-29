@@ -4,6 +4,21 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #18 — Final acceptance: measurements, knob freeze, held-out evaluation
+
+**Date:** 2026-10-29
+**Documents:** PRD v0.11 §5, NFR-3, NFR-4; architecture v0.3 §17 to §19. Branch `feature/18-acceptance`, stacked on `feature/17-cli`. Report: `reports/phase-1-results.md`.
+
+**R-09, R-10 (reviewer findings, fixed):** pixel-art watch mode printed frames after a blank line, so a terminal scrolled instead of animating; it now homes and clears the screen before each frame, and plain mode keeps scrolling. `PACMAN_DEBUG=1` makes `main` re-raise instead of printing `error: ...`.
+
+**Added:** `tests/test_determinism.py` (identical records twice in-process, in subprocesses under two `PYTHONHASHSEED` values, and a byte-identical table from two 200-episode trainings) and `tests/test_integration.py` (train, save, load, evaluate all agents, write and read the JSON, replay every record to the same ruling, step and return; the learned agent never asked to act after a ruling and starting every game with an empty cache). README rewritten for the implemented commands. Suite: 472 tests, about 12 s idle.
+
+**Measured:** the default 50,000-episode training run took 234.6 s wall (NFR-4 target 600 s) on an Intel i5-8259U with Python 3.14.10, NumPy 2.5.4, Matplotlib 3.11.2. Final validation on all 1,000 seeds: learned 691 wins (69.1% [66.2, 71.9]), 267 losses, 42 ties, 37.4 steps per win; pathfinding 142 wins, random 0; McNemar b=691/c=0 and b=570/c=21, both p far below 0.05. The learning curve passes 50% at 22,500 episodes and ends at 72.5% on the 200-seed checkpoint set.
+
+**Knob freeze (PRD §5), awaiting sign-off:** the proposal is the unchanged PRD defaults for every game knob and learner setting; nothing was tuned on validation. The policy is `reports/phase-1/policy.npz`. No test-split game has been played. Christian and Phillip record their approval here, after which `evaluate --split test` runs once and the report's §5.3 is written from it without further changes to the policy or settings.
+
+---
+
 ## Issue #17 — The five CLI commands, agent factory and replay flow
 
 **Date:** 2026-10-29
