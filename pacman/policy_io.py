@@ -7,12 +7,13 @@ all use it without pulling in each other.
 from dataclasses import dataclass
 import json
 import math
+import os
 from pathlib import Path
 from typing import Any
 
 import numpy
 
-from pacman.config import Config
+from pacman.config import Config, _reject_json_constant, _unique_json_object
 
 FORMAT_VERSION = 1
 # §10.4's state index has 122,880 rows; features.py (#10) must agree with this shape.
@@ -70,7 +71,7 @@ class ValidationSummary:
             object.__setattr__(self, "mean_steps_to_win", float(mean))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, eq=False)  # a NumPy field makes value equality ambiguous
 class Policy:
     q: numpy.ndarray
     config: Config
@@ -110,8 +111,16 @@ def save_policy(path: str | Path, policy: Policy) -> None:
         },
     }
     text = json.dumps(meta, sort_keys=True, allow_nan=False)
-    with open(path, "wb") as file:
-        numpy.savez(file, q=policy.q, meta=numpy.frombuffer(text.encode("utf-8"), dtype=numpy.uint8))
+    meta_array = numpy.frombuffer(text.encode("utf-8"), dtype=numpy.uint8)
+    # Write beside the target and rename, so an interrupted save never leaves a truncated policy.
+    path = Path(path)
+    partial = path.with_name(path.name + ".partial")
+    try:
+        with open(partial, "wb") as file:
+            numpy.savez(file, q=policy.q, meta=meta_array)
+        os.replace(partial, path)
+    finally:
+        partial.unlink(missing_ok=True)
 
 
 def _require(mapping: Any, key: str, where: str) -> Any:
@@ -122,18 +131,28 @@ def _require(mapping: Any, key: str, where: str) -> Any:
 
 def load_policy(path: str | Path) -> Policy:
     """Read a policy file, refusing unknown versions, bad tables and missing keys."""
-    with numpy.load(path, allow_pickle=False) as data:
+    try:
+        data = numpy.load(path, allow_pickle=False)
+    except (ValueError, OSError, EOFError) as error:
+        raise ValueError(f"{path} is not an .npz policy archive: {error}") from None
+    if not isinstance(data, numpy.lib.npyio.NpzFile):
+        raise ValueError(f"{path} is not an .npz policy archive")
+    with data:
         for key in ("q", "meta"):
             if key not in data.files:
                 raise ValueError(f"policy file lacks the '{key}' array")
         q = data["q"]
         raw = data["meta"]
     try:
-        meta = json.loads(bytes(raw).decode("utf-8"))
+        meta = json.loads(
+            bytes(raw).decode("utf-8"),
+            parse_constant=_reject_json_constant,  # the same strictness as Config.from_json
+            object_pairs_hook=_unique_json_object,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError(f"policy metadata is not UTF-8 JSON: {error}") from None
     version = _require(meta, "format_version", "metadata")
-    if version != FORMAT_VERSION:
+    if type(version) is not int or version != FORMAT_VERSION:
         raise ValueError(f"unknown policy format_version {version!r}; this build reads {FORMAT_VERSION}")
     for key in _META_KEYS:
         _require(meta, key, "metadata")

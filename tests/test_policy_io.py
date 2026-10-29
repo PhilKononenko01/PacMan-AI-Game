@@ -243,3 +243,68 @@ def test_policy_io_imports_only_configuration_and_numpy():
         [sys.executable, "-c", code], check=True, capture_output=True, text=True,
     )
     assert result.stdout.strip() == "['pacman', 'pacman.config', 'pacman.policy_io']"
+
+
+def test_policies_compare_by_identity_and_hash_without_touching_the_table():
+    first, second = policy(), policy()
+    assert first == first and first != second     # a NumPy field makes value equality ambiguous
+    assert hash(first) == hash(first)
+
+
+def test_duplicate_metadata_keys_are_refused(tmp_path):
+    path = tmp_path / "policy.npz"
+    text = json.dumps(meta_of_policy(policy()))
+    with open(path, "wb") as file:
+        numpy.savez(file, q=table(), meta=numpy.frombuffer(
+            (text[:-1] + ', "training_seeds": [5, 6]}').encode("utf-8"), dtype=numpy.uint8))
+    with pytest.raises(ValueError, match="[Dd]uplicate"):
+        load_policy(path)
+    with open(path, "wb") as file:
+        numpy.savez(file, q=table(), meta=numpy.frombuffer(
+            text.replace('"max_steps": 80', '"max_steps": 80, "max_steps": 7', 1).encode("utf-8"),
+            dtype=numpy.uint8))
+    with pytest.raises(ValueError, match="[Dd]uplicate"):
+        load_policy(path)
+
+
+def test_non_finite_metadata_cannot_be_loaded(tmp_path):
+    path = tmp_path / "policy.npz"
+    text = json.dumps(meta_of_policy(policy())).replace("[2500, 0.365]", "[2500, NaN]")
+    with open(path, "wb") as file:
+        numpy.savez(file, q=table(), meta=numpy.frombuffer(text.encode("utf-8"), dtype=numpy.uint8))
+    with pytest.raises(ValueError):
+        load_policy(path)
+
+
+def test_a_failed_save_leaves_the_previous_file_intact(tmp_path, monkeypatch):
+    path = tmp_path / "policy.npz"
+    save_policy(path, policy(training_seeds=(0, 9)))
+
+    def explode(*args, **kwargs):
+        raise RuntimeError("disk full")
+
+    monkeypatch.setattr(numpy, "savez", explode)
+    with pytest.raises(RuntimeError):
+        save_policy(path, policy(training_seeds=(0, 99)))
+    assert load_policy(path).training_seeds == (0, 9)
+    assert [entry.name for entry in tmp_path.iterdir()] == ["policy.npz"]
+
+
+def test_a_boolean_format_version_is_not_version_one(tmp_path):
+    path = tmp_path / "policy.npz"
+    meta = meta_of_policy(policy())
+    meta["format_version"] = True
+    write_raw(path, meta=meta)
+    with pytest.raises(ValueError, match="version"):
+        load_policy(path)
+
+
+def test_a_file_that_is_not_an_npz_archive_is_refused(tmp_path):
+    plain = tmp_path / "plain.npy"
+    numpy.save(plain, table())
+    with pytest.raises(ValueError, match="npz"):
+        load_policy(plain)
+    junk = tmp_path / "junk.npz"
+    junk.write_bytes(b"not an archive")
+    with pytest.raises(ValueError, match="npz"):
+        load_policy(junk)
