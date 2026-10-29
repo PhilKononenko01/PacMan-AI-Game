@@ -34,6 +34,8 @@ from pacman.policy_io import Policy, load_policy
 from pacman.referee import Referee
 from pacman.render import render_frame, use_plain
 
+CLEAR_SCREEN = "\x1b[H\x1b[2J"  # cursor home, then clear
+
 
 def apply_sets(config: Config, sets: list[str]) -> Config:
     """Apply `--set name=value` overrides by bare field name, with type-checked values."""
@@ -197,7 +199,10 @@ def _watch(args: argparse.Namespace) -> None:
         nonlocal shown
         if shown:
             time.sleep(args.delay)
-            print()
+            if plain:
+                print()  # plain frames scroll, which suits logs and tests
+        if not plain:
+            print(CLEAR_SCREEN, end="")  # pixel art redraws in place, so the game animates
         print(render_frame(frame, plain), flush=True)
         shown = True
 
@@ -214,6 +219,8 @@ def main(argv=None) -> int:
     try:
         COMMANDS[args.command](args)
     except Exception as error:  # the command boundary: every failure is a message and exit 1
+        if os.environ.get("PACMAN_DEBUG"):
+            raise
         print(f"error: {error}", file=sys.stderr)
         return 1
     return 0

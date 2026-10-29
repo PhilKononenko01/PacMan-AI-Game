@@ -197,6 +197,25 @@ def test_watch_falls_back_to_plain_text_when_output_is_not_a_terminal(run):
     assert "\x1b[" not in output
 
 
+def test_pixel_art_watch_redraws_in_place_instead_of_scrolling(run, monkeypatch):
+    from pacman import cli as cli_module
+
+    monkeypatch.setattr(cli_module, "use_plain", lambda plain, isatty, environ: False)
+    code, output, err = run("watch", "--agent", "pathfinding", "--seed", 1_000_000, "--delay", 0)
+    assert code == 0, err
+    assert "\n\n" not in output
+    frames = output.split("\x1b[H\x1b[2J")
+    assert frames[0] == ""                       # the screen is cleared before the first frame
+    assert all("▀" in frame for frame in frames[1:])
+    assert "Outcome:" in frames[-1]
+
+
+def test_pacman_debug_re_raises_instead_of_reporting(run, monkeypatch):
+    monkeypatch.setenv("PACMAN_DEBUG", "1")
+    with pytest.raises(ValueError, match="policy"):
+        run("simulate", "--agent", "learned", "--split", "val", "--games", 1)
+
+
 def test_watch_rejects_a_seed_outside_every_split(run):
     code, _, err = run("watch", "--agent", "random", "--seed", 5_000_000, "--delay", 0)
     assert code == 1 and "split" in err
