@@ -1,13 +1,13 @@
-# Phase 1 — Review Log
+# Review Log
 
-Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase-1-architecture.md`. The phase documents state what is decided; this file records how it got there. Newest round first.
+Findings, rulings and version history for `prd.md` and `architecture.md`. The design documents state what is decided; this file records how it got there. Newest round first.
 
 ---
 
 ## Issue #18 — Final acceptance: measurements, knob freeze, held-out evaluation
 
 **Date:** 2026-10-29
-**Documents:** PRD v0.11 §5, NFR-3, NFR-4; architecture v0.3 §17 to §19. Branch `feature/18-acceptance`, stacked on `feature/17-cli`. Report: `reports/phase-1-results.md`.
+**Documents:** PRD v0.11 §5, NFR-3, NFR-4; architecture v0.3 §17 to §19. Branch `feature/18-acceptance`, stacked on `feature/17-cli`. Report: `reports/results.md`.
 
 **R-09, R-10 (reviewer findings, fixed):** pixel-art watch mode printed frames after a blank line, so a terminal scrolled instead of animating; it now homes and clears the screen before each frame, and plain mode keeps scrolling. `PACMAN_DEBUG=1` makes `main` re-raise instead of printing `error: ...`.
 
@@ -15,7 +15,7 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 **Measured:** the default 50,000-episode training run took 234.6 s wall (NFR-4 target 600 s) on an Intel i5-8259U with Python 3.14.10, NumPy 2.5.4, Matplotlib 3.11.2. Final validation on all 1,000 seeds: learned 691 wins (69.1% [66.2, 71.9]), 267 losses, 42 ties, 37.4 steps per win; pathfinding 142 wins, random 0; McNemar b=691/c=0 and b=570/c=21, both p far below 0.05. The learning curve passes 50% at 22,500 episodes and ends at 72.5% on the 200-seed checkpoint set.
 
-**Knob freeze (PRD §5), awaiting sign-off:** the proposal is the unchanged PRD defaults for every game knob and learner setting; nothing was tuned on validation. The policy is `reports/phase-1/policy.npz`. No test-split game has been played. Christian and Phillip record their approval here, after which `evaluate --split test` runs once and the report's §5.3 is written from it without further changes to the policy or settings.
+**Knob freeze (PRD §5), awaiting sign-off:** the proposal is the unchanged PRD defaults for every game knob and learner setting; nothing was tuned on validation. The policy is `reports/results/policy.npz`. No test-split game has been played. Christian and Phillip record their approval here, after which `evaluate --split test` runs once and the report's §5.3 is written from it without further changes to the policy or settings.
 
 ---
 
@@ -218,7 +218,7 @@ Tests that need a mid-game state reset on a hand-built map and then set `env.pac
 ## Issue #4 — Foundation implementation and confirmed decisions
 
 **Date:** 2026-10-28
-**Documents:** PRD v0.11, architecture v0.3 and `phase-1-foundation-handoff.md`.
+**Documents:** PRD v0.11, architecture v0.3 and `foundation-handoff.md`.
 
 **Confirmed by Phillip:** keep bootstrap as the default tie update; reset per-game transition caches without deleting learned Q values; deliver an explicit final outcome and stop action requests. Earlier answers establish that exact cross-machine identity is unnecessary and failed final test targets are documented without test-driven retuning. D-2 through D-7 retain the architecture's existing implementation defaults; no separate approval by Christian is claimed.
 
@@ -283,7 +283,7 @@ Architecture §16 lists seven stated defaults (D-1 to D-7) to accept or override
 ## Round 3 — PRD v0.7 → v0.8
 
 **Date:** 2026-10-28
-**Reviewed:** `phase-1-grid-world-prd.md` v0.7 at commit `caf9415`, against `Design/project-proposal.md` (P1–P4) and rounds 1 and 2 of this log.
+**Reviewed:** `prd.md` v0.7 at commit `caf9415`, against `Design/project-proposal.md` (P1–P4) and rounds 1 and 2 of this log.
 **Method:** a full read for architecture readiness, plus a throwaway probe that implements the PRD's generator, turn order, ghost and both baselines (Python standard library, `random.Random`, a provisional split encoding). The probe is not kept; the architecture doc re-runs whatever it relies on.
 **Outcome:** 9 findings, all fixed in v0.8. None needed a team ruling: each corrects a claim or closes a gap without changing a decision. Four items added to the §7 handoff list.
 
@@ -387,7 +387,7 @@ Architecture §16 lists seven stated defaults (D-1 to D-7) to accept or override
 ## Round 2 — PRD v0.3 → v0.4
 
 **Date:** 2026-10-27
-**Reviewed:** `phase-1-grid-world-prd.md` v0.3 at commit `39df5a3`, against `Design/project-proposal.md` (P1–P4) and round 1 of this log.
+**Reviewed:** `prd.md` v0.3 at commit `39df5a3`, against `Design/project-proposal.md` (P1–P4) and round 1 of this log.
 **Method:** a full read for architecture readiness: could the architecture doc be written against this PRD without reopening it? Arithmetic re-checked by hand. The remote branches `agents` and `edits` were checked and hold nothing that is not already on `main`.
 **Outcome:** 11 findings. Three need the team and are recorded as open questions OQ-10 to OQ-12, each with a proposal; the rest are fixed in v0.4. Five items are handed to the architecture doc.
 
@@ -467,7 +467,7 @@ Listed in PRD §7: the exact bytes hashed for the split; how generators are deri
 ## Round 1 — PRD v0.1 → v0.2
 
 **Date:** 2026-10-26
-**Reviewed:** `phase-1-grid-world-prd.md` v0.1 at commit `be5efa8`, against `Design/project-proposal.md` (P1–P4).
+**Reviewed:** `prd.md` v0.1 at commit `be5efa8`, against `Design/project-proposal.md` (P1–P4).
 **Method:** a full read for logical errors, internal contradictions and unsupported claims. Finding R1-01 was checked by simulating the v0.1 map generator (200,000 training seeds, 1,000 test seeds, `wall_density` 0.20).
 **Outcome:** 13 findings. All fixed in v0.2. Team rulings on four of them are recorded under each finding.
 

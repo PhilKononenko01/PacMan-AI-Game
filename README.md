@@ -2,7 +2,7 @@
 
 A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
 
-> **Status: Phase 1 implemented.** The game, the ghost, all three agents, training, evaluation and the five commands are built and tested (issues #4 to #17). Issue #18 records the final acceptance run; see [`reports/phase-1-results.md`](reports/phase-1-results.md).
+> **Status: implemented.** The game, the ghost, all three agents, training, evaluation and the five commands are built and tested (issues #4 to #17). Issue #18 records the final acceptance run; see [`reports/results.md`](reports/results.md).
 
 ## The game
 
@@ -75,19 +75,19 @@ python -m pytest
 
 Any Python 3.11+ interpreter can create the virtual environment. The suite is one test file per module plus `test_determinism.py` (same seeds, same games, in and across processes) and `test_integration.py` (train, save, load, evaluate, record, replay in one process); it runs headless in well under the 30-second budget. `PACMAN_DEBUG=1` makes a failing command raise with a traceback instead of printing `error: ...`.
 
-See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-foundation-handoff.md>) for module ownership and interfaces, the [review log](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md>) for what each ticket built and decided, and the [implementation tracker](https://github.com/PhilKononenko01/PacMan-AI-Game/issues/19) for dependencies.
+See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ownership and interfaces, the [review log](<Architecture/review.md>) for what each ticket built and decided, and the [implementation tracker](https://github.com/PhilKononenko01/PacMan-AI-Game/issues/19) for dependencies.
 
 ## Repository layout
 
 | Path | What it is |
 |---|---|
 | [`Design/project-proposal.md`](Design/project-proposal.md) | The team's original proposal, the design authority. |
-| [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-grid-world-prd.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-grid-world-prd.md>) | Phase 1 requirements (PRD): rules, agents, evaluation and acceptance criteria. |
-| [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-review.md>) | Review findings and team decisions behind the PRD. |
-| [`Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-architecture.md`](<Architecture/Phase 1 - Grid World Ghost and Learned Pac-Man/phase-1-architecture.md>) | Module contracts, algorithms, configuration and commands. |
+| [`Architecture/prd.md`](<Architecture/prd.md>) | Requirements (PRD): rules, agents, evaluation and acceptance criteria. |
+| [`Architecture/review.md`](<Architecture/review.md>) | Review findings and team decisions behind the PRD. |
+| [`Architecture/architecture.md`](<Architecture/architecture.md>) | Module contracts, algorithms, configuration and commands. |
 | `pacman/` | The package: `grid`, `mapgen`, `ghost`, `env`, `referee`, `episode`, `agents/` (random, pathfinding, features, learned), `stats`, `evaluate`, `train`, `policy_io`, `render`, `plot`, `cli`. |
 | `tests/`, `pyproject.toml` | One test file per module, the determinism and integration suites, and package metadata. |
-| [`reports/phase-1-results.md`](reports/phase-1-results.md), `reports/phase-1/` | The Phase 1 acceptance report and the policy, configuration and evaluation files it cites. |
+| [`reports/results.md`](reports/results.md), `reports/results/` | The acceptance report and the policy, configuration and evaluation files it cites. |
 | [`AGENTS.md`](AGENTS.md) | Git rules for AI coding agents working in this repo. |
 
 ## Team
@@ -98,7 +98,7 @@ See the [foundation handoff](<Architecture/Phase 1 - Grid World Ghost and Learne
 ## Roadmap
 
 1. ~~Project proposal~~
-2. ~~Phase 1 requirements (PRD), reviewed and all questions answered~~
+2. ~~Requirements (PRD), reviewed and all questions answered~~
 3. ~~Architecture doc and implementation tickets~~
 4. ~~Build: environment, ghost, baselines, learned agent, training, evaluation and the commands~~
 5. Final acceptance (#18): train at the defaults, freeze the knobs, run the held-out evaluation, write the report

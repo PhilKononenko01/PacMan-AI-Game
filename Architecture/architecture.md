@@ -1,10 +1,10 @@
-# Phase 1 — Grid World, Ghost and Learned Pac-Man: Architecture
+# Grid World, Ghost and Learned Pac-Man: Architecture
 
-**Status:** DRAFT **v0.3**. Implements PRD v0.11. Issue #4 implements configuration, RNG and shared types; gameplay modules remain planned. D-1 is confirmed as bootstrap. D-2 through D-7 retain their existing implementation defaults; see `phase-1-foundation-handoff.md` for scope and ownership.
+**Status:** DRAFT **v0.3**. Implements PRD v0.11. Issue #4 implements configuration, RNG and shared types; gameplay modules remain planned. D-1 is confirmed as bootstrap. D-2 through D-7 retain their existing implementation defaults; see `foundation-handoff.md` for scope and ownership.
 **Date:** 2026-10-28
-**Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10, architecture v0.2 and the review log before issue #4. The foundation handoff identifies implemented configuration, RNG and shared type contracts; all other modules and commands below remain planned. Game/training measurements come from a discarded exploratory probe (Python 3.9.6 with NumPy 2.0.2; see `phase-1-review.md`) and must be checked against the implementation.
+**Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10, architecture v0.2 and the review log before issue #4. The foundation handoff identifies implemented configuration, RNG and shared type contracts; all other modules and commands below remain planned. Game/training measurements come from a discarded exploratory probe (Python 3.9.6 with NumPy 2.0.2; see `review.md`) and must be checked against the implementation.
 **Authority:** the PRD. This document decides only what PRD §7 leaves to it, plus the module, type and command structure needed to build the PRD. Where it seems to disagree with the PRD, the PRD wins and this document is wrong.
-**Form.** This document states what is decided and what is to be built. Review findings and version history go in `phase-1-review.md`.
+**Form.** This document states what is decided and what is to be built. Review findings and version history go in `review.md`.
 
 ---
 
@@ -470,7 +470,7 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 
 `training_seeds` is the first and last seed, inclusive. `mean_steps_to_win` is `null` when there are no wins. The values in the example are placeholders.
 
-**Loading checks.** `load_policy` refuses a file whose `format_version` is not one it knows, whose `q` shape is not `(122880, 4)`, or that lacks any key above. There is one format version in phase 1. A later change to the file adds a version and keeps the loader for version 1, so policy files from earlier runs stay readable.
+**Loading checks.** `load_policy` refuses a file whose `format_version` is not one it knows, whose `q` shape is not `(122880, 4)`, or that lacks any key above. There is one format version so far. A later change to the file adds a version and keeps the loader for version 1, so policy files from earlier runs stay readable.
 
 ## 13. Evaluation (FR-10, FR-11)
 
@@ -629,4 +629,4 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 
 ## 19. SDLC state
 
-Architecture v0.3, against PRD v0.11. Issue #4 implements the shared foundation; see `phase-1-foundation-handoff.md`. The GitHub tracker (#19) provides the remaining implementation tickets and dependencies. Next: review and merge the foundation, then the grid and policy-persistence work can proceed in parallel; finish with the PRD §5 gate. Full-game measurements remain pending implementation.
+Architecture v0.3, against PRD v0.11. Issue #4 implements the shared foundation; see `foundation-handoff.md`. The GitHub tracker (#19) provides the remaining implementation tickets and dependencies. Next: review and merge the foundation, then the grid and policy-persistence work can proceed in parallel; finish with the PRD §5 gate. Full-game measurements remain pending implementation.

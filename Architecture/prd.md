@@ -1,10 +1,10 @@
-# Phase 1 — Grid World, Ghost and Learned Pac-Man: PRD
+# Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.11**. OQ-1 to OQ-15 are answered. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `phase-1-foundation-handoff.md`.
+**Status:** DRAFT **v0.11**. OQ-1 to OQ-15 are answered. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `foundation-handoff.md`.
 **Date:** 2026-10-28
 **Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10 and architecture v0.2 before issue #4. The foundation handoff identifies implemented configuration, RNG and type contracts; gameplay and evaluation behavior below remains a requirement for subsequent tickets.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
-**Form.** This document states what is decided and what is to be built. Review findings, provenance and version history go in `phase-1-review.md`. The question state lives in §6 and nowhere else.
+**Form.** This document states what is decided and what is to be built. Review findings, provenance and version history go in `review.md`. The question state lives in §6 and nowhere else.
 
 ---
 
@@ -249,7 +249,7 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on
 
 ## 7. SDLC state
 
-PRD v0.11. Review rounds 1 to 3 and subsequent decisions are logged in `phase-1-review.md`. Architecture v0.3 and the issue #4 foundation handoff define the shared contracts. The GitHub implementation tracker (#19) records the remaining module owners and dependencies. Next: review and merge the foundation, implement the remaining tickets, then run the §5 gate.
+PRD v0.11. Review rounds 1 to 3 and subsequent decisions are logged in `review.md`. Architecture v0.3 and the issue #4 foundation handoff define the shared contracts. The GitHub implementation tracker (#19) records the remaining module owners and dependencies. Next: review and merge the foundation, implement the remaining tickets, then run the §5 gate.
 
 The architecture doc settles these, which this PRD leaves to it:
 

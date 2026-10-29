@@ -1,6 +1,6 @@
 # AI Pac-Man: project proposal
 
-Recorded 2026-10-26, verbatim from the team's proposal. This file is the design authority the phase documents cite. Edit it only to record a ruling the team has actually made; the PRD's open questions are where proposals go first.
+Recorded 2026-10-26, verbatim from the team's proposal. This file is the design authority the design documents cite. Edit it only to record a ruling the team has actually made; the PRD's open questions are where proposals go first.
 
 ---
 

@@ -1,10 +1,10 @@
-# Phase 1 — Acceptance report (issue #18)
+# Acceptance report (issue #18)
 
 **Status:** DRAFT. Training and validation measured; the held-out test evaluation waits for the knob freeze (§4).
 
 ## 1. What was built
 
-Issues #4 to #17 implement everything in the Phase 1 PRD (v0.11) and architecture (v0.3): the fixed 5x5 grid and planning primitives, bounded map generation with hashed train/validation/test splits, the ghost, the environment with Pac-Man's partial wall memory, the referee and the one episode loop, the random and pathfinding baselines, the ADR-2 feature encoder, tabular Q-learning, versioned policy files, statistics, paired evaluation, training with learning-curve checkpoints, terminal rendering, and the five commands. The per-ticket entries in `phase-1-review.md` record what each one built and decided.
+Issues #4 to #17 implement everything in the PRD (v0.11) and architecture (v0.3): the fixed 5x5 grid and planning primitives, bounded map generation with hashed train/validation/test splits, the ghost, the environment with Pac-Man's partial wall memory, the referee and the one episode loop, the random and pathfinding baselines, the ADR-2 feature encoder, tabular Q-learning, versioned policy files, statistics, paired evaluation, training with learning-curve checkpoints, terminal rendering, and the five commands. The per-ticket entries in `review.md` record what each one built and decided.
 
 ## 2. Runtime and dependencies (NFR-1, NFR-5)
 
@@ -40,22 +40,22 @@ learner: reward_win=100  reward_loss=-100  reward_corner=1  reward_step=-0.05
          tie_update=bootstrap
 ```
 
-**Sign-off:** pending. Christian and Phillip record the freeze in `phase-1-review.md` before any test-split game is played. No test-split episode has been run while writing this draft.
+**Sign-off:** pending. Christian and Phillip record the freeze in `review.md` before any test-split game is played. No test-split episode has been run while writing this draft.
 
 ## 5. Results
 
 ### 5.1 Training at the defaults (NFR-4, FR-9, FR-12)
 
-`python -m pacman train --out runs/default` at the configuration of §4, timed with `/usr/bin/time -p` (`reports/phase-1/train-default.log`):
+`python -m pacman train --out runs/default` at the configuration of §4, timed with `/usr/bin/time -p` (`reports/results/train-default.log`):
 
 | Measure | Value |
 |---|---|
 | Wall time, whole command | **234.6 s (3 min 55 s)**; user 217.9 s, sys 2.3 s. NFR-4 target: 10 min |
 | What that includes | 50,000 training episodes, 20 learning-curve checkpoints of 200 greedy validation games, the final 1,000-game validation, and writing the four files |
 | Per training episode | about 4.4 ms, with the checkpoints and the final validation costing about 15 s together |
-| Policy file | `reports/phase-1/policy.npz`, 3.9 MB, format version 1, training seeds 0 to 49,999 |
+| Policy file | `reports/results/policy.npz`, 3.9 MB, format version 1, training seeds 0 to 49,999 |
 
-**Learning curve** (`reports/phase-1/curve.csv`, plotted in `curve.png`): the greedy win rate on validation seeds 1,000,000 to 1,000,199 every 2,500 episodes.
+**Learning curve** (`reports/results/curve.csv`, plotted in `curve.png`): the greedy win rate on validation seeds 1,000,000 to 1,000,199 every 2,500 episodes.
 
 | Episodes | 2,500 | 5,000 | 7,500 | 10,000 | 12,500 | 15,000 | 17,500 | 20,000 | 22,500 | 25,000 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -71,7 +71,7 @@ The curve is flat while exploration is high, rises steeply between 15,000 and 30
 
 ### 5.2 Validation (FR-10, FR-11, FR-15)
 
-`python -m pacman evaluate --split val --policy runs/default/policy.npz`, all three agents on all 1,000 validation seeds under the policy's configuration (9.5 s; `reports/phase-1/eval-val.json` holds every record):
+`python -m pacman evaluate --split val --policy runs/default/policy.npz`, all three agents on all 1,000 validation seeds under the policy's configuration (9.5 s; `reports/results/eval-val.json` holds every record):
 
 ```
 split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
@@ -124,10 +124,10 @@ Not run. Waits for §4.
 
 ## 7. Evidence committed
 
-`reports/phase-1/` holds the run of §5.1 copied out of the git-ignored `runs/` (architecture D-6): `policy.npz`, `config.json`, `curve.csv`, `curve.png`, `eval-val.json` and `train-default.log` (the command's output and timing). Any game in `eval-val.json` replays with
+`reports/results/` holds the run of §5.1 copied out of the git-ignored `runs/` (architecture D-6): `policy.npz`, `config.json`, `curve.csv`, `curve.png`, `eval-val.json` and `train-default.log` (the command's output and timing). Any game in `eval-val.json` replays with
 
 ```sh
-python -m pacman watch --agent learned --seed <seed> --policy reports/phase-1/policy.npz
+python -m pacman watch --agent learned --seed <seed> --policy reports/results/policy.npz
 ```
 
 and ends on the recorded outcome at the recorded move. Checked by hand on two records of `eval-val.json`: the learned agent's win on seed 1,000,000 (recorded 49 steps, return 100.55) replays to `Move 49/100 ... Outcome: win`, and its tie on seed 1,000,008 (recorded 100 steps) replays to `Move 100/100 ... Outcome: tie`. `tests/test_integration.py` replays every record of a small evaluation the same way.
