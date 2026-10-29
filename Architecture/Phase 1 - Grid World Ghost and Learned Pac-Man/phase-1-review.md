@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #6 — Map generation, structural filters and splits
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §4.2, §6. Branch `feature/6-map-generation`, stacked on `feature/5-grid-primitives`.
+
+**Implemented:** `mapgen.py` now has `split_of_seed`, `draw_candidate`, `is_connected`, `loop_count`, `is_winnable` (wall cap then loop floor), `layout_bytes`, `split_bucket`, `split_of_map` and `generate`, with the §4.2 seed ranges and buckets as the constants `SPLIT_SEEDS` and `SPLIT_BUCKETS`. `generate` runs the §6.2 checks in order and raises `MapGenerationError` naming the seed, split, generator knobs and draw count. `grid.py` gains `CORNERS` (row-major), which the generator, the environment and the agents all need.
+
+**Measured on Python 3.14.10:** the §6.3 layout bytes, SHA-256 digests, buckets and golden maps for seeds 0, 1,000,000 and 2,000,000 all match, and the §6.4 table is reproduced exactly over 1,000 seeds per split (train 1.81 mean draws, max 10, 829 distinct; validation 15.35, 167, 579; test 12.96, 75, 491). `test_splits.py` generates all 3,000 maps in about 2.2 s; the whole suite runs in about 3 s.
+
+**Tests:** `test_mapgen.py` (41) and `test_splits.py` (1): 21 draws per candidate at any density, draw order, corners never walls, connectivity, loop counts (empty 16, ring round a 3x3 block 1, single centre wall 13), the 7-wall cap case, split ranges and bucket membership, draw-limit errors for `min_loops` 17 and `max_walls` 0, same seed same map, non-generator knobs leave maps unchanged, and no global random state touched.
+
+---
+
 ## Issue #5 — Grid primitives; environment lane claimed
 
 **Date:** 2026-10-29
