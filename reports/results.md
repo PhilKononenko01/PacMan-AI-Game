@@ -23,8 +23,8 @@ Reproducibility is within this runtime, as NFR-1 allows: the same seed, configur
 
 | Measure | Value |
 |---|---|
-| Tests | 472, one file per module plus `test_determinism.py` and `test_integration.py` |
-| Wall time | about 12 s idle, 14.5 s with a training run competing for the CPU; budget 30 s |
+| Tests | 475, one file per module plus `test_determinism.py` and `test_integration.py` |
+| Wall time | about 9 s idle (12 s before the R-11 neighbour table); budget 30 s |
 | Slowest test | the 1,000-seed validation run of both baselines (about 3.4 s), kept as the regression guard for the documented figures |
 
 Every test is headless. The §17 table of the architecture maps each file to the requirements it covers; §6 below traces the requirements the other way.
@@ -50,7 +50,7 @@ learner: reward_win=100  reward_loss=-100  reward_corner=1  reward_step=-0.05
 
 | Measure | Value |
 |---|---|
-| Wall time, whole command | **234.6 s (3 min 55 s)**; user 217.9 s, sys 2.3 s. NFR-4 target: 10 min |
+| Wall time, whole command | **234.6 s (3 min 55 s)**; user 217.9 s, sys 2.3 s. NFR-4 target: 10 min. Retrained after the R-11 neighbour table (`review.md`): the same `policy.npz` and `curve.csv` byte for byte in 103.4 s |
 | What that includes | 50,000 training episodes, 20 learning-curve checkpoints of 200 greedy validation games, the final 1,000-game validation, and writing the four files |
 | Per training episode | about 4.4 ms, with the checkpoints and the final validation costing about 15 s together |
 | Policy file | `reports/results/policy.npz`, 3.9 MB, format version 1, training seeds 0 to 49,999 |

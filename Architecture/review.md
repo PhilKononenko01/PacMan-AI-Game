@@ -4,6 +4,25 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Code review of the implementation — efficiency and failure paths
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §9, §11.2, §14. Branch `feature/18-acceptance`. Every module and test file of issues #5 to #18 read in full; the suite, a profile of training and a retraining at the defaults run as evidence.
+
+**R-11 (efficiency, fixed):** a profile of training put over 75% of the time in `grid.bfs`, and most of that in `grid.neighbours`, which rebuilt the same four-candidate tuple for every cell on every call (6 million calls in a 3,000-episode run). The grid never changes, so `grid.py` now holds `NEIGHBOURS`, the 25 neighbour tuples computed once at import in the same direction order, and `neighbours` is a lookup. Nothing draws from a generator or changes an order, so results are unchanged: retraining at the defaults with the new code gives a `policy.npz` and `curve.csv` byte-identical to `reports/results/` (`cmp`), in 103.4 s wall (user 99.0 s) against the 234.6 s recorded there; the suite runs in about 9 s instead of 12 s. The §6.4 map statistics were also rechecked (train 1.8 draws per map, validation 15.4, test 13.0); generation is under 5% of training, so no map cache is needed.
+
+**R-12 (robustness, fixed):** `train.write_outputs` imported `pacman.plot` (and so Matplotlib) before saving `policy.npz`, so a broken or missing plotting stack would have thrown away a finished training run. It now saves the policy first and imports the plotter after; `cli._train` also imports `pacman.plot` before training starts, so a missing Matplotlib fails in a second rather than after four minutes. `test_train.py` proves the policy survives a failing plot import.
+
+**R-13 (usability, fixed):** `main` caught `Exception`, so Ctrl-C during `watch` or `train` printed a traceback. `KeyboardInterrupt` now ends the command with a newline on standard error and exit 130.
+
+**Read and found sound (no change):** turn order and reward accounting in `env.step`; the ghost's vision, chase, pursuit and search draws and the `first_step` precondition the environment guarantees; the feature index covering exactly the 122,880 rows and the learned agent's cached next state only being filled by a training `observe`; the strict `<` draws and `pick` for determinism, with no set iteration anywhere that reaches an outcome; `save_policy`'s write-and-rename; `load_policy`'s refusal of pickles, unknown versions, bad shapes, duplicate or non-finite JSON; `run_split`'s training-mode guard; `--set` parsing by field type with the frozen dataclasses re-validating. The committed `eval-val.json` was recomputed independently: 691/267/42, [66.2, 71.9], 37.4 steps per win, b=691/c=0 and b=570/c=21, exactly the report's figures.
+
+**Noted, not changed:** `train` reads `evaluate.FULL_GAMES`, `CURVE_EVERY` and `CURVE_GAMES` as module globals at call time so tests can monkeypatch them; parameters with defaults would be the cleaner seam. `read_eval_json` validates nothing and has no caller outside the tests. `run_split`, `simulate` and `make_agent` leave the agent untyped. `cli._train` creates the run directory before training, so an interrupted run leaves an empty directory. Running `evaluate` on the committed policy would overwrite `reports/results/eval-val.json` in place.
+
+**Suite:** 475 tests, about 9 s.
+
+---
+
 ## Issue #18 — Final acceptance: measurements, knob freeze, held-out evaluation
 
 **Date:** 2026-10-29
