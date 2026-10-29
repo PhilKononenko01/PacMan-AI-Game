@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #9 — Referee and the shared episode loop
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §7.4, §10.6, §14.6. Branch `feature/9-referee-episode`, stacked on `feature/8-environment`.
+
+**Implemented:** `referee.py` with `Referee(max_steps)`: `start`, `next_move`, `rule`. `rule` passes a step's win or loss through and otherwise calls `TIE` once `moves` reaches `max_steps` (`>=` rather than `==`, so a loop that overran the clock could never un-tie; the loop stops on the first ruling, so the two never differ in practice). `episode.py` adds `play_episode(environment, referee, agent, seed, on_frame=None)` exactly as §10.6, plus the watch-mode callback of §14.6: a frozen `Frame(observation, t, outcome, ghost_sees, max_steps)` after reset (`t = 0`) and after every step, the last carrying the ruling. `ghost_sees` is line of sight on the true map, computed in the loop from `environment.game_map`, so the renderer (#16) needs only the frame and never the environment.
+
+**A9-01 (minor, noted):** §14.6 says the status line shows `t` of `max_steps`; the frame carries `max_steps` from `referee.max_steps` so the renderer has it without reading configuration.
+
+**Tests:** `test_referee.py` (7): counting from 1 after `start`, restart between games, `TIE` exactly on move `max_steps` and not before, a win or loss on any move passing through, observations carrying no move count. `test_episode.py` (14): call order with a fake environment and a spy agent; agent seeded from `derive(seed, "agent")`; the ruling delivered through `observe` and no `act` after it; the referee's tie; a win on the last move staying a win; latest observation each turn; consecutive games restarting the referee and reseeding the agent; return as the sum of rewards; frames at reset and after each step with the ruling last, `ghost_sees` from the true map, immutable; two real-environment games (a still Pac-Man and a still ghost tie on move `max_steps`; a moving ghost catches a still Pac-Man for a loss); `episode` importing neither the renderer nor concrete agents.
+
+---
+
 ## Issue #8 — Environment, partial wall memory and reward accounting
 
 **Date:** 2026-10-29
