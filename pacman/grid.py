@@ -18,6 +18,7 @@ class Direction(IntEnum):
 
 
 DELTAS: tuple[Cell, ...] = ((-1, 0), (0, 1), (1, 0), (0, -1))
+CORNERS: tuple[Cell, ...] = ((0, 0), (0, COLS - 1), (ROWS - 1, 0), (ROWS - 1, COLS - 1))
 
 
 def in_grid(cell: Cell) -> bool:

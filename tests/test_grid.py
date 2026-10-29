@@ -5,7 +5,11 @@ import sys
 
 import pytest
 
-from pacman.grid import Direction, bfs, first_step, line_of_sight, move, neighbours
+from pacman.grid import CORNERS, Direction, bfs, first_step, line_of_sight, move, neighbours
+
+
+def test_corners_are_the_four_grid_corners_in_row_major_order():
+    assert CORNERS == ((0, 0), (0, 4), (4, 0), (4, 4))
 
 
 def open_except(*walls):
