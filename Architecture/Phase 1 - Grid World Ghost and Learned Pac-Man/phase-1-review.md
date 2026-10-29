@@ -4,6 +4,19 @@ Findings, rulings and version history for `phase-1-grid-world-prd.md` and `phase
 
 ---
 
+## Issue #17 — The five CLI commands, agent factory and replay flow
+
+**Date:** 2026-10-29
+**Documents:** architecture v0.3 §4.3, §14. Branch `feature/17-cli`, stacked on `feature/15-train`.
+
+**Implemented:** `agents/__init__.py` with `AGENT_NAMES` and `make_agent(name, config, policy=None)` (the learned agent needs a policy and is always greedy from the factory; imports are lazy so `agents.base` stays light). `__main__.py` for `python -m pacman`. `cli.py` with `parse_args`, `load_config(path, sets)` and `apply_sets` (a `--set NAME=VALUE` finds the field by bare name in either section, parses by the field's type so `max_steps=5.0` is refused, and rebuilds the frozen `Config` so range checks run), `policy_config` (a policy's configuration with overrides; any differing game knob is an error naming it), and the five commands exactly as §14.1 to §14.5: `train` refuses an existing run before training, prints each curve point as it is made and ends with the §13.3 row for the final validation; `evaluate` plays all three agents on every seed of the split, prints the report with both McNemar lines and writes `eval-<split>.json` beside the policy; `check` prints the baselines and, with a policy, its stored validation row and the knobs with `*` on each that differs; `simulate` prints the requested summaries; `watch` plays one game through `play_episode`'s frame callback with `use_plain`'s fallback and sleeps `--delay` (default 0.25 s) between frames, and nothing else. `main` turns any exception into `error: ...` on standard error and exit 1.
+
+**Tests:** `test_cli.py` (22), all with the sizes lowered and `episodes=5`: `python -m pacman --help` lists the commands; the factory; `--set` on top of a file, rejected names and values; the default delay; `train` output and the four files; refusal of an existing run; `evaluate`'s report and JSON with every agent on the same seeds, a differing game knob refused and a learner setting allowed; `check` with and without a policy, knobs flagged, the policy file untouched; `simulate` rows, split bounds, the policy requirement; a `MapGenerationError` as a clean error; `watch` frames one per step with the ruling last, plain text when output is not a terminal, an unknown seed refused, and replaying an evaluated game from `eval-val.json` to the same outcome and step count.
+
+**Timing:** 465 tests in about 12 s.
+
+---
+
 ## Issue #15 — Training, validation checkpoints and learning-curve outputs
 
 **Date:** 2026-10-29
