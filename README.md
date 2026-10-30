@@ -88,7 +88,6 @@ See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ow
 | `pacman/` | The package: `grid`, `mapgen`, `ghost`, `env`, `referee`, `episode`, `agents/` (random, pathfinding, features, learned), `stats`, `evaluate`, `train`, `policy_io`, `render`, `plot`, `cli`. |
 | `tests/`, `pyproject.toml` | One test file per module, the determinism and integration suites, and package metadata. |
 | [`reports/results.md`](reports/results.md), `reports/results/` | The acceptance report and the policy, configuration and evaluation files it cites. |
-| [`AGENTS.md`](AGENTS.md) | Git rules for AI coding agents working in this repo. |
 
 ## Team
 

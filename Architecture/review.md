@@ -32,7 +32,7 @@ No game rule, generator condition, learner setting or policy changed. No retrain
 
 **Date:** 2026-10-29. Recorded before the held-out evaluation at 2026-10-30 03:03 UTC. Base commit `c72fd56`, which merges PR #22.
 
-**Approval:** Phillip reported "christian approved lets do the issues" in this session. This records Christian's approval as relayed by Phillip and Phillip's instruction to proceed. The approved candidate is the existing `reports/results/policy.npz` and every default game knob and learner setting in `reports/results/config.json`, including `tie_update=bootstrap`. No retraining or tuning follows the test results.
+**Approval:** Phillip reported "christian approved lets do the issues". This records Christian's approval as relayed by Phillip and Phillip's instruction to proceed. The approved candidate is the existing `reports/results/policy.npz` and every default game knob and learner setting in `reports/results/config.json`, including `tie_update=bootstrap`. No retraining or tuning follows the test results.
 
 **Identity checked before evaluation:** policy SHA-256 `42696428f6e686fa5476990aa3d5f664b6de7a3ef4bbf8e154979d4383a0bd15`; configuration file SHA-256 `00728a48ba2bad71935f5547be0128b714f31ef6f493a2a5e5440a89f44410f6`. The policy's embedded configuration equals the configuration file and `Config()`; its training seeds are 0 through 49,999. `eval-test.json` is absent before the final run.
 
@@ -50,7 +50,7 @@ No game rule, generator condition, learner setting or policy changed. No retrain
 
 **Verification:** the complete headless suite passes, **476 tests in 11.83 s**, on Python 3.11.14, NumPy 2.4.6, Matplotlib 3.11.2 and pytest 9.2.0. `git diff --check` passes. The freeze candidate and its configuration digests are recorded in `reports/results.md` §4.
 
-**Remaining gate:** recorded team approval of the exact policy/settings freeze, then the single 1,000-seed evaluation for each agent, final report and teammate review. Phillip confirmed in this session that Christian's approval is still pending. Issues #18 and #19 remain open until that evidence and review are complete.
+**Remaining gate:** recorded team approval of the exact policy/settings freeze, then the single 1,000-seed evaluation for each agent, final report and teammate review. At this stage, Phillip confirmed that Christian's approval was still pending. Issues #18 and #19 remain open until that evidence and review are complete.
 
 ---
 
@@ -78,7 +78,7 @@ No game rule, generator condition, learner setting or policy changed. No retrain
 **Date:** 2026-10-29
 **Documents:** PRD v0.11 §5, NFR-3, NFR-4; architecture v0.3 §17 to §19. Branch `feature/18-acceptance`, stacked on `feature/17-cli`. Report: `reports/results.md`.
 
-**R-09, R-10 (reviewer findings, fixed):** pixel-art watch mode printed frames after a blank line, so a terminal scrolled instead of animating; it now homes and clears the screen before each frame, and plain mode keeps scrolling. `PACMAN_DEBUG=1` makes `main` re-raise instead of printing `error: ...`.
+**R-09, R-10 (fixed):** pixel-art watch mode printed frames after a blank line, so a terminal scrolled instead of animating; it now homes and clears the screen before each frame, and plain mode keeps scrolling. `PACMAN_DEBUG=1` makes `main` re-raise instead of printing `error: ...`.
 
 **Added:** `tests/test_determinism.py` (identical records twice in-process, in subprocesses under two `PYTHONHASHSEED` values, and a byte-identical table from two 200-episode trainings) and `tests/test_integration.py` (train, save, load, evaluate all agents, write and read the JSON, replay every record to the same ruling, step and return; the learned agent never asked to act after a ruling and starting every game with an empty cache). README rewritten for the implemented commands. Suite: 472 tests, about 12 s idle.
 
@@ -108,11 +108,11 @@ No game rule, generator condition, learner setting or policy changed. No retrain
 
 **Implemented:** `train.py` with `CURVE_EVERY = 2_500`, `CURVE_GAMES = 200`, `epsilon_for(episode, settings)` (the §11.1 linear schedule), `train(config, on_progress=None) -> TrainingResult(policy, curve, validation)`, `prepare_output_dir` and `write_outputs`. Episode `k` plays training seed `k` with its epsilon set first. A second `LearnedAgent` in evaluation mode shares the learner's table and plays every curve checkpoint and the final validation greedily, so the table is never written by an evaluation game and there is no training mode to restore, the arrangement §11.1 explicitly allows. The curve point is `(episodes completed, win rate)`; `FULL_GAMES` is read from `evaluate` at call time so tests can lower it. The policy carries the final table, the configuration, `(0, episodes - 1)`, the curve and the final validation summary over the seeds actually played. `write_outputs` refuses a directory that already holds `policy.npz` before writing anything, then writes `policy.npz`, `curve.csv` (`episodes,win_rate`), `curve.png` and `config.json`. `plot.py` is the only Matplotlib importer, selects Agg before `pyplot`, closes its figure, and is imported lazily by `write_outputs` so `import pacman.train` loads no Matplotlib.
 
-**R-08 (reviewer finding, fixed on `feature/14-evaluate`, commit `04585ff`):** `run_split` took the agent as given, so a learned agent left in training mode would have learned from the seeds it was evaluating, on the test split silently. It now raises `ValueError` for an agent whose `training` is true; one test on the test split proves nothing is learned and that the same agent runs once `training` is off.
+**R-08 (fixed on `feature/14-evaluate`, commit `04585ff`):** `run_split` took the agent as given, so a learned agent left in training mode would have learned from the seeds it was evaluating, on the test split silently. It now raises `ValueError` for an agent whose `training` is true; one test on the test split proves nothing is learned and that the same agent runs once `training` is off.
 
 **Tests:** `test_train.py` (18): the constants; epsilon at the start, midway, the decay end and after it, and under other settings; episode `k` on seed `k` with its epsilon, in training mode; checkpoints at the right episodes on validation seeds, greedy, table unchanged; training continuing after a checkpoint and the last table saved; a checkpoint evaluation that raises propagates while the learner stays in training mode and still learns; the final validation stored with its seed range; the progress callback; an empty curve for a run shorter than a checkpoint; repeatability; the four outputs with exact `curve.csv` text and a loadable policy; refusal of an existing `policy.npz`; directory creation. `test_plot.py` (3): a PNG for a curve and for an empty curve; a subprocess check that `train`, `evaluate` and `policy_io` load no Matplotlib and `plot` selects Agg.
 
-**Timing:** the suite is 443 tests in about 17 s here (the reviewer measures about 23 s on its run). Matplotlib's first import in a fresh environment builds a font cache once, which took 44 s; it does not recur.
+**Timing:** the suite is 443 tests in about 17 s, with a separate run taking about 23 s. Matplotlib's first import in a fresh environment builds a font cache once, which took 44 s; it does not recur.
 
 ---
 
@@ -125,7 +125,7 @@ No game rule, generator condition, learner setting or policy changed. No retrain
 
 **A14-01 (cosmetic, kept):** the §13.3 example rows give the losses count one more column than the wins and ties counts. The rows are reproduced verbatim, widths 5, 6 and 5, so the documented example is exactly what the command prints.
 
-**R-06 and R-07 (fixed by the reviewer session, commits `ea07cd3` and `04c7990`):** in evaluation mode `LearnedAgent.observe` returned before refreshing the cached state, so every greedy `act` after the first reused the first observation's row; training was unaffected and the #11 tests passed because the greedy test acted twice on one observation. The agent now keeps the pending transition apart from the cache for the next `act`, with two regression tests. `policy_io` was hardened without interface change: `Policy` is `eq=False` (value equality crashed on the array field), metadata is parsed with `config.py`'s duplicate-key and NaN rejection, a boolean `format_version` is refused, a non-archive file raises `ValueError` naming the path, and `save_policy` writes `<name>.partial` then `os.replace`s it; six regression tests.
+**R-06 and R-07 (fixed in commits `ea07cd3` and `04c7990`):** in evaluation mode `LearnedAgent.observe` returned before refreshing the cached state, so every greedy `act` after the first reused the first observation's row; training was unaffected and the #11 tests passed because the greedy test acted twice on one observation. The agent now keeps the pending transition apart from the cache for the next `act`, with two regression tests. `policy_io` was hardened without interface change: `Policy` is `eq=False` (value equality crashed on the array field), metadata is parsed with `config.py`'s duplicate-key and NaN rejection, a boolean `format_version` is refused, a non-archive file raises `ValueError` naming the path, and `save_policy` writes `<name>.partial` then `os.replace`s it; six regression tests.
 
 **Tests:** `test_evaluate.py` (20): seed order and identical seeds per agent, records equal to direct `play_episode` results, split bounds, a greedy learned agent's table unchanged; summary counts, intervals and steps, no wins, empty input; pairing by seed independent of record order, seed-set mismatch; the two §13.3 example rows verbatim; header, comparison and report assembly; JSON round trip with every field; knob differences; the difficulty check with `FULL_GAMES` lowered, with and without a policy, table untouched; simulation per agent; and the full 1,000-seed validation run reproducing random 0 and pathfinding 142 wins with 13.6 steps per win.
 
