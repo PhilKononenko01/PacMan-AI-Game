@@ -46,7 +46,7 @@ def build(project: Path, experiment: Path, output: Path) -> None:
     cell("markdown", """
     # CSCI 3202: Intermediate Project Report
     ## Pac-Man AI, Option 1: Your Choice
-    **Phillip Kononenko and Christian Gore**  
+    **Phillip Kononenko and Christian Gore**\x20\x20
     **October 30, 2026**
 
     This notebook contains the report, all application source, the saved trained policy,
