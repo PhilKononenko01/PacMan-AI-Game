@@ -70,6 +70,7 @@ def run_split(config: Config, agent, split: Split, games: int) -> list[EpisodeRe
 
 def summarise(agent: str, records: Iterable[EpisodeRecord]) -> Summary:
     """Counts, 95% Wilson intervals and mean steps to a win for one agent's records."""
+    records = tuple(records)
     outcomes = [record.outcome for record in records]
     games = len(outcomes)
     if games == 0:

@@ -4,6 +4,20 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Final acceptance follow-up — issues #18 and #19
+
+**Date:** 2026-10-29. Branch `feature/18-19-final-acceptance`, based on main `6cd7e85`. Phillip requested completion of the remaining issues. The game rules, generator, learning settings and selected policy are unchanged.
+
+**R-14 (correctness, fixed):** `evaluate.summarise` accepted an iterable but traversed it twice. One-shot iterators therefore reported no mean steps per win despite containing wins. It now materialises records once. The existing mixed-outcome summary test runs with both a list and an iterator; the iterator regression failed before the fix and passes after it. Current CLI results were unaffected because their inputs are lists.
+
+**R-15 (acceptance evidence, corrected):** the earlier statement that no test-split game had been played was too broad: automated tests used seeds 2,000,000 and 2,000,001 with a spy, a baseline or an untrained Q table. The timeout test now uses a validation seed, the baseline route test uses a hand-built fixture, and the training-mode guard still proves test evaluation is rejected but exercises its successful path on validation. Map-generation tests continue to inspect test layouts. The committed policy has not undergone final held-out evaluation, and those unit-test outcomes were not used to select settings or policy.
+
+**Verification:** the complete headless suite passes, **476 tests in 11.83 s**, on Python 3.11.14, NumPy 2.4.6, Matplotlib 3.11.2 and pytest 9.2.0. `git diff --check` passes. The freeze candidate and its configuration digests are recorded in `reports/results.md` §4.
+
+**Remaining gate:** recorded team approval of the exact policy/settings freeze, then the single 1,000-seed evaluation for each agent, final report and teammate review. Phillip confirmed in this session that Christian's approval is still pending. Issues #18 and #19 remain open until that evidence and review are complete.
+
+---
+
 ## Code review of the implementation — efficiency and failure paths
 
 **Date:** 2026-10-29
@@ -34,7 +48,7 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 **Measured:** the default 50,000-episode training run took 234.6 s wall (NFR-4 target 600 s) on an Intel i5-8259U with Python 3.14.10, NumPy 2.5.4, Matplotlib 3.11.2. Final validation on all 1,000 seeds: learned 691 wins (69.1% [66.2, 71.9]), 267 losses, 42 ties, 37.4 steps per win; pathfinding 142 wins, random 0; McNemar b=691/c=0 and b=570/c=21, both p far below 0.05. The learning curve passes 50% at 22,500 episodes and ends at 72.5% on the 200-seed checkpoint set.
 
-**Knob freeze (PRD §5), awaiting sign-off:** the proposal is the unchanged PRD defaults for every game knob and learner setting; nothing was tuned on validation. The policy is `reports/results/policy.npz`. No test-split game has been played. Christian and Phillip record their approval here, after which `evaluate --split test` runs once and the report's §5.3 is written from it without further changes to the policy or settings.
+**Knob freeze (PRD §5), awaiting sign-off:** the proposal is the unchanged PRD defaults for every game knob and learner setting; nothing was tuned on validation. The policy is `reports/results/policy.npz`. The final held-out policy evaluation has not run. Correction from the final acceptance review: a few automated unit tests previously played test seeds with a spy, the pathfinding baseline or an untrained table; they now use validation seeds or a hand-built map. Christian and Phillip record their approval here, after which `evaluate --split test` runs once and the report's §5.3 is written from it without further changes to the policy or settings.
 
 ---
 

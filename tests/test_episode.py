@@ -168,8 +168,8 @@ def test_frames_are_immutable():
 def test_a_still_pacman_and_a_still_ghost_tie_on_move_max_steps():
     config = Config(game=GameKnobs(ghost_move_prob=0.0, max_steps=30))
     agent = SpyAgent(Direction.UP)
-    record = play_episode(Environment(config), Referee(config.game.max_steps), agent, 2_000_000)
-    assert record == EpisodeRecord(2_000_000, "spy", Outcome.TIE, 30, pytest.approx(-1.5))
+    record = play_episode(Environment(config), Referee(config.game.max_steps), agent, 1_000_000)
+    assert record == EpisodeRecord(1_000_000, "spy", Outcome.TIE, 30, pytest.approx(-1.5))
     assert agent.calls[-1][3] is Outcome.TIE
 
 
