@@ -1,0 +1,3 @@
+100 games: 2 wins, 89 losses, 9 ties (Pac-Man outcomes).
+Both players choose uniformly among four directions; blocked moves stay.
+Validation seeds 1000000 through 1000099; default map rules; 100-turn limit.
