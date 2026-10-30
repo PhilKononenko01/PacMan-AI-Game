@@ -1,6 +1,6 @@
 # Acceptance report (issue #18)
 
-**Status:** Final evaluation complete. All measured acceptance criteria pass. Team review of the final report tables remains pending under PRD §5 item 4.
+**Status:** Final evaluation complete and final tables approved by both teammates, as confirmed by Phillip on 2026-10-29. All PRD §5 acceptance criteria have recorded evidence.
 
 ## 1. What was built
 
@@ -143,7 +143,7 @@ The learned agent still loses 22.0% and ties 4.4%, so the result does not establ
 
 PRD §5 items 1 through 3 have evidence: the complete test suite passes, the measured difficulty is within the guideline, and the learned agent beats both baselines under the required paired tests. The policy and settings were approved before the final evaluation. No retraining or tuning followed it, and no DQN fallback was needed.
 
-PRD §5 item 4 also requires team approval of these final tables. That approval is pending. The earlier freeze approval does not assert that either teammate reviewed these later results. Issues #18 and #19 can close after this table review and delivery of the evidence.
+PRD §5 item 4 requires team approval of these final tables, separately from the earlier freeze. After receiving the completed report and outcome counts, Phillip confirmed "Both of us approve the final tables" on 2026-10-29. This records Phillip's approval and his report of Christian's approval. The sign-off is recorded in `Architecture/review.md`. Issues #18 and #19 have completed their acceptance work.
 
 An independent `gpt-6.1-terra` review recomputed the saved counts, all outcome intervals, mean winning steps and exact paired probabilities. It verified the original file identities and found no statistical mismatch. This is an independent technical review within the available Codex models; it does not replace the team's table approval. The review notes that pre-run approval, the one-run history and API assertions rely on the recorded session actions. Saved JSON and logs establish their outputs but cannot independently reconstruct that history. `verification-test.json` also records the observed CLI and test commands and their zero exit codes.
 

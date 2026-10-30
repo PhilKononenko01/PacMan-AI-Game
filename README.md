@@ -2,7 +2,7 @@
 
 A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
 
-> **Status: implemented and evaluated.** The frozen policy wins 73.6% of 1,000 held-out games, compared with pathfinding's 14.9% and random's 0.0%. Both paired significance tests pass. The full suite passes 476 tests. Final team review of the result tables remains pending; see [`reports/results.md`](reports/results.md).
+> **Status: accepted.** The frozen policy wins 73.6% of 1,000 held-out games, compared with pathfinding's 14.9% and random's 0.0%. Both paired significance tests pass. The full suite passes 476 tests. Phillip confirmed both teammates approve the final tables; see [`reports/results.md`](reports/results.md).
 
 ## The game
 
@@ -101,4 +101,4 @@ See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ow
 2. ~~Requirements (PRD), reviewed and all questions answered~~
 3. ~~Architecture doc and implementation tickets~~
 4. ~~Build: environment, ghost, baselines, learned agent, training, evaluation and the commands~~
-5. Final acceptance (#18): training, freeze, held-out evaluation and report complete; final team table approval remains.
+5. ~~Final acceptance (#18): training, freeze, held-out evaluation, report and team table approval~~

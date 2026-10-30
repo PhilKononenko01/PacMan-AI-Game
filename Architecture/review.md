@@ -4,6 +4,16 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Final report tables approved
+
+**Date:** 2026-10-29, recorded at 2026-10-30 03:13 UTC.
+
+After the completed report, frozen policy identity, 3,000 outcome records and paired comparisons were presented, Phillip confirmed "Both of us approve the final tables". This records his approval and his report of Christian's approval under PRD §5 item 4. It is separate from the earlier pre-evaluation freeze approval.
+
+Phillip also explicitly authorized opening the final-results PR. The report and evidence are on `feature/18-final-results`. The technical acceptance criteria and final table approval are complete, so issues #18 and #19 can close with links to the evidence.
+
+---
+
 ## Final held-out evaluation and report
 
 **Date:** 2026-10-29. Branch `feature/18-final-results`, based on merged main `c72fd56`.
@@ -14,7 +24,7 @@ Both paired tests pass. Learned versus random has b=736, c=0 and p=2.76645233140
 
 The policy and configuration hashes are unchanged from the freeze below. Counts, paired seed sets and exact binomial probabilities were checked from the saved output. API and CLI replays of a win, loss and tie match their recorded results. The replayed Q table is unchanged. `verification-test.json` and `replay-test.log` preserve the checks. The complete suite passes, 476 tests in 11.94 s, with output in `tests-final.log`.
 
-No game rule, generator condition, learner setting or policy changed. No retraining or tuning followed the test results. Technical acceptance evidence is complete. The team's final table approval remains pending under PRD §5 item 4, separately from the pre-evaluation freeze approval.
+No game rule, generator condition, learner setting or policy changed. No retraining or tuning followed the test results. Technical acceptance evidence is complete. The later team table approval is recorded above, separately from the pre-evaluation freeze approval.
 
 ---
 
