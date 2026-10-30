@@ -1,6 +1,6 @@
 # Acceptance report (issue #18)
 
-**Status:** DRAFT. Training and validation measured; the held-out test evaluation waits for the knob freeze (§4).
+**Status:** Final evaluation complete. All measured acceptance criteria pass. Team review of the final report tables remains pending under PRD §5 item 4.
 
 ## 1. What was built
 
@@ -19,13 +19,15 @@ Issues #4 to #17 implement everything in the PRD (v0.11) and architecture (v0.3)
 
 Reproducibility is within this runtime, as NFR-1 allows: the same seed, configuration and policy give the same games in one process and in a subprocess with a different `PYTHONHASHSEED` (`tests/test_determinism.py`), and a 200-episode training run gives a byte-identical table twice.
 
+The final held-out evaluation uses Python 3.11.14, NumPy 2.4.6, Matplotlib 3.11.2 and pytest 9.2.0 on macOS 26.7.1, x86_64. These are the evaluation runtime versions, separate from the training runtime above. The frozen policy file is identical in both runtimes. `results/verification-test.json` records the evaluation runtime and source commit `c72fd56`.
+
 ## 3. Test suite (NFR-3, NFR-7)
 
 | Measure | Value |
 |---|---|
-| Tests | 475, one file per module plus `test_determinism.py` and `test_integration.py` |
-| Wall time | about 9 s idle (12 s before the R-11 neighbour table); budget 30 s |
-| Slowest test | the 1,000-seed validation run of both baselines (about 3.4 s), kept as the regression guard for the documented figures |
+| Tests | 476, one file per module plus `test_determinism.py` and `test_integration.py` |
+| Final acceptance wall time | 11.94 s for one full run; budget 30 s; `results/tests-final.log` |
+| Earlier implementation measurement | about 9 s idle on the training machine; the 1,000-seed validation baseline test took about 3.4 s |
 
 Every test is headless. The §17 table of the architecture maps each file to the requirements it covers; §6 below traces the requirements the other way.
 
@@ -33,7 +35,7 @@ Final acceptance follow-up on 2026-10-29: **476 tests passed in 11.83 s** on Pyt
 
 ## 4. Knob freeze (PRD §5)
 
-The configuration proposed for the final evaluation is the PRD default, unchanged by anything measured on validation:
+The frozen configuration for the final evaluation is the PRD default, unchanged by anything measured on validation:
 
 ```
 game:    ghost_move_prob=1.0  wall_density=0.2  max_walls=6  min_loops=4  max_steps=100
@@ -42,9 +44,11 @@ learner: reward_win=100  reward_loss=-100  reward_corner=1  reward_step=-0.05
          tie_update=bootstrap
 ```
 
-**Sign-off:** pending. Christian and Phillip record the freeze in `review.md` before the final held-out policy evaluation. The committed policy has not undergone that evaluation. Earlier automated tests did play test seeds 2,000,000 and 2,000,001 with a spy agent, the pathfinding baseline or an untrained table; the earlier claim that no test-split episode had run was therefore too broad. Those episode tests now use validation seeds or an explicit hand-built map. Map-generation and split-membership tests still inspect test layouts without playing games. No policy or setting was selected using those unit-test outcomes.
+**Freeze approval:** recorded in `Architecture/review.md` before evaluation on 2026-10-29. Phillip reported Christian's approval and instructed the final run. The exact approved policy and configuration hashes are below. Final review of the result tables remains separate.
 
-Freeze candidate SHA-256 digests (unchanged by the acceptance fixes):
+Earlier automated tests did play test seeds 2,000,000 and 2,000,001 with a spy agent, the pathfinding baseline or an untrained table; the earlier claim that no test-split episode had run was therefore too broad. Those episode tests now use validation seeds or an explicit hand-built map. Map-generation and split-membership tests still inspect test layouts without playing games. No policy or setting was selected using those unit-test outcomes.
+
+Frozen SHA-256 digests, unchanged by the acceptance fixes:
 
 - `reports/results/policy.npz`: `42696428f6e686fa5476990aa3d5f664b6de7a3ef4bbf8e154979d4383a0bd15`
 - `reports/results/config.json`: `00728a48ba2bad71935f5547be0128b714f31ef6f493a2a5e5440a89f44410f6`
@@ -98,7 +102,50 @@ Two things worth noticing. The learned agent wins slowly: 37.4 steps per win aga
 
 ### 5.3 Held-out test (PRD §5 items 2 and 3)
 
-Not run. Waits for §4.
+After the freeze in §4, the existing CLI ran once on test seeds 2,000,000 through 2,000,999 for each agent:
+
+```sh
+.venv/bin/python -m pacman evaluate --split test --policy reports/results/policy.npz
+```
+
+`results/eval-test.log` contains the command output. `results/eval-test.json` contains all 3,000 records and the frozen configuration. Each agent has exactly the same 1,000 seeds, once each, with no failed or missing episode. The learned agent plays greedily through `make_agent`, with training disabled. Counts, seed pairing and the exact binomial tail probabilities were checked from the saved records without repeating the evaluation.
+
+| Agent | Wins | Losses | Ties | Win rate, 95% Wilson interval | Mean steps per win |
+|---|---:|---:|---:|---|---:|
+| Random | 0 | 1,000 | 0 | 0.0% [0.0%, 0.4%] | n/a |
+| Pathfinding | 149 | 851 | 0 | 14.9% [12.8%, 17.2%] | 13.7 |
+| Learned | 736 | 220 | 44 | **73.6% [70.8%, 76.2%]** | 36.5 |
+
+The learned loss rate is 22.0% [19.5%, 24.7%]; its tie rate is 4.4% [3.3%, 5.9%]. Ties are separate from wins. Intervals for every agent and outcome are preserved in `results/verification-test.json`.
+
+| Paired comparison | Only learned wins, b | Only baseline wins, c | One-sided exact McNemar p |
+|---|---:|---:|---:|
+| Learned versus random | 736 | 0 | 2.7664523314090327 × 10^-222 |
+| Learned versus pathfinding | 612 | 25 | 9.280586169327794 × 10^-148 |
+
+Both p-values are below 0.05, and the learned win rate exceeds both baselines. The CLI rounds these probabilities to `0.0000`; neither probability is zero.
+
+**Difficulty discussion.** The learned rate and its interval fall within the 50% to 90% guideline. Its win rate is 4.5 percentage points above validation's 69.1%; the two 95% intervals overlap. These are different seed sets and layout populations. The final run uses the recorded test range and the policy's unchanged configuration. A map-only check confirms all 1,000 test seeds generate layouts in the hashed test partition, with 491 unique layouts. No setting or policy was changed in response to this difference. Each seed is a trial as specified by the PRD; repeated layouts within a split remain allowed.
+
+The learned agent still loses 22.0% and ties 4.4%, so the result does not establish a winning policy on every accepted map. The baseline wins average 13.7 moves, while learned wins average 36.5 moves. Mean steps per win compares different successful subsets and is not a paired efficiency comparison. The test results support the PRD's balanced-difficulty guideline and both baseline comparisons for this frozen configuration.
+
+**Integrity and replay.** The policy and configuration hashes match §4 after evaluation. Replays with the learned agent preserve its Q table and reproduce all fields of representative saved records. The CLI also reproduces their outcomes and step counts with exit code 0:
+
+| Seed | Outcome | Steps | Episode return |
+|---|---|---:|---:|
+| 2,000,000 | Win | 33 | 101.35 |
+| 2,000,004 | Loss | 72 | -101.60 |
+| 2,000,023 | Tie | 100 | -3.00 |
+
+`results/replay-test.log` preserves the three `watch --delay 0 --plain` runs. `results/verification-test.json` records the full comparison and replay checks. SHA-256 of the final evaluation JSON is `1f0270d019d58441e91f084a29895341508160f078ffede3617463cf26f4da08`.
+
+### 5.4 Acceptance decision
+
+PRD §5 items 1 through 3 have evidence: the complete test suite passes, the measured difficulty is within the guideline, and the learned agent beats both baselines under the required paired tests. The policy and settings were approved before the final evaluation. No retraining or tuning followed it, and no DQN fallback was needed.
+
+PRD §5 item 4 also requires team approval of these final tables. That approval is pending. The earlier freeze approval does not assert that either teammate reviewed these later results. Issues #18 and #19 can close after this table review and delivery of the evidence.
+
+An independent `gpt-6.1-terra` review recomputed the saved counts, all outcome intervals, mean winning steps and exact paired probabilities. It verified the original file identities and found no statistical mismatch. This is an independent technical review within the available Codex models; it does not replace the team's table approval. The review notes that pre-run approval, the one-run history and API assertions rely on the recorded session actions. Saved JSON and logs establish their outputs but cannot independently reconstruct that history. `verification-test.json` also records the observed CLI and test commands and their zero exit codes.
 
 ## 6. Requirement traceability
 
@@ -131,7 +178,7 @@ Not run. Waits for §4.
 
 ## 7. Evidence committed
 
-`reports/results/` holds the run of §5.1 copied out of the git-ignored `runs/` (architecture D-6): `policy.npz`, `config.json`, `curve.csv`, `curve.png`, `eval-val.json` and `train-default.log` (the command's output and timing). Any game in `eval-val.json` replays with
+`reports/results/` holds the run of §5.1 copied out of the git-ignored `runs/` (architecture D-6): `policy.npz`, `config.json`, `curve.csv`, `curve.png`, `eval-val.json` and `train-default.log` (the command's output and timing). Final acceptance adds `eval-test.json`, `eval-test.log`, `verification-test.json`, `replay-test.log`, `tests-final.log` and `acceptance-decisions.tsv`. Any game in either evaluation JSON replays with
 
 ```sh
 python -m pacman watch --agent learned --seed <seed> --policy reports/results/policy.npz

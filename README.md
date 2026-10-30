@@ -2,7 +2,7 @@
 
 A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
 
-> **Status: implemented.** The game, the ghost, all three agents, training, evaluation and the five commands are built and tested (issues #4 to #17). Issue #18 records the final acceptance run; see [`reports/results.md`](reports/results.md).
+> **Status: implemented and evaluated.** The frozen policy wins 73.6% of 1,000 held-out games, compared with pathfinding's 14.9% and random's 0.0%. Both paired significance tests pass. The full suite passes 476 tests. Final team review of the result tables remains pending; see [`reports/results.md`](reports/results.md).
 
 ## The game
 
@@ -33,7 +33,7 @@ Both move one square per turn. Pac-Man moves first.
 
 ## What we measure
 
-Every agent plays the same 1,000 test maps, which are never seen during training or tuning. We report wins, losses and ties with 95% confidence intervals, and use a paired McNemar test to check whether the learned agent beats each baseline.
+Every agent plays the same 1,000 test seeds. The generator keeps test layouts separate from training and validation; layouts can repeat within a split. We report wins, losses and ties with 95% confidence intervals, and use a paired McNemar test to check whether the learned agent beats each baseline.
 
 **Targets:**
 - The learned agent wins roughly **50% to 90%** of games. This is a rough guide to whether the game is balanced, not a hard pass/fail line.
@@ -101,4 +101,4 @@ See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ow
 2. ~~Requirements (PRD), reviewed and all questions answered~~
 3. ~~Architecture doc and implementation tickets~~
 4. ~~Build: environment, ghost, baselines, learned agent, training, evaluation and the commands~~
-5. Final acceptance (#18): train at the defaults, freeze the knobs, run the held-out evaluation, write the report
+5. Final acceptance (#18): training, freeze, held-out evaluation and report complete; final team table approval remains.

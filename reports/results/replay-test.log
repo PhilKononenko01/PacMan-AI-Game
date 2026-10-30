@@ -1,0 +1,1461 @@
+$ /Users/phillipkononenko/Documents/Univeristy CS Classes/Intro to AI/PacMan-AI-Game/.venv/bin/python -m pacman watch --agent learned --seed 2000000 --policy reports/results/policy.npz --delay 0 --plain
+P.??o
+.????
+?????
+?????
+o???G
+Move 0/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?????
+o??Go
+Move 1/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?????
+o?G?o
+Move 2/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+??G??
+o???o
+Move 3/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?G???
+o???o
+Move 4/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+G????
+o???o
+Move 5/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*.??o
+P.???
+G????
+?????
+o???o
+Move 6/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*.??o
+GP.??
+..???
+?????
+o???o
+Move 7/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*P.?o
+.G.??
+..???
+?????
+o???o
+Move 8/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*.P.o
+...??
+.G???
+?????
+o???o
+Move 9/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*..Po
+....?
+..G??
+?????
+o???o
+Move 10/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*...P
+.....
+..?G?
+?????
+o???o
+Move 11/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...P
+.....
+..??G
+?????
+o???o
+Move 12/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..P*
+.....
+..???
+????G
+o???o
+Move 13/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.....
+..???
+???G?
+o???o
+Move 14/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+...P.
+..?G?
+?????
+o???o
+Move 15/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+...GP
+..?..
+?????
+o???o
+Move 16/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+....G
+..?.P
+????.
+o???o
+Move 17/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...G
+.....
+...P.
+???..
+o???o
+Move 18/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..G*
+.....
+.....
+??.P.
+o??.o
+Move 19/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.G.*
+.....
+.....
+??..P
+o??.o
+Move 20/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*G..*
+.....
+.....
+??...
+o??.P
+Move 21/100  Corners 3/4  Ghost sees Pac-Man: no
+
+G...*
+.....
+.....
+??...
+o??.P
+Move 22/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*...*
+G....
+.....
+??...
+o??.P
+Move 23/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*...*
+.....
+G....
+??..P
+o??.*
+Move 24/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*...*
+.....
+.....
+G?...
+o??.P
+Move 25/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*...*
+.....
+.....
+?G..P
+o??.*
+Move 26/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.....
+??G..
+o??.P
+Move 27/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*...*
+.....
+.....
+??.GP
+o??.*
+Move 28/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.....
+??..G
+o??.P
+Move 29/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.....
+??...
+o?.PG
+Move 30/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.....
+??...
+o.PG*
+Move 31/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.....
+?....
+oPG.*
+Move 32/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.....
+?....
+P.G.*
+Move 33/100  Corners 4/4  Ghost sees Pac-Man: yes
+Outcome: win
+
+$ /Users/phillipkononenko/Documents/Univeristy CS Classes/Intro to AI/PacMan-AI-Game/.venv/bin/python -m pacman watch --agent learned --seed 2000004 --policy reports/results/policy.npz --delay 0 --plain
+P.??o
+.????
+?????
+?????
+o???G
+Move 0/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?????
+o??Go
+Move 1/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+???G?
+o???o
+Move 2/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+??G??
+o???o
+Move 3/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?G???
+o???o
+Move 4/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?????
+oG??o
+Move 5/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P.???
+.????
+?????
+G???o
+Move 6/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.P.??
+..???
+?????
+oG??o
+Move 7/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*..?o
+..P.?
+..#??
+?G???
+o???o
+Move 8/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*...o
+...P.
+.G##?
+?????
+o???o
+Move 9/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*...o
+.G..P
+..##.
+?????
+o???o
+Move 10/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*G..o
+.....
+..##P
+????#
+o???o
+Move 11/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.G.o
+....P
+..##.
+????#
+o???o
+Move 12/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*..Go
+.....
+..##P
+????#
+o???o
+Move 13/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*...o
+...GP
+..##.
+????#
+o???o
+Move 14/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*...P
+....G
+..##.
+????#
+o???o
+Move 15/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..PG
+.....
+..##.
+????#
+o???o
+Move 16/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..G*
+...P.
+..##.
+????#
+o???o
+Move 17/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.G.*
+....P
+..##.
+????#
+o???o
+Move 18/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+..GP.
+..##.
+????#
+o???o
+Move 19/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..P*
+.G...
+..##.
+????#
+o???o
+Move 20/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+G....
+..##.
+????#
+o???o
+Move 21/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.....
+G.##.
+????#
+o???o
+Move 22/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.....
+.G##.
+????#
+o???o
+Move 23/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.....
+..##.
+?G??#
+o???o
+Move 24/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...P
+.....
+..##.
+??G?#
+o???o
+Move 25/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.....
+..##.
+???G#
+o???o
+Move 26/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...P
+.....
+..##.
+????#
+o??Go
+Move 27/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.....
+..##.
+????#
+o???G
+Move 28/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*.P.*
+.....
+..##.
+????#
+o??Go
+Move 29/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*P..*
+.....
+..##.
+???G#
+o???o
+Move 30/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+.P...
+..##.
+??G?#
+o???o
+Move 31/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+..P..
+..##.
+?G??#
+o???o
+Move 32/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+...P.
+..##.
+????#
+oG??o
+Move 33/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+..P..
+..##.
+????#
+G???o
+Move 34/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+.P...
+..##.
+????#
+oG??o
+Move 35/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+..P..
+..##.
+?G??#
+o???o
+Move 36/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+...P.
+.G##.
+????#
+o???o
+Move 37/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*..P*
+.G...
+..##.
+????#
+o???o
+Move 38/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*G.P*
+.....
+..##.
+????#
+o???o
+Move 39/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.GP*
+.....
+..##.
+????#
+o???o
+Move 40/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..G*
+...P.
+..##.
+????#
+o???o
+Move 41/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+...GP
+..##.
+????#
+o???o
+Move 42/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...P
+....G
+..##.
+????#
+o???o
+Move 43/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..P*
+.....
+..##G
+????#
+o???o
+Move 44/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*.P.*
+....G
+..##.
+????#
+o???o
+Move 45/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+..PG.
+..##.
+????#
+o???o
+Move 46/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.P.*
+..G..
+..##.
+????#
+o???o
+Move 47/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*P..*
+.G...
+..##.
+????#
+o???o
+Move 48/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+P...*
+G....
+..##.
+????#
+o???o
+Move 49/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+GP..*
+.....
+..##.
+????#
+o???o
+Move 50/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*G..*
+.P...
+..##.
+????#
+o???o
+Move 51/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.G.*
+..P..
+..##.
+????#
+o???o
+Move 52/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..G*
+...P.
+..##.
+????#
+o???o
+Move 53/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...G
+....P
+..##.
+????#
+o???o
+Move 54/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+...PG
+..##.
+????#
+o???o
+Move 55/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*..P*
+.....
+..##G
+????#
+o???o
+Move 56/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*.P.*
+....G
+..##.
+????#
+o???o
+Move 57/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*...*
+..PG.
+..##.
+????#
+o???o
+Move 58/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.P.*
+..G..
+..##.
+????#
+o???o
+Move 59/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*P..*
+.G...
+..##.
+????#
+o???o
+Move 60/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+P...*
+.....
+.G##.
+????#
+o???o
+Move 61/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*P..*
+.G...
+..##.
+????#
+o???o
+Move 62/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+PG..*
+.....
+..##.
+????#
+o???o
+Move 63/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+G...*
+P....
+..##.
+????#
+o???o
+Move 64/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+GP...
+..##.
+????#
+o???o
+Move 65/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+GP##.
+?.??#
+o???o
+Move 66/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+.G##.
+#P.?#
+o.??o
+Move 67/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+..##.
+#GP.#
+o.#?o
+Move 68/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+..##.
+#.GP#
+o.#.o
+Move 69/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+..##.
+#..G#
+o.#Po
+Move 70/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+..##.
+#...#
+o.#GP
+Move 71/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*...*
+.....
+..##.
+#...#
+o.#G*
+Move 72/100  Corners 3/4  Ghost sees Pac-Man: yes
+Outcome: loss
+
+$ /Users/phillipkononenko/Documents/Univeristy CS Classes/Intro to AI/PacMan-AI-Game/.venv/bin/python -m pacman watch --agent learned --seed 2000023 --policy reports/results/policy.npz --delay 0 --plain
+P.??o
+.????
+?????
+?????
+o???G
+Move 0/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+P#???
+.????
+?????
+o??Go
+Move 1/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.??G?
+o???o
+Move 2/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.???G
+o???o
+Move 3/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.????
+o???G
+Move 4/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.????
+o??Go
+Move 5/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.??G?
+o???o
+Move 6/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.?G??
+o???o
+Move 7/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+.G???
+o???o
+Move 8/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+P.???
+G????
+o???o
+Move 9/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+.P#??
+..???
+G???o
+Move 10/100  Corners 1/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..#??
+.P.??
+oG??o
+Move 11/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..#??
+PG.??
+o.??o
+Move 12/100  Corners 1/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+.G#??
+...??
+P.??o
+Move 13/100  Corners 2/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.#??
+...??
+P.??o
+Move 14/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..#??
+G..??
+P.??o
+Move 15/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..#??
+...??
+GP#?o
+Move 16/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..#??
+.P.??
+*G#?o
+Move 17/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..#??
+.GP.?
+*.#?o
+Move 18/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..##?
+..GP.
+*.#.o
+Move 19/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..##?
+...G.
+*.#Po
+Move 20/100  Corners 2/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..##?
+....G
+*.#.P
+Move 21/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..##?
+.....
+*.#PG
+Move 22/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..##?
+...P.
+*.#G*
+Move 23/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...GP
+*.#.*
+Move 24/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+..G..
+*.#.P
+Move 25/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.G...
+*.#.P
+Move 26/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+.G###
+.....
+*.#.P
+Move 27/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.###
+....P
+*.#.*
+Move 28/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+G#???
+..###
+...P.
+*.#.*
+Move 29/100  Corners 3/4  Ghost sees Pac-Man: no
+
+G.??o
+.#???
+..###
+.....
+*.#P*
+Move 30/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*G??o
+.#???
+..###
+...P.
+*.#.*
+Move 31/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.G?o
+.#???
+..###
+.....
+*.#P*
+Move 32/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#G??
+..###
+...P.
+*.#.*
+Move 33/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#?G?
+..###
+....P
+*.#.*
+Move 34/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#??G
+..###
+....P
+*.#.*
+Move 35/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??G
+.#???
+..###
+.....
+*.#.P
+Move 36/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.?Go
+.#???
+..###
+.....
+*.#.P
+Move 37/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.G?o
+.#???
+..###
+.....
+*.#P*
+Move 38/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*G??o
+.#???
+..###
+...P.
+*.#.*
+Move 39/100  Corners 3/4  Ghost sees Pac-Man: no
+
+G.??o
+.#???
+..###
+.....
+*.#P*
+Move 40/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+G#???
+..###
+...P.
+*.#.*
+Move 41/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.###
+.....
+*.#P*
+Move 42/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+G..P.
+*.#.*
+Move 43/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+.G..P
+*.#.*
+Move 44/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+..G..
+*.#.P
+Move 45/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+...G.
+*.#.P
+Move 46/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+....G
+*.#.P
+Move 47/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+.....
+*.#PG
+Move 48/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...P.
+*.#G*
+Move 49/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...GP
+*.#.*
+Move 50/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+..G..
+*.#.P
+Move 51/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.G...
+*.#.P
+Move 52/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.....
+*G#.P
+Move 53/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.....
+G.#.P
+Move 54/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+G....
+*.#.P
+Move 55/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.###
+.....
+*.#.P
+Move 56/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+.G###
+.....
+*.#.P
+Move 57/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.G..P
+*.#.*
+Move 58/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+..G..
+*.#.P
+Move 59/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+...G.
+*.#.P
+Move 60/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+....G
+*.#.P
+Move 61/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+.....
+*.#PG
+Move 62/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...P.
+*.#G*
+Move 63/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...GP
+*.#.*
+Move 64/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+..G..
+*.#.P
+Move 65/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.G...
+*.#.P
+Move 66/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.....
+*G#.P
+Move 67/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.....
+G.#.P
+Move 68/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+G....
+*.#.P
+Move 69/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.###
+.....
+*.#.P
+Move 70/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+G#???
+..###
+.....
+*.#.P
+Move 71/100  Corners 3/4  Ghost sees Pac-Man: no
+
+G.??o
+.#???
+..###
+....P
+*.#.*
+Move 72/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*G??o
+.#???
+..###
+...P.
+*.#.*
+Move 73/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.G?o
+.#???
+..###
+.....
+*.#P*
+Move 74/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#G??
+..###
+...P.
+*.#.*
+Move 75/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#?G?
+..###
+....P
+*.#.*
+Move 76/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#??G
+..###
+....P
+*.#.*
+Move 77/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??G
+.#???
+..###
+.....
+*.#.P
+Move 78/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.?Go
+.#???
+..###
+.....
+*.#.P
+Move 79/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.G?o
+.#???
+..###
+.....
+*.#P*
+Move 80/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*G??o
+.#???
+..###
+...P.
+*.#.*
+Move 81/100  Corners 3/4  Ghost sees Pac-Man: no
+
+G.??o
+.#???
+..###
+.....
+*.#P*
+Move 82/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+G#???
+..###
+...P.
+*.#.*
+Move 83/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.###
+.....
+*.#P*
+Move 84/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+.G###
+...P.
+*.#.*
+Move 85/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.G...
+*.#P*
+Move 86/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+..GP.
+*.#.*
+Move 87/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...G.
+*.#P*
+Move 88/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+....G
+*.#.P
+Move 89/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+.....
+*.#PG
+Move 90/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...P.
+*.#G*
+Move 91/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+...GP
+*.#.*
+Move 92/100  Corners 3/4  Ghost sees Pac-Man: yes
+
+*.??o
+.#???
+..###
+..G..
+*.#.P
+Move 93/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.G...
+*.#.P
+Move 94/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.....
+*G#.P
+Move 95/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+.....
+G.#.P
+Move 96/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+..###
+G....
+*.#.P
+Move 97/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+.#???
+G.###
+.....
+*.#.P
+Move 98/100  Corners 3/4  Ghost sees Pac-Man: no
+
+*.??o
+G#???
+..###
+.....
+*.#.P
+Move 99/100  Corners 3/4  Ghost sees Pac-Man: no
+
+G.??o
+.#???
+..###
+....P
+*.#.*
+Move 100/100  Corners 3/4  Ghost sees Pac-Man: no
+Outcome: tie

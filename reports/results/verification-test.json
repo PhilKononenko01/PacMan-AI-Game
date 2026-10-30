@@ -1,0 +1,178 @@
+{
+  "commands_observed": {
+    "evaluate": {
+      "command": ".venv/bin/python -m pacman evaluate --split test --policy reports/results/policy.npz",
+      "exit_code": 0,
+      "log": "eval-test.log"
+    },
+    "pytest": {
+      "command": "MPLCONFIGDIR=/private/tmp/pacman-foundation-mpl XDG_CACHE_HOME=/private/tmp/pacman-review-cache .venv/bin/python -m pytest -q",
+      "exit_code": 0,
+      "log": "tests-final.log"
+    }
+  },
+  "comparisons": [
+    {
+      "b": 736,
+      "baseline": "random",
+      "c": 0,
+      "learned": "learned",
+      "p": 2.7664523314090327e-222
+    },
+    {
+      "b": 612,
+      "baseline": "pathfinding",
+      "c": 25,
+      "learned": "learned",
+      "p": 9.280586169327794e-148
+    }
+  ],
+  "config": {
+    "game": {
+      "ghost_move_prob": 1.0,
+      "max_steps": 100,
+      "max_walls": 6,
+      "min_loops": 4,
+      "wall_density": 0.2
+    },
+    "learner": {
+      "discount": 0.99,
+      "episodes": 50000,
+      "epsilon_decay_fraction": 0.5,
+      "epsilon_end": 0.05,
+      "epsilon_start": 1.0,
+      "learning_rate": 0.1,
+      "reward_corner": 1.0,
+      "reward_loss": -100.0,
+      "reward_step": -0.05,
+      "reward_win": 100.0,
+      "tie_update": "bootstrap"
+    }
+  },
+  "dependencies": {
+    "matplotlib": "3.11.2",
+    "numpy": "2.4.6",
+    "pytest": "9.2.0"
+  },
+  "evaluation_command": ".venv/bin/python -m pacman evaluate --split test --policy reports/results/policy.npz",
+  "final_evaluation_runs": 1,
+  "games_per_agent": {
+    "learned": 1000,
+    "pathfinding": 1000,
+    "random": 1000
+  },
+  "hashes_sha256": {
+    "config.json": "00728a48ba2bad71935f5547be0128b714f31ef6f493a2a5e5440a89f44410f6",
+    "eval-test.json": "1f0270d019d58441e91f084a29895341508160f078ffede3617463cf26f4da08",
+    "policy.npz": "42696428f6e686fa5476990aa3d5f664b6de7a3ef4bbf8e154979d4383a0bd15"
+  },
+  "layout_partition_check": {
+    "all_in_hashed_test_partition": true,
+    "episodes_played_for_this_check": 0,
+    "repeated_layouts_allowed_by_prd": true,
+    "seeds_checked": 1000,
+    "unique_layouts": 491
+  },
+  "paired_seeds": [
+    2000000,
+    2000999
+  ],
+  "platform": "macOS-26.7.1-x86_64-i386-64bit",
+  "policy_and_config_hashes_unchanged": true,
+  "python": "3.11.14",
+  "records": 3000,
+  "replay_q_unchanged": true,
+  "replays": [
+    {
+      "agent": "learned",
+      "api_record_equal": true,
+      "cli_exit_code": 0,
+      "episode_return": 101.35000000000001,
+      "outcome": "win",
+      "seed": 2000000,
+      "steps": 33
+    },
+    {
+      "agent": "learned",
+      "api_record_equal": true,
+      "cli_exit_code": 0,
+      "episode_return": -101.6,
+      "outcome": "loss",
+      "seed": 2000004,
+      "steps": 72
+    },
+    {
+      "agent": "learned",
+      "api_record_equal": true,
+      "cli_exit_code": 0,
+      "episode_return": -2.999999999999998,
+      "outcome": "tie",
+      "seed": 2000023,
+      "steps": 100
+    }
+  ],
+  "source_commit": "c72fd56db4b30ff2a63f7dc375129bf2c80f0849",
+  "summaries": [
+    {
+      "agent": "random",
+      "games": 1000,
+      "loss_interval": [
+        0.996173241514445,
+        1.0
+      ],
+      "losses": 1000,
+      "mean_steps_to_win": null,
+      "tie_interval": [
+        0.0,
+        0.0038267584855551234
+      ],
+      "ties": 0,
+      "win_interval": [
+        0.0,
+        0.0038267584855551234
+      ],
+      "wins": 0
+    },
+    {
+      "agent": "pathfinding",
+      "games": 1000,
+      "loss_interval": [
+        0.8275879764800763,
+        0.871725639063064
+      ],
+      "losses": 851,
+      "mean_steps_to_win": 13.651006711409396,
+      "tie_interval": [
+        0.0,
+        0.0038267584855551234
+      ],
+      "ties": 0,
+      "win_interval": [
+        0.12827436093693598,
+        0.1724120235199237
+      ],
+      "wins": 149
+    },
+    {
+      "agent": "learned",
+      "games": 1000,
+      "loss_interval": [
+        0.1954234933890366,
+        0.24671949136287427
+      ],
+      "losses": 220,
+      "mean_steps_to_win": 36.505434782608695,
+      "tie_interval": [
+        0.0329382145884185,
+        0.058551789150407776
+      ],
+      "ties": 44,
+      "win_interval": [
+        0.7078137382308571,
+        0.7623800317639609
+      ],
+      "wins": 736
+    }
+  ],
+  "verified_at_utc": "2026-10-30T03:05:04.536151+00:00"
+}
