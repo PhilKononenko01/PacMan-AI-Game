@@ -4,6 +4,42 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Final report tables approved
+
+**Date:** 2026-10-29, recorded at 2026-10-30 03:13 UTC.
+
+After the completed report, frozen policy identity, 3,000 outcome records and paired comparisons were presented, Phillip confirmed "Both of us approve the final tables". This records his approval and his report of Christian's approval under PRD §5 item 4. It is separate from the earlier pre-evaluation freeze approval.
+
+Phillip also explicitly authorized opening the final-results PR. The report and evidence are on `feature/18-final-results`. The technical acceptance criteria and final table approval are complete, so issues #18 and #19 can close with links to the evidence.
+
+---
+
+## Final held-out evaluation and report
+
+**Date:** 2026-10-29. Branch `feature/18-final-results`, based on merged main `c72fd56`.
+
+The approved frozen policy ran once through the existing `evaluate --split test` CLI. Each agent completed seeds 2,000,000 through 2,000,999, with 3,000 records saved in `reports/results/eval-test.json`. Random recorded 0 wins, 1,000 losses and no ties. Pathfinding recorded 149 wins, 851 losses and no ties. Learned recorded 736 wins, 220 losses and 44 ties, a 73.6% win rate with 95% Wilson interval [70.8%, 76.2%].
+
+Both paired tests pass. Learned versus random has b=736, c=0 and p=2.7664523314090327 × 10^-222. Learned versus pathfinding has b=612, c=25 and p=9.280586169327794 × 10^-148. The learned rate meets the difficulty guideline. `reports/results.md` §5.3 discusses the 4.5 percentage point difference from validation and the remaining losses and ties.
+
+The policy and configuration hashes are unchanged from the freeze below. Counts, paired seed sets and exact binomial probabilities were checked from the saved output. API and CLI replays of a win, loss and tie match their recorded results. The replayed Q table is unchanged. `verification-test.json` and `replay-test.log` preserve the checks. The complete suite passes, 476 tests in 11.94 s, with output in `tests-final.log`.
+
+No game rule, generator condition, learner setting or policy changed. No retraining or tuning followed the test results. Technical acceptance evidence is complete. The later team table approval is recorded above, separately from the pre-evaluation freeze approval.
+
+---
+
+## Final policy and settings freeze
+
+**Date:** 2026-10-29. Recorded before the held-out evaluation at 2026-10-30 03:03 UTC. Base commit `c72fd56`, which merges PR #22.
+
+**Approval:** Phillip reported "christian approved lets do the issues" in this session. This records Christian's approval as relayed by Phillip and Phillip's instruction to proceed. The approved candidate is the existing `reports/results/policy.npz` and every default game knob and learner setting in `reports/results/config.json`, including `tie_update=bootstrap`. No retraining or tuning follows the test results.
+
+**Identity checked before evaluation:** policy SHA-256 `42696428f6e686fa5476990aa3d5f664b6de7a3ef4bbf8e154979d4383a0bd15`; configuration file SHA-256 `00728a48ba2bad71935f5547be0128b714f31ef6f493a2a5e5440a89f44410f6`. The policy's embedded configuration equals the configuration file and `Config()`; its training seeds are 0 through 49,999. `eval-test.json` is absent before the final run.
+
+**Separate remaining approval:** the team reviews the final result tables after they exist. Freeze approval does not claim that final table review has occurred.
+
+---
+
 ## Final acceptance follow-up — issues #18 and #19
 
 **Date:** 2026-10-29. Branch `feature/18-19-final-acceptance`, based on main `6cd7e85`. Phillip requested completion of the remaining issues. The game rules, generator, learning settings and selected policy are unchanged.

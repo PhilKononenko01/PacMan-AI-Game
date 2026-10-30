@@ -1,0 +1,8 @@
+ts	phase	decision	why	evidence	result
+2026-10-30T03:03:14Z	freeze	Keep the existing policy and all default settings	Phillip reports Christian approved and instructs completion	Architecture/review.md; reports/results/config.json	Hashes verified before evaluation
+2026-10-30T03:05:48Z	evaluate	Run the final CLI evaluation once	Measure the approved candidate without test-driven tuning	reports/results/eval-test.json; reports/results/eval-test.log	3,000 records with identical 1,000-seed ranges for all agents
+2026-10-30T03:05:48Z	verify	Check the recorded statistics and replay one learned game per outcome	Verify actual results and policy identity before reporting acceptance	reports/results/verification-test.json; reports/results/replay-test.log	Both comparisons pass; policy hashes and replayed Q table unchanged
+2026-10-30T03:05:48Z	tests	Run the full headless suite after final evaluation	Confirm the existing requirement tests remain green	reports/results/tests-final.log	476 passed in 11.94 s
+2026-10-30T03:08:32Z	review	Obtain an independent statistical and evidence review	Check the report without rerunning final games	reports/results.md section 5.4	VERIFIED by gpt-6.1-terra; historical provenance relies on session actions
+2026-10-30T03:08:32Z	partition	Check generated maps for all 1,000 test seeds without playing episodes	Investigate the test versus validation difference before accepting it	reports/results/verification-test.json	All maps in the hashed test partition; 491 unique layouts
+2026-10-30T03:13:42Z	signoff	Record final table approval and permission to open the results PR	Phillip confirmed both teammates approve the completed tables	Architecture/review.md final report tables approved	Team table approval complete as relayed by Phillip

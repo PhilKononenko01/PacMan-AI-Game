@@ -1,0 +1,8 @@
+split test, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
+agent         wins                  losses                ties                  steps/win
+random          0   0.0% [ 0.0,  0.4]  1000 100.0% [99.6,100.0]    0   0.0% [ 0.0,  0.4]   n/a
+pathfinding   149  14.9% [12.8, 17.2]   851  85.1% [82.8, 87.2]    0   0.0% [ 0.0,  0.4]   13.7
+learned       736  73.6% [70.8, 76.2]   220  22.0% [19.5, 24.7]   44   4.4% [ 3.3,  5.9]   36.5
+learned vs random:       b=736 c=0 one-sided exact McNemar p=0.0000
+learned vs pathfinding:  b=612 c=25 one-sided exact McNemar p=0.0000
+wrote reports/results/eval-test.json
