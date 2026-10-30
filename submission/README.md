@@ -23,3 +23,6 @@ python submission/build_notebook.py --output /tmp/CSCI_3202_Intermediate_Report.
 The builder uses the tracked experiment inputs in `random_vs_random/`. Its notebook copy
 replaces the experiment's Git provenance lookup with the recorded source revision so it
 can run without Git. Game rules and random policies are unchanged.
+
+The report text comes directly from `writeup.md`. The proposed power-up system is future
+work; the notebook preserves the current four-corner win condition.

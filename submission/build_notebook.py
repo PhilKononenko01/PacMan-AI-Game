@@ -43,77 +43,24 @@ def build(project: Path, experiment: Path, output: Path) -> None:
             value.update(execution_count=None, outputs=[])
         cells.append(value)
 
+    cell("markdown", Path(__file__).with_name("writeup.md").read_text())
     cell("markdown", """
-    # CSCI 3202: Intermediate Project Report
-    ## Pac-Man AI, Option 1: Your Choice
-    **Phillip Kononenko and Christian Gore**\x20\x20
-    **October 30, 2026**
+    ## Notebook instructions and references
 
-    This notebook contains the report, all application source, the saved trained policy,
-    recorded experimental data and runnable demonstrations. The automated test suite's
-    source is intentionally excluded. Only this `.ipynb` file is needed for the submission.
+    This notebook contains the supplied write-up, all application source, the saved
+    trained policy, recorded experimental data and runnable demonstrations. Automated
+    test source is excluded. Only this `.ipynb` file is needed for the submission.
 
     Use a **Python 3.11 or later Jupyter kernel**, then choose **Restart Kernel and Run All**.
     NumPy and Matplotlib must be available in that kernel. If they are missing, run
     `%pip install numpy matplotlib` in a new cell, restart the kernel and run all cells.
 
-    Source cells reconstruct normal Python files in a fresh temporary workspace. They do
-    not overwrite files beside this notebook or require Git or the original repository.
+    Source cells reconstruct normal Python files in a fresh temporary workspace. They
+    do not overwrite files beside this notebook or require Git or the original repository.
     Run All displays recorded results, runs 100 random-versus-random games and replays
     one recorded learned-agent win. It does not retrain the policy or repeat the final
-    held-out evaluation. The optional training cell is disabled by default.
-    """)
-    cell("markdown", """
-    ## Project and current implementation
-
-    Our project asks whether reinforcement learning can outperform random movement and
-    basic pathfinding in a Pac-Man-style game. A 5x5 grid contains randomly generated
-    walls. Pac-Man starts at `(0, 0)` and must visit all four corners, with his starting
-    corner already counted. The ghost starts at `(4, 4)`. Capture is a loss, and reaching
-    100 turns without winning or losing is a tie. A blocked move leaves an actor in place.
-
-    Pac-Man always knows the ghost's position but only senses adjacent walls. Discovered
-    walls remain in memory for the current game. Unknown cells are treated as open when
-    planning. Map generation keeps corners open, connects all open cells, allows at most
-    six walls and requires at least four independent loops.
-
-    The implementation includes the game, wall sensing and memory, rewards, a scripted
-    ghost, three agents, training, evaluation, policy saving and terminal visualization.
-    The **random agent** chooses among four directions. The **pathfinding agent** uses
-    breadth-first search to move toward the nearest unvisited corner. The **learned
-    agent** uses tabular Q-learning with BFS-derived features and can depart from that
-    shortest route to avoid danger. The normal ghost does not learn. It chases visible
-    Pac-Man, pursues his last observed position, and otherwise searches by least-recent visits.
-
-    The learned state describes goal direction, neighboring open moves, relative ghost
-    position, ghost distance, estimated visibility and remaining corners. This gives
-    **122,880 states with four actions each**. Coordinates alone would be ambiguous across
-    different wall layouts. The compact features permit reuse across maps but omit detail.
-
-    Training uses **50,000 episodes**, learning rate **0.1** and discount **0.99**.
-    Epsilon-greedy exploration decreases from **1.0 to 0.05** during the first half.
-    Rewards are **+100** for winning, **-100** for capture, **+1** per new corner and
-    **-0.05** per turn. The Q update learns from immediate reward and the estimated value
-    of the next state. Wins and losses are terminal. A referee tie stops the episode but
-    bootstraps the learning target under the approved default.
-
-    ## Correctness and progress
-
-    The recorded project acceptance suite passed **476 automated tests**. Tests cover
-    movement, map constraints, sensing privacy, visibility, collision order, rewards,
-    timeout precedence, numeric Q updates and per-game cache resets. Integration tests
-    train, save, load, evaluate and replay a policy. Determinism checks reproduce games
-    across processes. Those are historical verification results; no test source or
-    automated test runner is included in this submission notebook.
-
-    The core implementation and planned evaluation are complete. Remaining course work
-    includes the final write-up and interview preparation. The learned agent still loses
-    or ties some games. Its feature summary omits the ghost's internal history, so the
-    results demonstrate improvement over baselines rather than guaranteed success on
-    every game. Structural generator constraints are not a formal proof of a winning
-    strategy for every encounter. Further improvement studies would use validation data.
-
-    ## Libraries and sources
+    held-out evaluation. The optional training cell is disabled by default. The proposed
+    power-up system in the write-up is future work and is not implemented in this snapshot.
 
     | Tool | Role | Reference |
     |---|---|---|
