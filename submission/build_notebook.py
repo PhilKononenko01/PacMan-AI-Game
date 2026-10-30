@@ -15,8 +15,8 @@ def build(project: Path, experiment: Path, output: Path) -> None:
     files = {p.relative_to(project).as_posix(): p.read_bytes()
              for p in sorted((project / "pacman").rglob("*.py"))}
     application_paths = list(files)
-    for name in ("pyproject.toml", "README.md"):
-        files[name] = (project / name).read_bytes()
+    files["pyproject.toml"] = (project / "pyproject.toml").read_bytes()
+    files["README.md"] = Path(__file__).with_name("notebook_readme.md").read_bytes()
     original_experiment = (experiment / "run.py").read_text()
     git_lookup = 'subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()'
     if original_experiment.count(git_lookup) != 1:
@@ -58,7 +58,7 @@ def build(project: Path, experiment: Path, output: Path) -> None:
     Source cells reconstruct normal Python files in a fresh temporary workspace. They
     do not overwrite files beside this notebook or require Git or the original repository.
     Run All displays recorded results, runs 100 random-versus-random games and replays
-    one recorded learned-agent win. It does not retrain the policy or repeat the final
+    one recorded learned-player win. It does not retrain the policy or repeat the final
     held-out evaluation. The optional training cell is disabled by default. The proposed
     power-up system in the write-up is future work and is not implemented in this snapshot.
 
@@ -174,18 +174,18 @@ def build(project: Path, experiment: Path, output: Path) -> None:
     cell("markdown", """
     ## Recorded results against the scripted ghost
 
-    All three Pac-Man agents played the same **1,000 held-out test seeds** after freezing
+    All three Pac-Man players played the same **1,000 held-out test seeds** after freezing
     the policy and settings. The following table is calculated from the included recorded
     data. It does not run another held-out evaluation. Repeated layouts within a split
     are permitted; those seeds generated 491 distinct layouts.
 
-    The learned agent's 95% Wilson win-rate interval was **70.8% to 76.2%**. Both one-sided
+    The learned player's 95% Wilson win-rate interval was **70.8% to 76.2%**. Both one-sided
     exact paired McNemar comparisons passed `p < 0.05`. The 73.6% learned rate meets our
     proposed 50% to 90% difficulty guideline. Losses and ties remain separate from wins.
     """)
     cell("code", textwrap.dedent("""
     recorded = json.loads((WORKSPACE / "reports/results/eval-test.json").read_text())
-    rows = ["| Pac-Man agent | Wins | Losses | Ties | Win rate |", "|---|---:|---:|---:|---:|"]
+    rows = ["| Pac-Man player | Wins | Losses | Ties | Win rate |", "|---|---:|---:|---:|---:|"]
     for name in ("random", "pathfinding", "learned"):
         games = [r for r in recorded["records"] if r["agent"] == name]
         counts = Counter(r["outcome"] for r in games)
@@ -201,7 +201,7 @@ def build(project: Path, experiment: Path, output: Path) -> None:
     are unchanged. The recorded result was **2 Pac-Man wins, 89 losses and 9 ties**, with
     **42.7 Pac-Man turns per game** on average. A turn includes Pac-Man's action and,
     if the game continues, the ghost's action. This opponent differs from the scripted
-    ghost above, so the two experiments are not a matched comparison of agent performance.
+    ghost above, so the two experiments are not a matched comparison of player performance.
 
     This cell reruns the experiment in a fresh output folder. Original recorded results
     stay under `evidence/random-vs-random/`.
@@ -221,7 +221,7 @@ def build(project: Path, experiment: Path, output: Path) -> None:
     print("New experiment output:", experiment_run)
     """))
     cell("markdown", """
-    ## Replay a learned-agent game
+    ## Replay a learned-player game
     This is the already recorded win on seed **2,000,000**. It should end at **move 33**.
     The command uses the saved policy greedily and does not train it. The final frame is
     displayed below; the full plain-text replay is saved in the temporary output folder.

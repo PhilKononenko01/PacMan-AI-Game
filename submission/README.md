@@ -26,3 +26,6 @@ can run without Git. Game rules and random policies are unchanged.
 
 The report text comes directly from `writeup.md`. The proposed power-up system is future
 work; the notebook preserves the current four-corner win condition.
+
+The embedded project README comes from `notebook_readme.md`, which contains only game
+and execution documentation.
