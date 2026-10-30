@@ -11,6 +11,7 @@ from pacman.config import Config, GameKnobs
 from pacman.env import Environment, KnownCell, Observation, Outcome
 from pacman.episode import play_episode
 from pacman.grid import COLS, Direction
+from pacman.mapgen import GameMap
 from pacman.referee import Referee
 from pacman.rng import derive, pick
 
@@ -131,10 +132,12 @@ def test_baselines_play_whole_games_deterministically():
         assert all(record.outcome in Outcome for record in records)
 
 
-def test_pathfinding_walks_into_a_still_ghost_on_the_nearest_corner():
+def test_pathfinding_walks_into_a_still_ghost_on_the_nearest_corner(monkeypatch):
+    # An explicit fixture tests the route without playing a held-out seed.
+    monkeypatch.setattr("pacman.env.generate", lambda *_: GameMap(()))
     config = Config(game=GameKnobs(ghost_move_prob=0.0))
     env = Environment(config)
-    record = play_episode(env, Referee(config.game.max_steps), PathfindingAgent(), 2_000_000)
+    record = play_episode(env, Referee(config.game.max_steps), PathfindingAgent(), 0)
     assert record.outcome is Outcome.LOSS
     assert env.visited == {(0, 0), (0, 4)}   # from (0, 4) the nearest corner is (4, 4)
     assert record.steps == 8

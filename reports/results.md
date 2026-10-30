@@ -29,6 +29,8 @@ Reproducibility is within this runtime, as NFR-1 allows: the same seed, configur
 
 Every test is headless. The §17 table of the architecture maps each file to the requirements it covers; §6 below traces the requirements the other way.
 
+Final acceptance follow-up on 2026-10-29: **476 tests passed in 11.83 s** on Python 3.11.14, NumPy 2.4.6, Matplotlib 3.11.2 and pytest 9.2.0. This includes a regression check that summary statistics agree for lists and one-shot iterators. The full suite now plays no held-out test-seed episodes; map generation and split checks still inspect that split.
+
 ## 4. Knob freeze (PRD §5)
 
 The configuration proposed for the final evaluation is the PRD default, unchanged by anything measured on validation:
@@ -40,7 +42,12 @@ learner: reward_win=100  reward_loss=-100  reward_corner=1  reward_step=-0.05
          tie_update=bootstrap
 ```
 
-**Sign-off:** pending. Christian and Phillip record the freeze in `review.md` before any test-split game is played. No test-split episode has been run while writing this draft.
+**Sign-off:** pending. Christian and Phillip record the freeze in `review.md` before the final held-out policy evaluation. The committed policy has not undergone that evaluation. Earlier automated tests did play test seeds 2,000,000 and 2,000,001 with a spy agent, the pathfinding baseline or an untrained table; the earlier claim that no test-split episode had run was therefore too broad. Those episode tests now use validation seeds or an explicit hand-built map. Map-generation and split-membership tests still inspect test layouts without playing games. No policy or setting was selected using those unit-test outcomes.
+
+Freeze candidate SHA-256 digests (unchanged by the acceptance fixes):
+
+- `reports/results/policy.npz`: `42696428f6e686fa5476990aa3d5f664b6de7a3ef4bbf8e154979d4383a0bd15`
+- `reports/results/config.json`: `00728a48ba2bad71935f5547be0128b714f31ef6f493a2a5e5440a89f44410f6`
 
 ## 5. Results
 

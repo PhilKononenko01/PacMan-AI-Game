@@ -82,10 +82,11 @@ def test_run_split_leaves_a_greedy_learned_agent_unchanged():
     assert agent.training is False
 
 
-def test_summarise_counts_rates_intervals_and_steps():
+@pytest.mark.parametrize("as_iterable", [list, iter])
+def test_summarise_counts_rates_intervals_and_steps(as_iterable):
     records = records_from("a", [Outcome.WIN, Outcome.LOSS, Outcome.WIN, Outcome.TIE], steps=12)
     records[2] = record(2, Outcome.WIN, "a", steps=20)
-    summary = summarise("a", records)
+    summary = summarise("a", as_iterable(records))
     assert summary == Summary(
         agent="a", games=4, wins=2, losses=1, ties=1,
         win_interval=wilson(2, 4), loss_interval=wilson(1, 4), tie_interval=wilson(1, 4),
@@ -233,4 +234,4 @@ def test_run_split_refuses_an_agent_still_in_training_mode():
         run_split(CONFIG, agent, Split.TEST, 2)
     assert numpy.array_equal(agent.q, before)        # nothing was learned from held-out seeds
     agent.training = False
-    assert len(run_split(CONFIG, agent, Split.TEST, 2)) == 2
+    assert len(run_split(CONFIG, agent, Split.VAL, 2)) == 2
