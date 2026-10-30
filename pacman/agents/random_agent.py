@@ -1,4 +1,4 @@
-"""The random baseline: one uniform draw per step (§10.2)."""
+"""The random baseline: one uniform draw per step."""
 
 import random
 

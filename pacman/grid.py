@@ -1,4 +1,4 @@
-"""Fixed-grid types, movement, planning and sight (architecture §4.1, §9)."""
+"""Fixed-grid types, movement, planning and sight."""
 
 from collections import deque
 from collections.abc import Callable
@@ -45,7 +45,7 @@ def neighbours(cell: Cell) -> tuple[Cell, ...]:
 
 
 def move(cell: Cell, direction: Direction, passable: Passable) -> Cell:
-    """The neighbour in that direction, or the cell itself when blocked (FR-1).
+    """The neighbour in that direction, or the cell itself when blocked.
 
     Anything that is not one of the four directions is an error: a bad action
     must fail loudly rather than wrap round to a valid move.

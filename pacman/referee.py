@@ -1,4 +1,4 @@
-"""The referee: the only holder of the move count and the only reader of max_steps (§7.4)."""
+"""The referee: the only holder of the move count and the only reader of max_steps."""
 
 from pacman.env import Outcome, StepResult
 

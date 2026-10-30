@@ -1,4 +1,4 @@
-"""Wilson intervals and the paired one-sided exact McNemar test (§13.2).
+"""Wilson intervals and the paired one-sided exact McNemar test.
 
 Pure functions on counts; nothing here imports the game, the CLI or training.
 """

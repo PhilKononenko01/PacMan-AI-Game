@@ -1,4 +1,4 @@
-"""Versioned policy files: the Q-table and the metadata needed to replay a run (§12).
+"""Versioned policy files: the Q-table and the metadata needed to replay a run.
 
 Imports only the configuration and NumPy, so training, evaluation and the CLI can
 all use it without pulling in each other.
@@ -16,7 +16,7 @@ import numpy
 from pacman.config import Config, _reject_json_constant, _unique_json_object
 
 FORMAT_VERSION = 1
-# §10.4's state index has 122,880 rows; features.py (#10) must agree with this shape.
+# The state index has 122,880 rows; features.py must agree with this shape.
 TABLE_SHAPE = (122_880, 4)
 
 _META_KEYS = ("format_version", "config", "training_seeds", "learning_curve", "validation")
@@ -94,7 +94,7 @@ class Policy:
 
 
 def save_policy(path: str | Path, policy: Policy) -> None:
-    """Write the two-array .npz of §12 to exactly the given path."""
+    """Write the two-array .npz to exactly the given path."""
     validation = policy.validation
     meta = {
         "format_version": FORMAT_VERSION,

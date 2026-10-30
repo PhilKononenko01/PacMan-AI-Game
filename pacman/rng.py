@@ -5,7 +5,7 @@ import random
 
 
 def derive(seed: int, component: str) -> random.Random:
-    """Derive an independent stream using the architecture's fixed encoding."""
+    """Derive an independent stream using a fixed encoding."""
     if type(seed) is not int:
         raise ValueError("seed must be an integer")
     if not isinstance(component, str) or not component or not component.isascii():

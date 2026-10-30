@@ -1,4 +1,4 @@
-"""The one episode loop that joins an environment, the referee and an agent (§10.6)."""
+"""The one episode loop that joins an environment, the referee and an agent."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -24,7 +24,7 @@ class EpisodeRecord:
 
 @dataclass(frozen=True, slots=True)
 class Frame:
-    """What watch mode draws after reset and after each step (§14.6)."""
+    """What watch mode draws after reset and after each step."""
 
     observation: Observation
     t: int

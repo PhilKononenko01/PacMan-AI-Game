@@ -1,5 +1,5 @@
 """Paired evaluation on a split, summaries, the report layout, replay JSON and the
-difficulty check (§13, §14.3, §14.4). Everything returns data or strings; the CLI prints.
+difficulty check. Everything returns data or strings; the CLI prints.
 """
 
 from collections.abc import Iterable, Sequence
@@ -18,7 +18,7 @@ from pacman.policy_io import Policy, ValidationSummary
 from pacman.referee import Referee
 from pacman.stats import discordant_pairs, mcnemar_one_sided, mean_steps, wilson
 
-FULL_GAMES = 1_000  # PRD OQ-12: an evaluation plays every seed of its split (§11.1)
+FULL_GAMES = 1_000  # An evaluation plays every seed of its split.
 
 TABLE_HEADER = "agent         wins                  losses                ties                  steps/win"
 
@@ -58,7 +58,7 @@ def run_split(config: Config, agent, split: Split, games: int) -> list[EpisodeRe
     if type(games) is not int or games < 1 or games > len(seeds):
         raise ValueError(f"games must be between 1 and {len(seeds)} for the {split.value} split")
     if getattr(agent, "training", False):
-        # §13.1: evaluation is greedy. A training agent here would learn from held-out seeds.
+        # Evaluation is greedy. A training agent here would learn from held-out seeds.
         raise ValueError(
             f"{agent.name} is in training mode; evaluation plays greedily, so set"
             " training = False or use a separate evaluation agent"
@@ -86,7 +86,7 @@ def summarise(agent: str, records: Iterable[EpisodeRecord]) -> Summary:
 
 
 def summary_of_validation(validation: ValidationSummary, agent: str = "learned") -> Summary:
-    """The summary a policy file stores for its final validation run (§12)."""
+    """The summary a policy file stores for its final validation run."""
     games = validation.games
     return Summary(
         agent, games, validation.wins, validation.losses, validation.ties,
@@ -110,7 +110,7 @@ def _wins_by_seed(records: Sequence[EpisodeRecord]) -> dict[int, bool]:
 
 
 def compare(learned: Sequence[EpisodeRecord], baseline: Sequence[EpisodeRecord]) -> Comparison:
-    """The one-sided exact McNemar test of the learned agent against a baseline (FR-11)."""
+    """The one-sided exact McNemar test of the learned agent against a baseline."""
     b, c = discordant_pairs(_wins_by_seed(learned), _wins_by_seed(baseline))
     return Comparison(_one_agent(learned), _one_agent(baseline), b, c, mcnemar_one_sided(b, c))
 
@@ -126,7 +126,7 @@ def _cell(count: int, games: int, interval: tuple[float, float], width: int) -> 
 
 
 def format_summary_row(summary: Summary) -> str:
-    """One row of the §13.3 table, in its documented column widths."""
+    """One summary-table row with fixed column widths."""
     steps = "n/a" if summary.mean_steps_to_win is None else f"{summary.mean_steps_to_win:.1f}"
     return (
         f"{summary.agent:<12}"
@@ -153,7 +153,7 @@ def format_report(
 
 
 def write_eval_json(path: str | Path, config: Config, records: Iterable[EpisodeRecord]) -> None:
-    """The configuration and every record, so any evaluated game can be replayed (FR-14)."""
+    """The configuration and every record, so any evaluated game can be replayed."""
     data = {
         "config": json.loads(config.to_json()),
         "records": [
@@ -190,7 +190,7 @@ def knob_differences(current: GameKnobs, stored: GameKnobs) -> dict[str, tuple[A
 
 
 def difficulty_check(config: Config, policy: Policy | None = None) -> DifficultyCheck:
-    """FR-15: the baselines on the validation split under the given knobs; never trains."""
+    """The baselines on the validation split under the given knobs; never trains."""
     baselines = tuple(
         summarise(agent.name, run_split(config, agent, Split.VAL, FULL_GAMES))
         for agent in (RandomAgent(), PathfindingAgent())
@@ -204,5 +204,5 @@ def difficulty_check(config: Config, policy: Policy | None = None) -> Difficulty
 
 
 def simulate(config: Config, agents: Iterable, split: Split, games: int) -> list[Summary]:
-    """FR-17: the per-agent summary of the first `games` seeds of a split, no graphics."""
+    """The per-agent summary of the first `games` seeds of a split, no graphics."""
     return [summarise(agent.name, run_split(config, agent, split, games)) for agent in agents]

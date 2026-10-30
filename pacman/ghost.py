@@ -1,4 +1,4 @@
-"""The ghost: row/column vision, BFS chase, pursuit of the last sighting, search (§8)."""
+"""The ghost: row/column vision, BFS chase, pursuit of the last sighting, search."""
 
 import random
 
@@ -22,7 +22,7 @@ class Ghost:
         self.move_prob = move_prob
 
     def act(self, pacman: Cell, game_map: GameMap, t: int) -> None:
-        """One ghost move (§8.2): vision, the move draw, then chase, pursue or search."""
+        """One ghost move: vision, the move draw, then chase, pursue or search."""
         passable = game_map.is_open
         if line_of_sight(self.cell, pacman, passable):
             self.last_seen = pacman
