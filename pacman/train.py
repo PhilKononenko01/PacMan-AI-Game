@@ -1,4 +1,4 @@
-"""Q-learning training: seeds, the epsilon schedule, the learning curve and outputs (§11)."""
+"""Q-learning training: seeds, the epsilon schedule, the learning curve and outputs."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -14,7 +14,7 @@ from pacman.mapgen import SPLIT_SEEDS, Split
 from pacman.policy_io import Policy, ValidationSummary, save_policy
 from pacman.referee import Referee
 
-# PRD §2.8 evaluation sizes: how much is measured, not what is learned (§11.1).
+# Evaluation sizes control how much is measured, not what is learned.
 CURVE_EVERY = 2_500
 CURVE_GAMES = 200
 
@@ -72,7 +72,7 @@ def train(
 
 
 def prepare_output_dir(out_dir: str | Path) -> Path:
-    """Create the run directory; refuse one that already holds a policy (§14.1)."""
+    """Create the run directory; refuse one that already holds a policy."""
     out = Path(out_dir)
     if (out / "policy.npz").exists():
         raise FileExistsError(f"{out / 'policy.npz'} already exists; choose another --out")
@@ -81,7 +81,7 @@ def prepare_output_dir(out_dir: str | Path) -> Path:
 
 
 def write_outputs(out_dir: str | Path, result: TrainingResult) -> Path:
-    """Write policy.npz, curve.csv, curve.png and config.json (§11.2)."""
+    """Write policy.npz, curve.csv, curve.png and config.json."""
     out = prepare_output_dir(out_dir)
     save_policy(out / "policy.npz", result.policy)  # first: the run must survive a plotting failure
     from pacman.plot import save_curve  # Matplotlib is loaded only when a curve is drawn

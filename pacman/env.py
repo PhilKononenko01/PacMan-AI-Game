@@ -1,4 +1,4 @@
-"""The environment: one episode's true map, ghost, Pac-Man memory and rewards (§7)."""
+"""The environment: one episode's true map, ghost, Pac-Man memory and rewards."""
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
@@ -59,7 +59,7 @@ class Environment:
         self.known: list[KnownCell] = []
 
     def reset(self, seed: int, game_map: GameMap | None = None) -> Observation:
-        """Start an episode on the seed's map, or on a hand-built map for tests (§7.1)."""
+        """Start an episode on the seed's map, or on a hand-built map for tests."""
         if game_map is None:
             game_map = generate(seed, split_of_seed(seed), self.config)
         self.game_map = game_map
@@ -72,7 +72,7 @@ class Environment:
         return self._observation()
 
     def step(self, action: Direction, t: int) -> StepResult:
-        """PRD §2.4 steps 1 to 6; `t` only stamps the ghost's visit record (§7.2)."""
+        """Advance one turn; `t` only stamps the ghost's visit record."""
         game_map, ghost = self.game_map, self.ghost
         if game_map is None or ghost is None:
             raise RuntimeError("reset the environment before stepping")
@@ -98,7 +98,7 @@ class Environment:
         return StepResult(self._observation(), reward, None)
 
     def _sense(self, game_map: GameMap) -> None:
-        """Record each in-grid neighbour of Pac-Man as open or a wall (§7.3)."""
+        """Record each in-grid neighbour of Pac-Man as open or a wall."""
         for row, col in neighbours(self.pacman):
             self.known[row * COLS + col] = (
                 KnownCell.OPEN if game_map.is_open((row, col)) else KnownCell.WALL

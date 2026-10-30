@@ -1,4 +1,4 @@
-"""The ADR-2 state features and the table index, from an observation alone (§10.4)."""
+"""The state features and the table index, from an observation alone."""
 
 from dataclasses import dataclass
 

@@ -1,4 +1,4 @@
-"""Watch-mode frames as strings: terminal pixel art and the plain-text fallback (§14.6).
+"""Watch-mode frames as strings: terminal pixel art and the plain-text fallback.
 
 The renderer draws walls and unknown cells from Pac-Man's memory (D-5), and the
 actors and corners where they are. It never writes output or sleeps; the CLI does.
@@ -70,7 +70,7 @@ SPRITES: dict[str, Sprite] = {
 
 
 def use_plain(plain: bool, isatty: bool, environ: Mapping[str, str]) -> bool:
-    """The §14.6 fallback rule: --plain, no terminal, NO_COLOR set, or TERM=dumb."""
+    """The plain-rendering fallback rule: --plain, no terminal, NO_COLOR set, or TERM=dumb."""
     return plain or not isatty or bool(environ.get("NO_COLOR")) or environ.get("TERM") == "dumb"
 
 

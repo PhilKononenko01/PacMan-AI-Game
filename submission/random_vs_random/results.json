@@ -1,0 +1,748 @@
+{
+  "experiment": "random Pac-Man versus random ghost",
+  "games": 100,
+  "split": "validation",
+  "seeds": [
+    1000000,
+    1000099
+  ],
+  "source_commit": "6f313150eb20d8a12ff1dcc485337dee1e276724",
+  "python": "3.11.14",
+  "pacman_policy": "uniform among up, right, down, left",
+  "ghost_policy": "uniform among up, right, down, left; no chase or search",
+  "blocked_moves": "stay in place and consume the turn",
+  "outcome_perspective": "Pac-Man",
+  "config": {
+    "game": {
+      "ghost_move_prob": 1.0,
+      "max_steps": 100,
+      "max_walls": 6,
+      "min_loops": 4,
+      "wall_density": 0.2
+    },
+    "learner": {
+      "discount": 0.99,
+      "episodes": 50000,
+      "epsilon_decay_fraction": 0.5,
+      "epsilon_end": 0.05,
+      "epsilon_start": 1.0,
+      "learning_rate": 0.1,
+      "reward_corner": 1.0,
+      "reward_loss": -100.0,
+      "reward_step": -0.05,
+      "reward_win": 100.0,
+      "tie_update": "bootstrap"
+    }
+  },
+  "wins": 2,
+  "losses": 89,
+  "ties": 9,
+  "mean_steps": 42.7,
+  "verified_replay_seeds": [
+    1000000,
+    1000017,
+    1000076
+  ],
+  "records": [
+    {
+      "seed": 1000000,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 22,
+      "episode_return": -100.1
+    },
+    {
+      "seed": 1000001,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 32,
+      "episode_return": -100.6
+    },
+    {
+      "seed": 1000002,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 42,
+      "episode_return": -101.1
+    },
+    {
+      "seed": 1000003,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 39,
+      "episode_return": -100.95
+    },
+    {
+      "seed": 1000004,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 28,
+      "episode_return": -101.39999999999999
+    },
+    {
+      "seed": 1000005,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 46,
+      "episode_return": -101.3
+    },
+    {
+      "seed": 1000006,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 25,
+      "episode_return": -101.25
+    },
+    {
+      "seed": 1000007,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 64,
+      "episode_return": -103.19999999999999
+    },
+    {
+      "seed": 1000008,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 89,
+      "episode_return": -103.44999999999999
+    },
+    {
+      "seed": 1000009,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 72,
+      "episode_return": -103.6
+    },
+    {
+      "seed": 1000010,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 76,
+      "episode_return": -102.8
+    },
+    {
+      "seed": 1000011,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 38,
+      "episode_return": -100.89999999999999
+    },
+    {
+      "seed": 1000012,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 22,
+      "episode_return": -101.1
+    },
+    {
+      "seed": 1000013,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 37,
+      "episode_return": -101.85
+    },
+    {
+      "seed": 1000014,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 24,
+      "episode_return": -101.2
+    },
+    {
+      "seed": 1000015,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 33,
+      "episode_return": -101.64999999999999
+    },
+    {
+      "seed": 1000016,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 17,
+      "episode_return": -100.85
+    },
+    {
+      "seed": 1000017,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999947
+    },
+    {
+      "seed": 1000018,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 13,
+      "episode_return": -100.64999999999999
+    },
+    {
+      "seed": 1000019,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999942
+    },
+    {
+      "seed": 1000020,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999902
+    },
+    {
+      "seed": 1000021,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 34,
+      "episode_return": -100.7
+    },
+    {
+      "seed": 1000022,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 44,
+      "episode_return": -102.2
+    },
+    {
+      "seed": 1000023,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 47,
+      "episode_return": -101.35
+    },
+    {
+      "seed": 1000024,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 24,
+      "episode_return": -101.2
+    },
+    {
+      "seed": 1000025,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 22,
+      "episode_return": -101.1
+    },
+    {
+      "seed": 1000026,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 16,
+      "episode_return": -100.8
+    },
+    {
+      "seed": 1000027,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 12,
+      "episode_return": -100.6
+    },
+    {
+      "seed": 1000028,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999947
+    },
+    {
+      "seed": 1000029,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 71,
+      "episode_return": -102.55
+    },
+    {
+      "seed": 1000030,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 46,
+      "episode_return": -101.3
+    },
+    {
+      "seed": 1000031,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 58,
+      "episode_return": -102.89999999999999
+    },
+    {
+      "seed": 1000032,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 41,
+      "episode_return": -102.05
+    },
+    {
+      "seed": 1000033,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 53,
+      "episode_return": -101.65
+    },
+    {
+      "seed": 1000034,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 69,
+      "episode_return": -103.44999999999999
+    },
+    {
+      "seed": 1000035,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 15,
+      "episode_return": -100.75
+    },
+    {
+      "seed": 1000036,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 28,
+      "episode_return": -100.39999999999999
+    },
+    {
+      "seed": 1000037,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 21,
+      "episode_return": -101.05
+    },
+    {
+      "seed": 1000038,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 7,
+      "episode_return": -100.35
+    },
+    {
+      "seed": 1000039,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 88,
+      "episode_return": -102.39999999999999
+    },
+    {
+      "seed": 1000040,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 25,
+      "episode_return": -100.25
+    },
+    {
+      "seed": 1000041,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 65,
+      "episode_return": -101.25
+    },
+    {
+      "seed": 1000042,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 28,
+      "episode_return": -101.39999999999999
+    },
+    {
+      "seed": 1000043,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 34,
+      "episode_return": -100.7
+    },
+    {
+      "seed": 1000044,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 17,
+      "episode_return": -100.85
+    },
+    {
+      "seed": 1000045,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 35,
+      "episode_return": -101.75
+    },
+    {
+      "seed": 1000046,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999902
+    },
+    {
+      "seed": 1000047,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 44,
+      "episode_return": -102.2
+    },
+    {
+      "seed": 1000048,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 27,
+      "episode_return": -101.35
+    },
+    {
+      "seed": 1000049,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 40,
+      "episode_return": -101.0
+    },
+    {
+      "seed": 1000050,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 20,
+      "episode_return": -100.0
+    },
+    {
+      "seed": 1000051,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 24,
+      "episode_return": -101.2
+    },
+    {
+      "seed": 1000052,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 6,
+      "episode_return": -100.3
+    },
+    {
+      "seed": 1000053,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 25,
+      "episode_return": -100.25
+    },
+    {
+      "seed": 1000054,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 27,
+      "episode_return": -101.35
+    },
+    {
+      "seed": 1000055,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 38,
+      "episode_return": -100.89999999999999
+    },
+    {
+      "seed": 1000056,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 63,
+      "episode_return": -102.14999999999999
+    },
+    {
+      "seed": 1000057,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 23,
+      "episode_return": -100.14999999999999
+    },
+    {
+      "seed": 1000058,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 26,
+      "episode_return": -101.3
+    },
+    {
+      "seed": 1000059,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 21,
+      "episode_return": -100.05
+    },
+    {
+      "seed": 1000060,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 38,
+      "episode_return": -101.89999999999999
+    },
+    {
+      "seed": 1000061,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 41,
+      "episode_return": -101.05
+    },
+    {
+      "seed": 1000062,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 28,
+      "episode_return": -100.39999999999999
+    },
+    {
+      "seed": 1000063,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 100,
+      "episode_return": -103.99999999999999
+    },
+    {
+      "seed": 1000064,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 12,
+      "episode_return": -100.6
+    },
+    {
+      "seed": 1000065,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999947
+    },
+    {
+      "seed": 1000066,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 13,
+      "episode_return": -100.64999999999999
+    },
+    {
+      "seed": 1000067,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 31,
+      "episode_return": -101.55
+    },
+    {
+      "seed": 1000068,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 68,
+      "episode_return": -102.39999999999999
+    },
+    {
+      "seed": 1000069,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 24,
+      "episode_return": -101.2
+    },
+    {
+      "seed": 1000070,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 58,
+      "episode_return": -100.9
+    },
+    {
+      "seed": 1000071,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 35,
+      "episode_return": -101.75
+    },
+    {
+      "seed": 1000072,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -2.999999999999995
+    },
+    {
+      "seed": 1000073,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 18,
+      "episode_return": -100.89999999999999
+    },
+    {
+      "seed": 1000074,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 70,
+      "episode_return": -102.5
+    },
+    {
+      "seed": 1000075,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 14,
+      "episode_return": -100.7
+    },
+    {
+      "seed": 1000076,
+      "agent": "random",
+      "outcome": "win",
+      "steps": 55,
+      "episode_return": 100.25
+    },
+    {
+      "seed": 1000077,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 21,
+      "episode_return": -101.05
+    },
+    {
+      "seed": 1000078,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 29,
+      "episode_return": -101.45
+    },
+    {
+      "seed": 1000079,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 32,
+      "episode_return": -101.6
+    },
+    {
+      "seed": 1000080,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 30,
+      "episode_return": -100.5
+    },
+    {
+      "seed": 1000081,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 12,
+      "episode_return": -100.6
+    },
+    {
+      "seed": 1000082,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 84,
+      "episode_return": -102.2
+    },
+    {
+      "seed": 1000083,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 42,
+      "episode_return": -101.1
+    },
+    {
+      "seed": 1000084,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 11,
+      "episode_return": -100.55
+    },
+    {
+      "seed": 1000085,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 9,
+      "episode_return": -100.45
+    },
+    {
+      "seed": 1000086,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 28,
+      "episode_return": -100.39999999999999
+    },
+    {
+      "seed": 1000087,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 7,
+      "episode_return": -100.35
+    },
+    {
+      "seed": 1000088,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 52,
+      "episode_return": -102.6
+    },
+    {
+      "seed": 1000089,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 33,
+      "episode_return": -101.64999999999999
+    },
+    {
+      "seed": 1000090,
+      "agent": "random",
+      "outcome": "win",
+      "steps": 95,
+      "episode_return": 98.25
+    },
+    {
+      "seed": 1000091,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 69,
+      "episode_return": -102.45
+    },
+    {
+      "seed": 1000092,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 22,
+      "episode_return": -100.1
+    },
+    {
+      "seed": 1000093,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 39,
+      "episode_return": -100.95
+    },
+    {
+      "seed": 1000094,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 21,
+      "episode_return": -100.05
+    },
+    {
+      "seed": 1000095,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 28,
+      "episode_return": -100.39999999999999
+    },
+    {
+      "seed": 1000096,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 62,
+      "episode_return": -102.1
+    },
+    {
+      "seed": 1000097,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -2.999999999999999
+    },
+    {
+      "seed": 1000098,
+      "agent": "random",
+      "outcome": "tie",
+      "steps": 100,
+      "episode_return": -3.9999999999999947
+    },
+    {
+      "seed": 1000099,
+      "agent": "random",
+      "outcome": "loss",
+      "steps": 36,
+      "episode_return": -100.8
+    }
+  ]
+}

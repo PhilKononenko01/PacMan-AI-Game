@@ -1,4 +1,4 @@
-"""Random 5x5 maps: candidate draws, structural filters and held-out splits (§6)."""
+"""Random 5x5 maps: candidate draws, structural filters and held-out splits."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -18,7 +18,7 @@ class Split(Enum):
     TEST = "test"
 
 
-# PRD §2.7 / architecture §4.2: what the splits are, not configuration.
+# Split definitions are fixed rather than configurable.
 SPLIT_SEEDS: dict[Split, range] = {
     Split.TRAIN: range(0, 1_000_000),
     Split.VAL: range(1_000_000, 1_001_000),
@@ -67,12 +67,12 @@ def split_of_seed(seed: int) -> Split:
 
 
 def draw_candidate(rng: random.Random, wall_density: float) -> GameMap:
-    """One draw per non-corner cell in row-major order; corners stay open (§6.1)."""
+    """One draw per non-corner cell in row-major order; corners stay open."""
     return GameMap(cell for cell in NON_CORNERS if rng.random() < wall_density)
 
 
 def is_connected(game_map: GameMap) -> bool:
-    """Every open cell is reachable from the start corner (§6.2 check 1)."""
+    """Every open cell is reachable from the start corner."""
     reached = bfs((0, 0), game_map.is_open)
     return len(reached) == ROWS * COLS - len(game_map.walls)
 
@@ -93,7 +93,7 @@ def loop_count(game_map: GameMap) -> int:
 
 
 def is_winnable(game_map: GameMap, game: GameKnobs) -> bool:
-    """PRD §2.3 winnability: at most max_walls walls and at least min_loops loops.
+    """Require at most max_walls walls and at least min_loops loops.
 
     Defined only for connected maps; the loop formula undercounts otherwise.
     """
@@ -103,12 +103,12 @@ def is_winnable(game_map: GameMap, game: GameKnobs) -> bool:
 
 
 def _within_knobs(game_map: GameMap, game: GameKnobs) -> bool:
-    """The wall cap, then the loop floor (§6.2 checks 2 and 3); assumes connectivity."""
+    """The wall cap, then the loop floor; assumes connectivity."""
     return len(game_map.walls) <= game.max_walls and loop_count(game_map) >= game.min_loops
 
 
 def layout_bytes(game_map: GameMap) -> bytes:
-    """The hashed form: a format tag plus row-major wall bits (§6.3)."""
+    """The hashed form: a format tag plus row-major wall bits."""
     bits = b"".join(b"0" if game_map.is_open(cell) else b"1" for cell in ALL_CELLS)
     return b"5x5:" + bits
 
@@ -131,7 +131,7 @@ def generate(
 ) -> GameMap:
     """Return a structurally valid map in the requested layout split.
 
-    The split must be the seed's own (§4.2): a seed names its split everywhere,
+    The split must be the seed's own: a seed names its split everywhere,
     so asking a training seed for a test map is a caller error, not a request.
     """
     if split_of_seed(seed) is not split:

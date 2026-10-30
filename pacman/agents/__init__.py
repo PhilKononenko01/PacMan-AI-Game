@@ -1,4 +1,4 @@
-"""Agent names and the factory the CLI builds them with (§14)."""
+"""Agent names and the factory the CLI builds them with."""
 
 from pacman.config import Config
 

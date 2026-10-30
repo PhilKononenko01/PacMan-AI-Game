@@ -1,4 +1,4 @@
-"""The five commands: train, evaluate, check, simulate and watch (§14).
+"""The five commands: train, evaluate, check, simulate and watch.
 
 Only this module parses arguments or prints; the services return data and strings.
 Every error ends the command with a message on standard error and a non-zero exit.
@@ -75,7 +75,7 @@ def load_config(path: str | Path | None, sets: list[str]) -> Config:
 
 
 def policy_config(args: argparse.Namespace, policy: Policy) -> Config:
-    """A policy's configuration with overrides; a differing game knob is an error (§14.2)."""
+    """A policy's configuration with overrides; a differing game knob is an error."""
     base = policy.config if args.config is None else Config.from_json(Path(args.config).read_text())
     config = apply_sets(base, args.set)
     differences = knob_differences(config.game, policy.config.game)

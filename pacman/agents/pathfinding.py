@@ -1,4 +1,4 @@
-"""The pathfinding baseline and the plan it shares with the features (§10.3)."""
+"""The pathfinding baseline and the plan it shares with the features."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -7,7 +7,7 @@ import random
 from pacman.env import KnownCell, Observation, Outcome
 from pacman.grid import COLS, Cell, Direction, Passable, bfs, first_step
 
-# PRD §2.8: equally near corners are chosen in this order.
+# Equally near corners are chosen in this order.
 CORNER_ORDER: tuple[Cell, ...] = ((0, 4), (4, 0), (4, 4))
 
 

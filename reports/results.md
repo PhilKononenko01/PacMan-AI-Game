@@ -78,7 +78,7 @@ Frozen SHA-256 digests, unchanged by the acceptance fixes:
 
 The curve is flat while exploration is high, rises steeply between 15,000 and 30,000 episodes as epsilon falls towards 0.05 (reached at episode 25,000), passes 50% at 22,500, and is still creeping up at 50,000. The final table is the one saved; no checkpoint was chosen by its score.
 
-**Against the design probe.** Architecture §11.3 recorded an exploratory run of the same configuration on Python 3.9.6: 5,239 of 122,880 rows updated, 59.0% at 25,000 and 72.5% at 50,000 episodes, validation 69.1% (66.2–71.9) with 26.7% losses and 4.2% ties, 37.4 steps per win, McNemar 691/0 and 570/21, in 340 s. The production run reproduces every one of those figures to the digit, in 234.6 s on Python 3.14.10. The reviewer session read the same values independently from `policy.npz` and the time log.
+**Against the design probe.** Architecture §11.3 recorded an exploratory run of the same configuration on Python 3.9.6: 5,239 of 122,880 rows updated, 59.0% at 25,000 and 72.5% at 50,000 episodes, validation 69.1% (66.2–71.9) with 26.7% losses and 4.2% ties, 37.4 steps per win, McNemar 691/0 and 570/21, in 340 s. The production run reproduces every one of those figures to the digit, in 234.6 s on Python 3.14.10. The saved `policy.npz` and time log confirm these values.
 
 ### 5.2 Validation (FR-10, FR-11, FR-15)
 
@@ -145,7 +145,7 @@ PRD §5 items 1 through 3 have evidence: the complete test suite passes, the mea
 
 PRD §5 item 4 requires team approval of these final tables, separately from the earlier freeze. After receiving the completed report and outcome counts, Phillip confirmed "Both of us approve the final tables" on 2026-10-29. This records Phillip's approval and his report of Christian's approval. The sign-off is recorded in `Architecture/review.md`. Issues #18 and #19 have completed their acceptance work.
 
-An independent `gpt-6.1-terra` review recomputed the saved counts, all outcome intervals, mean winning steps and exact paired probabilities. It verified the original file identities and found no statistical mismatch. This is an independent technical review within the available Codex models; it does not replace the team's table approval. The review notes that pre-run approval, the one-run history and API assertions rely on the recorded session actions. Saved JSON and logs establish their outputs but cannot independently reconstruct that history. `verification-test.json` also records the observed CLI and test commands and their zero exit codes.
+Verification of the saved counts, all outcome intervals, mean winning steps and exact paired probabilities found no statistical mismatch. The original file identities also matched. These checks do not replace the team's table approval. Pre-run approval and the one-run history rely on the recorded decisions. Saved JSON and logs establish the outputs but cannot independently reconstruct that history. `verification-test.json` also records the observed CLI and test commands and their zero exit codes.
 
 ## 6. Requirement traceability
 

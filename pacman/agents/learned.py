@@ -1,4 +1,4 @@
-"""Tabular Q-learning over the ADR-2 features (§10.5)."""
+"""Tabular Q-learning over the encoded state features."""
 
 import random
 
@@ -27,7 +27,7 @@ class LearnedAgent:
         self.settings = settings
         self.q = q
         self.training = training
-        self.epsilon = 0.0  # the training loop sets it before each episode (§11.1)
+        self.epsilon = 0.0  # the training loop sets it before each episode
         self.rng: random.Random | None = None
         self._state: int | None = None      # state of the pending transition, set by act
         self._action: Direction | None = None
