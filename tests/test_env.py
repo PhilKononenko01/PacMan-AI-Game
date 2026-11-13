@@ -282,3 +282,12 @@ def test_env_imports_only_the_game_modules():
         "pacman", "pacman.config", "pacman.rng", "pacman.grid", "pacman.mapgen",
         "pacman.ghost", "pacman.env",
     }
+
+
+@pytest.mark.parametrize("mode,expected", [("vision", (4, 3)), ("pathfinding", (3, 4))])
+def test_the_ghost_mode_knob_decides_how_the_ghost_moves(mode, expected):
+    env = Environment(Config(game=GameKnobs(ghost_mode=mode)))
+    env.reset(0, EMPTY)
+    env.ghost.last_visit[(3, 4)] = 0  # searching now goes left, to the never-visited (4, 3)
+    env.step(RIGHT, 1)                # Pac-Man to (0, 1): in neither the ghost's row nor column
+    assert env.ghost.cell == expected # pathfinding goes up, the first of two shortest steps

@@ -107,6 +107,7 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `max_walls` | int | 6 | 0 or more | walls |
 | `min_loops` | int | 4 | 0 or more | independent loops |
 | `max_steps` | int | 100 | 1 or more | moves; read only by the referee (§7.4) |
+| `ghost_mode` | str | `"vision"` | `"vision"` or `"pathfinding"` | how the ghost finds Pac-Man (§8.2); opt-in extension, see `review.md` |
 
 **Learner settings** (`LearnerSettings`):
 
@@ -281,7 +282,7 @@ The referee's ruling is what the agent receives (§10.1) and what the record sto
 
 ### 8.2 One ghost move, `act(pacman, map, t)`
 
-1. **Vision.** If `line_of_sight(cell, pacman, open on the true map)`, set `last_seen = pacman`.
+1. **Vision.** If `line_of_sight(cell, pacman, open on the true map)`, set `last_seen = pacman`. With `ghost_mode="pathfinding"` the ghost skips this test and always sets `last_seen = pacman`, so it chases every step and never searches; the move draw and everything else below are unchanged.
 2. **Move draw.** `u = rng.random()`. This draw happens every step. If not `u < ghost_move_prob`, the ghost stays put this step and nothing else changes.
 3. **Mode and move:**
 
@@ -491,7 +492,7 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 Example layout, with the measured validation numbers for the two baselines at the defaults:
 
 ```
-split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
+split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100 ghost_mode=vision
 agent         wins                  losses                ties                  steps/win
 random          0   0.0% [ 0.0,  0.4]  1000 100.0% [99.6,100.0]    0   0.0% [ 0.0,  0.4]   n/a
 pathfinding   142  14.2% [12.2, 16.5]   858  85.8% [83.5, 87.8]    0   0.0% [ 0.0,  0.4]   13.6

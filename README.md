@@ -21,6 +21,13 @@ A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether 
 
 Both move one square per turn. Pac-Man moves first.
 
+**Pathfinding ghost (optional).** `--set ghost_mode=pathfinding` gives the ghost Pac-Man's position every turn, so it always takes a shortest-path step towards him and never searches. It is off by default, and every reported result uses the default ghost. A policy only plays against the ghost it was trained with, so train a separate policy for this mode:
+
+```sh
+python -m pacman check --set ghost_mode=pathfinding
+python -m pacman train --out runs/pathfinding-ghost --set ghost_mode=pathfinding
+```
+
 ## The agents
 
 | Agent | How it plays |

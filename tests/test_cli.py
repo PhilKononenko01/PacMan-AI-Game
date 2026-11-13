@@ -77,13 +77,15 @@ def test_make_agent_builds_each_named_agent():
 def test_load_config_applies_sets_by_bare_name_on_top_of_a_file(tmp_path):
     path = tmp_path / "config.json"
     path.write_text(Config(game=GameKnobs(max_walls=5)).to_json())
-    config = load_config(path, ["max_steps=50", "learning_rate=0.3", "tie_update=terminal"])
-    assert config.game == GameKnobs(max_walls=5, max_steps=50)
+    config = load_config(path, ["max_steps=50", "learning_rate=0.3", "tie_update=terminal", "ghost_mode=pathfinding"])
+    assert config.game == GameKnobs(max_walls=5, max_steps=50, ghost_mode="pathfinding")
     assert config.learner == LearnerSettings(learning_rate=0.3, tie_update="terminal")
     assert load_config(None, []) == Config()
 
 
-@pytest.mark.parametrize("setting", ["speed=1", "max_steps", "max_steps=5.0", "max_steps=fast", "episodes=0"])
+@pytest.mark.parametrize("setting", [
+    "speed=1", "max_steps", "max_steps=5.0", "max_steps=fast", "episodes=0", "ghost_mode=teleport",
+])
 def test_load_config_rejects_bad_sets(setting):
     with pytest.raises(ValueError):
         load_config(None, [setting])
@@ -137,6 +139,8 @@ def test_evaluate_reports_all_three_agents_and_writes_the_json(run, trained):
 def test_evaluate_refuses_a_game_knob_that_differs_from_the_policy(run, trained):
     code, _, err = run("evaluate", "--split", "val", "--policy", trained / "policy.npz", "--set", "max_steps=50")
     assert code == 1 and "max_steps" in err
+    code, _, err = run("evaluate", "--split", "val", "--policy", trained / "policy.npz", "--set", "ghost_mode=pathfinding")
+    assert code == 1 and "ghost_mode=pathfinding (policy: vision)" in err
     code, _, err = run("evaluate", "--split", "val", "--policy", trained / "policy.npz", "--set", "learning_rate=0.5")
     assert code == 0, err
 

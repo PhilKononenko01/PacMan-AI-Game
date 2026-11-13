@@ -64,7 +64,8 @@ class Environment:
             game_map = generate(seed, split_of_seed(seed), self.config)
         self.game_map = game_map
         self.pacman = PACMAN_START
-        self.ghost = Ghost(derive(seed, "ghost"), self.config.game.ghost_move_prob)
+        game = self.config.game
+        self.ghost = Ghost(derive(seed, "ghost"), game.ghost_move_prob, mode=game.ghost_mode)
         self.visited = {PACMAN_START}
         self.known = [KnownCell.UNKNOWN] * (ROWS * COLS)
         self.outcome = None

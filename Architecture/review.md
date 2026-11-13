@@ -4,6 +4,24 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Pathfinding ghost: an opt-in game knob
+
+**Date:** 2026-11-13. Branch `feature/ghost-pathfinding`, based on main `d3120d1`. Christian asked to add pathfinding to the ghost.
+
+**What changed:** the ghost already took shortest-path steps towards Pac-Man, but only after seeing him; otherwise it searched. A new game knob, `ghost_mode`, selects between the existing `vision` ghost, which stays the default, and a `pathfinding` ghost that knows Pac-Man's position every turn. The pathfinding ghost always takes `first_step` towards him on the true map and never searches. Its move draw is unchanged and still taken every step. `GameKnobs` validates the value, `Ghost` refuses an unknown mode, and `Environment` passes the knob through. Files written before the knob existed, including the frozen policy, `config.json` and the evaluation JSON, load with the `vision` ghost because omitted keys default.
+
+**The frozen results are unaffected:** a copy of `reports/results/policy.npz` was re-evaluated on all 1,000 validation seeds. All 3,000 records match `reports/results/eval-val.json` exactly; the written configuration differs only by the new `ghost_mode=vision` entry. The test split was not played.
+
+**For the team:** OQ-10 ruled that the ghost's search rule is not a knob, and PRD §2.7 lists five game knobs. This knob is an opt-in extension, not a change to the accepted game. The PRD is not amended, and the submitted report describes the vision ghost. Making it part of the game would need a team ruling, a PRD amendment, a retrained policy and a new frozen evaluation.
+
+**Measured on the 1,000 validation seeds against the pathfinding ghost:** the pathfinding baseline won 8 games, 0.8% [0.4, 1.6], against 142 with the vision ghost. The random agent won none, as before. An exploratory policy trained at the default learner settings with `--set ghost_mode=pathfinding` (125.7 s wall; kept in the untracked `runs/pathfinding-ghost/`) won 88 games, 8.8% [7.2, 10.7], lost 215 and tied 697, with 19.5 steps per win. It still beats both baselines (McNemar b=88/c=0 and b=88/c=8, both p far below 0.05), but sits far below the 50% to 90% guideline: it mostly learned to evade until the turn limit. Its learning curve peaked at 13.0% on the 200-seed checkpoint set. Nothing was tuned, and no test seed was played.
+
+**Display:** watch mode's "Ghost sees Pac-Man" still reports true line of sight. Against a pathfinding ghost it can read "no" while the ghost closes in.
+
+**Tests:** `test_ghost.py` covers a pathfinding ghost closing on a hidden Pac-Man with only its move draw, routing round a wall where a searching ghost would turn away, keeping its move draw, and refusing an unknown mode. `test_env.py` shows the knob deciding the ghost's first move in each mode. `test_config.py`, `test_cli.py` and `test_policy_io.py` cover the default, validation, `--set`, a policy refusing a different mode, and a policy file written before the knob loading with the vision ghost. Suite: 487 tests, about 12 s.
+
+---
+
 ## Final report tables approved
 
 **Date:** 2026-10-29, recorded at 2026-10-30 03:13 UTC.

@@ -192,3 +192,37 @@ def test_ghost_uses_the_true_map_for_sight_and_movement():
     ghost.act((4, 0), GameMap(walls), 1)
     assert ghost.last_seen is None
     assert ghost.cell == (3, 4)
+
+
+def test_a_pathfinding_ghost_closes_in_on_a_pacman_it_cannot_see():
+    # (0, 0) shares no row or column with (4, 4), so a vision ghost would search instead.
+    rng = Scripted(*[0.5] * 8)
+    ghost = Ghost(rng, mode="pathfinding")
+    path = []
+    for t in range(1, 9):
+        ghost.act((0, 0), GameMap({(2, 2)}), t)
+        path.append(ghost.cell)
+    assert path == [(3, 4), (2, 4), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    assert rng.calls == 8                             # only the move draw: it never searches
+
+
+def test_a_pathfinding_ghost_routes_around_walls_to_a_hidden_pacman():
+    # The wall at (4, 2) blocks the row, so a vision ghost cannot see Pac-Man at (4, 0) and
+    # would search, picking the never-visited (4, 4). The only way round the wall is up.
+    ghost = Ghost(Scripted(0.5), mode="pathfinding", start=(4, 3))
+    ghost.last_visit[(3, 3)] = 0
+    ghost.act((4, 0), GameMap({(4, 2)}), 1)
+    assert ghost.cell == (3, 3)
+
+
+def test_a_pathfinding_ghost_still_takes_its_move_draw():
+    rng = Scripted(0.7)
+    ghost = Ghost(rng, move_prob=0.5, mode="pathfinding")
+    ghost.act((2, 2), EMPTY, 1)
+    assert ghost.cell == (4, 4)
+    assert rng.calls == 1
+
+
+def test_an_unknown_ghost_mode_is_refused():
+    with pytest.raises(ValueError, match="ghost_mode"):
+        Ghost(Scripted(), mode="teleport")

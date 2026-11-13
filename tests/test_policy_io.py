@@ -308,3 +308,13 @@ def test_a_file_that_is_not_an_npz_archive_is_refused(tmp_path):
     junk.write_bytes(b"not an archive")
     with pytest.raises(ValueError, match="npz"):
         load_policy(junk)
+
+
+def test_a_policy_saved_before_the_ghost_mode_knob_loads_with_the_vision_ghost(tmp_path):
+    meta = meta_of_policy(policy())
+    meta["config"]["game"] = {
+        "ghost_move_prob": 0.9, "wall_density": 0.2, "max_walls": 6, "min_loops": 4, "max_steps": 80,
+    }
+    write_raw(tmp_path / "old.npz", meta=meta)
+    assert load_policy(tmp_path / "old.npz").config == CONFIG
+    assert CONFIG.game.ghost_mode == "vision"
