@@ -17,8 +17,9 @@ from pacman.mapgen import SPLIT_SEEDS, Split
 from pacman.policy_io import Policy, ValidationSummary
 from pacman.referee import Referee
 from pacman.stats import discordant_pairs, mcnemar_one_sided, mean_steps, wilson
+from pacman.winnable import is_winnable
 
-FULL_GAMES = 1_000  # An evaluation plays every seed of its split.
+FULL_GAMES = 1_000  # An evaluation considers every seed of its split and counts the winnable ones.
 
 TABLE_HEADER = "agent         wins                  losses                ties                  steps/win"
 
@@ -53,7 +54,10 @@ class DifficultyCheck:
 
 
 def run_split(config: Config, agent, split: Split, games: int) -> list[EpisodeRecord]:
-    """Play the first `games` seeds of the split, in seed order, with the agent as given."""
+    """Play the winnable seeds among the first `games` of the split, in seed order.
+
+    A game no sequence of moves could win is neither played nor counted (`winnable.py`).
+    """
     seeds = SPLIT_SEEDS[split]
     if type(games) is not int or games < 1 or games > len(seeds):
         raise ValueError(f"games must be between 1 and {len(seeds)} for the {split.value} split")
@@ -63,9 +67,12 @@ def run_split(config: Config, agent, split: Split, games: int) -> list[EpisodeRe
             f"{agent.name} is in training mode; evaluation plays greedily, so set"
             " training = False or use a separate evaluation agent"
         )
+    counted = [seed for seed in seeds[:games] if is_winnable(config, seed)]
+    if not counted:
+        raise ValueError(f"none of the first {games} {split.value} seeds is winnable under these knobs")
     environment = Environment(config)
     referee = Referee(config.game.max_steps)
-    return [play_episode(environment, referee, agent, seed) for seed in seeds[:games]]
+    return [play_episode(environment, referee, agent, seed) for seed in counted]
 
 
 def summarise(agent: str, records: Iterable[EpisodeRecord]) -> Summary:
@@ -115,9 +122,9 @@ def compare(learned: Sequence[EpisodeRecord], baseline: Sequence[EpisodeRecord])
     return Comparison(_one_agent(learned), _one_agent(baseline), b, c, mcnemar_one_sided(b, c))
 
 
-def format_header(split: Split, games: int, game: GameKnobs) -> str:
+def format_header(split: Split, seeds: int, counted: int, game: GameKnobs) -> str:
     knobs = " ".join(f"{field.name}={getattr(game, field.name)}" for field in fields(game))
-    return f"split {split.value}, {games} games per agent, knobs: {knobs}"
+    return f"split {split.value}, {counted} winnable of the first {seeds} seeds, knobs: {knobs}"
 
 
 def _cell(count: int, games: int, interval: tuple[float, float], width: int) -> str:
@@ -146,7 +153,9 @@ def format_report(
     split: Split, games: int, game: GameKnobs,
     summaries: Iterable[Summary], comparisons: Iterable[Comparison] = (),
 ) -> str:
-    lines = [format_header(split, games, game), TABLE_HEADER]
+    summaries = list(summaries)
+    counted = summaries[0].games if summaries else 0
+    lines = [format_header(split, games, counted, game), TABLE_HEADER]
     lines += [format_summary_row(summary) for summary in summaries]
     lines += [format_comparison(comparison) for comparison in comparisons]
     return "\n".join(lines)

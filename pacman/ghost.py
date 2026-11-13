@@ -8,6 +8,12 @@ from pacman.mapgen import GameMap
 GHOST_START: Cell = (4, 4)
 
 
+def chase_step(cell: Cell, pacman: Cell, game_map: GameMap) -> Cell:
+    """The ghost's next cell: the first step of a shortest true-map path to Pac-Man."""
+    passable = game_map.is_open
+    return move(cell, first_step(cell, pacman, passable), passable)
+
+
 class Ghost:
     """One ghost for one episode; the environment calls `act` once per step."""
 
@@ -25,5 +31,4 @@ class Ghost:
         """
         if not self.rng.random() < self.move_prob:
             return
-        passable = game_map.is_open
-        self.cell = move(self.cell, first_step(self.cell, pacman, passable), passable)
+        self.cell = chase_step(self.cell, pacman, game_map)

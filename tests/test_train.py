@@ -129,9 +129,9 @@ def test_final_validation_uses_full_games_and_is_stored_in_the_policy(small_size
     assert final_run["games"] == 4
     assert isinstance(result, TrainingResult)
     assert isinstance(result.validation, Summary)
-    assert result.validation.games == 4 and result.validation.agent == "learned"
+    assert result.validation.games == 3 and result.validation.agent == "learned"  # winnable of 4
     assert result.policy.validation == ValidationSummary(
-        seeds=(1_000_000, 1_000_003), games=4, wins=result.validation.wins,
+        seeds=(1_000_000, 1_000_003), games=3, wins=result.validation.wins,
         losses=result.validation.losses, ties=result.validation.ties,
         mean_steps_to_win=result.validation.mean_steps_to_win,
     )

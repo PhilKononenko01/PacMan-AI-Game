@@ -113,7 +113,7 @@ def test_train_prints_curve_points_and_the_final_row_and_writes_the_run(run, tmp
     assert sorted(path.name for path in out.iterdir()) == ["config.json", "curve.csv", "curve.png", "policy.npz"]
     policy = load_policy(out / "policy.npz")
     assert policy.config.game.max_steps == 20 and policy.config.learner.episodes == 5
-    assert policy.validation.games == 4
+    assert policy.validation.games == 3  # the winnable of the first 4 seeds
 
 
 def test_train_refuses_an_existing_run_before_training(run, trained):
@@ -125,15 +125,15 @@ def test_evaluate_reports_all_three_agents_and_writes_the_json(run, trained):
     code, output, err = run("evaluate", "--split", "val", "--policy", trained / "policy.npz")
     assert code == 0, err
     lines = output.splitlines()
-    assert lines[0].startswith("split val, 4 games per agent, knobs:")
+    assert lines[0].startswith("split val, 3 winnable of the first 4 seeds, knobs:")
     assert "max_steps=20" in lines[0]
     assert [line.split()[0] for line in lines[2:5]] == ["random", "pathfinding", "learned"]
     assert lines[5].startswith("learned vs random:") and lines[6].startswith("learned vs pathfinding:")
     config, records = read_eval_json(trained / "eval-val.json")
     assert config.game.max_steps == 20
-    assert len(records) == 12
+    assert len(records) == 9
     assert {record.agent for record in records} == {"random", "pathfinding", "learned"}
-    assert sorted({record.seed for record in records}) == list(range(1_000_000, 1_000_004))
+    assert sorted({record.seed for record in records}) == [1_000_000, 1_000_001, 1_000_002]
 
 
 def test_evaluate_refuses_a_game_knob_that_differs_from_the_policy(run, trained):
@@ -160,7 +160,7 @@ def test_simulate_prints_a_row_per_agent_for_the_requested_games(run, trained):
     code, output, err = run("simulate", "--agent", "random", "--agent", "pathfinding", "--split", "val", "--games", 3)
     assert code == 0, err
     lines = output.splitlines()
-    assert lines[0].startswith("split val, 3 games per agent")
+    assert lines[0].startswith("split val, 3 winnable of the first 3 seeds")
     assert [line.split()[0] for line in lines[2:]] == ["random", "pathfinding"]
     code, output, err = run(
         "simulate", "--agent", "learned", "--split", "val", "--games", 2, "--policy", trained / "policy.npz",

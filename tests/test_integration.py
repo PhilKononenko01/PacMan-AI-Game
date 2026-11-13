@@ -36,7 +36,7 @@ def test_train_save_load_evaluate_record_and_replay(tmp_path):
         for name in AGENT_NAMES
     }
     summaries = [summarise(name, agent_records) for name, agent_records in records.items()]
-    assert [summary.games for summary in summaries] == [6, 6, 6]
+    assert [summary.games for summary in summaries] == [3, 3, 3]  # the winnable of the first 6
     for name in ("random", "pathfinding"):
         comparison = compare(records["learned"], records[name])
         assert 0.0 <= comparison.p <= 1.0
@@ -44,7 +44,7 @@ def test_train_save_load_evaluate_record_and_replay(tmp_path):
     path = out / "eval-val.json"
     write_eval_json(path, policy.config, [r for rs in records.values() for r in rs])
     config, loaded = read_eval_json(path)
-    assert config == policy.config and len(loaded) == 18
+    assert config == policy.config and len(loaded) == 9
 
     # Every recorded game replays to the same ruling, step count and return (FR-14).
     for record in loaded:

@@ -459,7 +459,7 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 
 ### 13.1 Running a split
 
-`run_split(config, agent, split, games)` plays the first `games` seeds of the split, in seed order, and returns their `EpisodeRecord`s. Every agent sees the same seeds, so the same maps and the same ghost generator streams (FR-10). A learned agent is evaluated with `training = False`.
+`run_split(config, agent, split, games)` plays the winnable seeds among the first `games` of the split, in seed order, and returns their `EpisodeRecord`s; with none it raises `ValueError` (PRD OQ-17). `winnable.winning_moves(config, seed)` decides each seed by breadth-first search over (Pac-Man's cell, the ghost's cell, visited corners), mirroring `Environment.step`'s order and taking the ghost's move draws from `derive(seed, "ghost")` in advance; when the ghost moves on every step or on none, states are not revisited across moves. `is_winnable` caches the answer per `GameKnobs` and seed. Every agent sees the same seeds, so the same maps and the same ghost generator streams (FR-10). A learned agent is evaluated with `training = False`.
 
 ### 13.2 Statistics (`stats.py`)
 
@@ -474,10 +474,10 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 Example layout, with the measured validation numbers for the two baselines at the defaults:
 
 ```
-split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
+split val, 483 winnable of the first 1000 seeds, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
 agent         wins                  losses                ties                  steps/win
-random          0   0.0% [ 0.0,  0.4]  1000 100.0% [99.6,100.0]    0   0.0% [ 0.0,  0.4]   n/a
-pathfinding     8   0.8% [ 0.4,  1.6]   992  99.2% [98.4, 99.6]    0   0.0% [ 0.0,  0.4]   14.2
+random          0   0.0% [ 0.0,  0.8]   483 100.0% [99.2,100.0]    0   0.0% [ 0.0,  0.8]   n/a
+pathfinding     8   1.7% [ 0.8,  3.2]   475  98.3% [96.8, 99.2]    0   0.0% [ 0.0,  0.8]   14.2
 learned       ...
 learned vs random:       b=... c=... one-sided exact McNemar p=...
 learned vs pathfinding:  b=... c=... one-sided exact McNemar p=...

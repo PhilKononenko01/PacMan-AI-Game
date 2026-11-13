@@ -4,6 +4,23 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Only winnable games count (PRD OQ-17)
+
+**Date:** 2026-11-13. Pushed to main at Christian's request, ahead of PR #25. Christian ruled: "All maps should be winnable to be counted in the tests."
+
+**What changed:** `pacman/winnable.py` decides each seed exactly. The pathfinding ghost's move depends only on the true map, its cell, Pac-Man's cell and one move draw per step from `derive(seed, "ghost")`, so a game is a fixed puzzle once its seed is known. `winning_moves` searches Pac-Man's moves breadth first with the whole map known, mirroring `Environment.step`, and returns the shortest win or `None`; `is_winnable` caches the answer per game knobs and seed. The ghost's move rule moved into `ghost.chase_step`, which `Ghost.act` and the search share. `run_split` plays and counts only the winnable seeds among those requested, so evaluation, the difficulty check, simulation, the learning curve and a policy's stored validation all count winnable games; with none it raises. Training still plays every training seed. The report header now reads, for example, "483 winnable of the first 1000 seeds".
+
+**Verification:** for the default and for a ghost that moves half the time, every win the search finds wins the real game on its last move when replayed through `Environment`. The search reproduces the 48 winnable maps among the first 100 validation seeds from the earlier independent search. Re-scoring every experiment's policy left every agent's win count unchanged, as it must, since no game outside the search can be won; only the games counted fell, to 483. Suite: 473 tests, about 12 s.
+
+**Re-scored** on the winnable validation maps, wins / losses / ties against the pathfinding ghost. The optional settings in PR #25 are re-scored there:
+
+| Policy | Counted | Random | Pathfinding | Learned | Learned win rate |
+|---|---|---|---|---|---|
+| Corners, 50,000 training games | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 88 / 70 / 325 | 18.2% |
+| Corners, 100,000 training games | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 126 / 99 / 258 | 26.1% |
+
+---
+
 ## The pathfinding ghost replaces the vision ghost (PRD v0.12, OQ-16)
 
 **Date:** 2026-11-13. Branch `feature/ghost-pathfinding`. Christian ruled that the game keeps only the pathfinding ghost: "we're only keeping the pathfinding ghost", choosing to replace the original ghost rather than keep it as an option. The learning-ghost experiment branch was deleted at the same time. The tie-penalty and two-corner branches are kept as they are; they were cut from this branch's previous commit and still contain the `ghost_mode` choice.

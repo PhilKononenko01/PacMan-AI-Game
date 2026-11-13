@@ -164,7 +164,7 @@ def _check(args: argparse.Namespace) -> None:
     config = load_config(args.config, args.set)
     policy = load_policy(args.policy) if args.policy is not None else None
     result = difficulty_check(config, policy)
-    print(format_header(Split.VAL, evaluate.FULL_GAMES, config.game))
+    print(format_header(Split.VAL, evaluate.FULL_GAMES, result.baselines[0].games, config.game))
     print(TABLE_HEADER)
     for summary in result.baselines:
         print(format_summary_row(summary))
