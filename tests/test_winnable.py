@@ -12,7 +12,9 @@ VAL = range(1_000_000, 1_000_020)
 @pytest.mark.parametrize("game", [
     GameKnobs(),
     GameKnobs(ghost_move_prob=0.5, max_steps=40),
-], ids=["default", "ghost-moves-half-the-time"])
+    GameKnobs(pellets="anywhere"),
+    GameKnobs(pellets="anywhere", pellet_count=2),
+], ids=["default", "ghost-moves-half-the-time", "pellets-anywhere", "two-pellets"])
 def test_every_win_the_search_finds_wins_the_real_game_on_its_last_move(game):
     config = Config(game=game)
     found = 0

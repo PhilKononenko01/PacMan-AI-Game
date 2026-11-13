@@ -4,6 +4,27 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Pellets anywhere: an opt-in game knob
+
+**Date:** 2026-11-13. Branch `feature/pellets`, stacked on `feature/ghost-pathfinding`. Christian asked what happens if the pellets Pac-Man must collect could spawn anywhere instead of only in the corners.
+
+**What changed:** a game knob, `pellets` (default `"corners"`), chooses Pac-Man's targets. With `"anywhere"`, `Environment.reset` draws three distinct open cells other than his start from `derive(seed, "pellets")` with `pick`; the targets are the start plus those three, in reading order. A pellet may land on a corner or on the ghost's start. `Observation` gained `targets`, defaulting to the corners, so Pac-Man knows where the pellets are as he knows the corners. The environment's corner reward and win rule, the pathfinding plan and therefore the learned agent's features, and the renderer all follow `targets`. Equally near targets go in reading order, which for corners is the existing `CORNER_ORDER`, so the corner game is unchanged: a policy trained against the pathfinding ghost again replayed all 3,000 recorded validation games exactly. The status line reads "Pellets" instead of "Corners" when the targets are not the corners.
+
+**Measured** against the pathfinding ghost on the first 1,000 validation seeds, one 50,000-episode training run per row at default learner settings. Perfect play is the exact breadth-first search with Pac-Man knowing the whole map; it reproduces 483 for corners.
+
+| Targets | Learned win / loss / tie | Steps per win | Pathfinding wins | Random wins | Maps winnable with perfect play |
+|---|---|---|---|---|---|
+| Corners | 8.8% / 21.5% / 69.7% | 19.5 | 0.8% | 0.0% | 483 |
+| Pellets anywhere | 27.8% / 19.4% / 52.8% | 13.8 | 11.1% | 0.1% | 716 |
+
+On the first 100 seeds, pellets anywhere give learned 32/13/55, pathfinding 14/86/0 and random 0/100/0. The learner beats both baselines, b=277/c=0 and b=217/c=50, both p < 0.0001, and takes 278 of the 716 winnable maps against 88 of 483 with corners. Corners are dead ends with two ways in, and the ghost starts on one; pellets in the open are nearer, 6.4 steps per pathfinding win, and leave more room to dodge.
+
+**Limits:** one run, on validation seeds only; nothing tuned; no test seed played. The corner game and every result recorded for it are unchanged.
+
+**Tests:** `test_env.py` covers corner targets by default, three distinct open non-start pellets that vary by seed and repeat for the same seed, a pellet reward and win, and no reward for a corner that is not a pellet. `test_baselines.py` covers planning to the nearest pellet and reading-order ties. `test_render.py` draws pellets and the "Pellets" count; `test_config.py` and `test_evaluate.py` cover the knob. Suite: 473 tests.
+
+---
+
 ## Only winnable games count (PRD OQ-17)
 
 **Date:** 2026-11-13. Pushed to main at Christian's request, ahead of PR #25. Christian ruled: "All maps should be winnable to be counted in the tests."

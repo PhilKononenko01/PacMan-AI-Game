@@ -289,3 +289,54 @@ def test_env_imports_only_the_game_modules():
         "pacman", "pacman.config", "pacman.rng", "pacman.grid", "pacman.mapgen",
         "pacman.ghost", "pacman.env",
     }
+
+
+PELLETS = Config(game=GameKnobs(pellets="anywhere", ghost_move_prob=0.0))
+
+
+def test_by_default_the_targets_are_the_four_corners():
+    assert Environment(Config()).reset(0, EMPTY).targets == ((0, 0), (0, 4), (4, 0), (4, 4))
+
+
+def test_pellets_anywhere_put_three_on_random_open_cells_besides_the_start():
+    walls = GameMap({(1, 1), (2, 3), (3, 1)})
+    layouts = []
+    for seed in range(40):
+        targets = Environment(PELLETS).reset(seed, walls).targets
+        assert targets[0] == (0, 0) and len(set(targets)) == 4
+        assert list(targets) == sorted(targets)
+        assert all(walls.is_open(cell) for cell in targets)
+        layouts.append(targets)
+    assert len(set(layouts)) > 20                                           # they move around
+    assert any(not set(t[1:]) & {(0, 4), (4, 0), (4, 4)} for t in layouts)  # not tied to corners
+    again = [Environment(PELLETS).reset(seed, walls).targets for seed in range(40)]
+    assert again == layouts                                                 # the seed decides
+
+
+def test_collecting_every_pellet_wins_and_an_empty_corner_pays_nothing():
+    env = Environment(PELLETS)
+    env.reset(0, EMPTY)
+    env.targets = ((0, 0), (1, 3), (2, 1), (3, 4))  # a hand-built layout; the still ghost stays in (4, 4)
+    place(env, pacman=(3, 0))
+    assert env.step(DOWN, 1).reward == pytest.approx(-0.05)       # (4, 0) is a corner, not a pellet
+    place(env, pacman=(0, 3))
+    assert env.step(DOWN, 2).reward == pytest.approx(-0.05 + 1)   # pellet (1, 3)
+    place(env, pacman=(2, 0))
+    assert env.step(RIGHT, 3).reward == pytest.approx(-0.05 + 1)  # pellet (2, 1)
+    place(env, pacman=(2, 4))
+    result = env.step(DOWN, 4)                                     # the last pellet, (3, 4)
+    assert result.outcome is Outcome.WIN
+    assert result.reward == pytest.approx(-0.05 + 1 + 100)
+
+
+def test_pellet_count_sets_how_many_random_pellets_are_placed():
+    two = Config(game=GameKnobs(pellets="anywhere", pellet_count=2))
+    walls = GameMap({(1, 1), (2, 3), (3, 1)})
+    layouts = [Environment(two).reset(seed, walls).targets for seed in range(30)]
+    for targets in layouts:
+        assert targets[0] == (0, 0) and len(set(targets)) == 3
+        assert all(walls.is_open(cell) for cell in targets)
+    assert len(set(layouts)) > 15
+    three = Config(game=GameKnobs(pellets="anywhere"))
+    first_two = [Environment(three).reset(seed, walls).targets for seed in range(30)]
+    assert all(len(t) == 4 for t in first_two)   # the default is still three pellets

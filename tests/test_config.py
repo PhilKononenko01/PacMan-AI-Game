@@ -13,7 +13,7 @@ def test_defaults_match_the_approved_game_and_learner_settings():
     assert json.loads(config.to_json()) == {
         "game": {
             "ghost_move_prob": 1.0, "wall_density": 0.20,
-            "max_walls": 6, "min_loops": 4, "max_steps": 100,
+            "max_walls": 6, "min_loops": 4, "max_steps": 100, "pellets": "corners", "pellet_count": 3,
         },
         "learner": {
             "reward_win": 100.0, "reward_loss": -100.0,
@@ -83,6 +83,8 @@ def test_invalid_json_structure_is_rejected(text):
     ("min_loops", -1), ("min_loops", "4"),
     ("max_steps", 0), ("max_steps", True),
     ("ghost_move_prob", False), ("wall_density", None),
+    ("pellets", "everywhere"), ("pellets", None),
+    ("pellet_count", 0), ("pellet_count", 4), ("pellet_count", 2.0),
 ])
 def test_invalid_game_settings_fail_at_construction(field, value):
     with pytest.raises(ValueError, match=field):
@@ -164,3 +166,9 @@ def test_a_file_from_when_the_ghost_was_a_choice_loads_only_if_it_names_the_path
 def test_a_tie_reward_is_accepted_when_ties_are_terminal():
     settings = LearnerSettings(reward_tie=-100.0, tie_update="terminal")
     assert (settings.reward_tie, settings.tie_update) == (-100.0, "terminal")
+
+
+def test_a_pellet_count_other_than_three_needs_pellets_anywhere():
+    with pytest.raises(ValueError, match="pellet_count"):
+        GameKnobs(pellet_count=2)
+    assert GameKnobs(pellets="anywhere", pellet_count=2).pellet_count == 2
