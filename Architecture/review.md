@@ -4,6 +4,18 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Combined for review: the pathfinding ghost and three opt-in options
+
+**Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options`, for Phillip's review. It starts from `feature/pellets`, which holds the pathfinding ghost and pellets, and adds the tie-reward and two-corner commits. Those two were cut before the ghost switch was removed; their conflicts were resolved by dropping `ghost_mode`. The learning-ghost experiment is not included; Christian had it deleted.
+
+**One new rule:** `corners_to_visit` applies only with `pellets="corners"`, and `GameKnobs` refuses the combination. Otherwise a skipped corner, marked visited at reset, would count towards the pellets and end a game early.
+
+**Verification:** 489 tests pass. On the combined code, each experiment's policy replays its recorded validation games exactly: the pathfinding-ghost, two-corner and pellets runs, 3,000 games each. The tie-reward run reproduces its recorded 154 wins, 395 losses and 451 ties. A policy trained against the vision ghost is refused, by design.
+
+**For the team:** merging changes the game. The pathfinding ghost replaces the vision ghost that the accepted results, `reports/results/`, `reports/results.md` and the submitted report and notebook describe; none of those was edited. `submission/build_notebook.py` embeds the package source from `HEAD`, so a notebook rebuilt after merging would contain the new game. The three options are off by default.
+
+---
+
 ## Pellets anywhere: an opt-in game knob
 
 **Date:** 2026-11-13. Branch `feature/pellets`, stacked on `feature/ghost-pathfinding`. Christian asked what happens if the pellets Pac-Man must collect could spawn anywhere instead of only in the corners.
