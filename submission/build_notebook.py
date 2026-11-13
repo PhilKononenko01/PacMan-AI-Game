@@ -10,7 +10,7 @@ import textwrap
 import zlib
 
 
-def build(project: Path, experiment: Path, output: Path) -> None:
+def build(project: Path, experiment: Path, output: Path, report: Path | None = None) -> None:
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project, text=True).strip()
     files = {p.relative_to(project).as_posix(): p.read_bytes()
              for p in sorted((project / "pacman").rglob("*.py"))}
@@ -43,7 +43,8 @@ def build(project: Path, experiment: Path, output: Path) -> None:
             value.update(execution_count=None, outputs=[])
         cells.append(value)
 
-    cell("markdown", Path(__file__).with_name("writeup.md").read_text())
+    report = report or Path(__file__).with_name("writeup.md")
+    cell("markdown", report.read_text())
     cell("markdown", """
     ## Notebook instructions and references
 
@@ -271,6 +272,8 @@ if __name__ == "__main__":
     parser.add_argument("--experiment-root", type=Path,
                         default=Path(__file__).with_name("random_vs_random"))
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--report", type=Path, help="report Markdown; defaults to the intermediate writeup.md")
     args = parser.parse_args()
     build(args.project.resolve(), args.experiment_root.resolve(),
-          args.output or Path(__file__).with_name("CSCI_3202_Intermediate_Report.ipynb"))
+          args.output or Path(__file__).with_name("CSCI_3202_Intermediate_Report.ipynb"),
+          args.report)
