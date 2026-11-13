@@ -1,0 +1,21 @@
+{
+  "verified": true,
+  "record_consistency_verified": true,
+  "all_games_replayed": true,
+  "registered_schedule": {
+    "replicate": 2,
+    "final_slots": 1000,
+    "repeats": 2,
+    "checkpoint_slots": 200
+  },
+  "reports": 17,
+  "records_checked": 25000,
+  "games_replayed": 25000,
+  "policy_file_hashes": {
+    "baseline-1": "e8302fe8bf3ba26da711cbce0b065e60884e79e5bc6d72576e453b672438a7a3",
+    "baseline-2": "d24347fef866a29d68ea8fc2c5faab77311d4f3ba92fa0bb33c95f31dff5597a",
+    "baseline-3": "3b11b1eff863f5ac543c349912730e23508818ef0bd191f06dc59e7cefa2bb5a",
+    "adapted": "7c36ec20334945decf43eafcc9d3c2541662ba04c50e5688364d0eccc138f01f",
+    "ghost": "d1a2c0053cdbaf56678d2c22d2bc3e2dcbf37a325a0af3b7af6533fe9315ccd6"
+  }
+}

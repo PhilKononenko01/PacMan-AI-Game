@@ -1,0 +1,9 @@
+{
+  "source_files_match": true,
+  "verification_tools_match": true,
+  "full_verified_runs": 5,
+  "games_replayed": 125000,
+  "win_capture_timeout_cli_replays_match": true,
+  "chart_visually_inspected": true,
+  "independent_review_archive_condition": "Closed after successful archive process exit and verification of five complete replay results."
+}

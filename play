@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
+python="$root/.venv/bin/python"
+if [ ! -x "$python" ]; then
+    python=python3
+fi
+
+cd "$root"
+exec "$python" -m pacman.hybrid watch \
+    --pac-policy "$root/reports/hybrid-55/replicate-0/pacman.npz" \
+    --ghost-policy "$root/reports/hybrid-55/replicate-0/ghost.npz" \
+    --seed 1000000 --key 42 "$@"

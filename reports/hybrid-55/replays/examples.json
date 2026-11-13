@@ -1,0 +1,17 @@
+{
+  "win": {
+    "layout_seed": 2000000,
+    "episode_key": 4623642752459706441,
+    "turns": 27
+  },
+  "loss": {
+    "layout_seed": 2000001,
+    "episode_key": 1007556786767762072,
+    "turns": 31
+  },
+  "tie": {
+    "layout_seed": 2000134,
+    "episode_key": 8945607076928758796,
+    "turns": 100
+  }
+}

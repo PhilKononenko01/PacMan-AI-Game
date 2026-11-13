@@ -1,0 +1,140 @@
+{
+  "budgets": {
+    "adapt": 50000,
+    "baseline": 30000,
+    "ghost": 30000
+  },
+  "episode_key_scheme": "derive(replicate, hybrid-{stage}-{index}).getrandbits(63)",
+  "epsilon": "linear 1.0 to 0.05 during first 70% of each stage, then 0.05",
+  "evaluation": "All scheduled games; ties and losses remain in denominator; validation only.",
+  "features": {
+    "ghost": "sighting-search-v1",
+    "pacman": "pellet-route-ghost-clock-v1"
+  },
+  "final_policy_hashes": {
+    "adapted": "0d7e33901dfa3089c82642326bab52f57cad22571cae86c72247567ca359b901",
+    "baseline": "f25089992d9669e81090bb0d250995e81f3d238735fb32b45f3455d660c0866e",
+    "ghost": "3fe2afd3ac865c175a08da1424de49eea26ab96d284946c429a29a3df639996c"
+  },
+  "layout_seed_block": [
+    0,
+    199999
+  ],
+  "learning_parameters": {
+    "ghost": {
+      "alpha": 0.1,
+      "capture": 1.0,
+      "gamma": 0.97,
+      "pacman_win": -1.0,
+      "timeout": 0.0
+    },
+    "pacman": {
+      "alpha": 0.1,
+      "gamma": 1.0,
+      "loss": -100.0,
+      "pellet": 1.0,
+      "step": -0.05,
+      "timeout": -100.0,
+      "win": 100.0
+    }
+  },
+  "replicate": 0,
+  "rules": {
+    "max_steps": 100,
+    "memory_turns": 12,
+    "search_choices": 3,
+    "search_distance": 3,
+    "search_moves": 4
+  },
+  "rules_version": "two-pellets-sight-memory-v1",
+  "source_files_sha256": {
+    "__init__.py": "774bf41cb25b32eb6206192cc4927fce05c284a4814b1c102fe699df7d8f5eba",
+    "__main__.py": "d6d3610361646c2e0dadd178ae784bc47c084ca917583a5c461cbc0da1f78989",
+    "artifacts.py": "56b04a87123a6d304336de11eb4ef02839997cde6f54b2bf7409a8ea53c550f2",
+    "experiment.py": "de0d2f6e20855eb92c7ba54dc0c32ab5a67c1ea92b4c508a4c246b61b94c7fe4",
+    "game.py": "21f237379ea071239ef40efddfd9b8e7b541029eecf3678df2dd2531058fc9db",
+    "ghost.py": "016a5ae8e6146e623456d4311e5599dc0d301d113f0ede96e2f93eafd55eb9a6",
+    "learning.py": "e209d293d32e57d212d1adce82f3aff276b4d671e4eea657c6d5bdc15a32aa42",
+    "models.py": "93a5612d5f6797ebf131b28a2222e385083436bfb3babc144f2744db7329ec8f"
+  },
+  "stages": {
+    "adapt": {
+      "coverage": {
+        "decisions": 823979,
+        "q_updates": 823979,
+        "states": 17797,
+        "unseen": 4188,
+        "unseen_fraction": 0.00508265380549747
+      },
+      "elapsed_seconds": 154.73341796299792,
+      "episodes": 50000,
+      "episodes_per_second": 323.1364023249116,
+      "first_layout_seed": 60000,
+      "frozen_after": [
+        "f25089992d9669e81090bb0d250995e81f3d238735fb32b45f3455d660c0866e",
+        "3fe2afd3ac865c175a08da1424de49eea26ab96d284946c429a29a3df639996c"
+      ],
+      "frozen_before": [
+        "f25089992d9669e81090bb0d250995e81f3d238735fb32b45f3455d660c0866e",
+        "3fe2afd3ac865c175a08da1424de49eea26ab96d284946c429a29a3df639996c"
+      ],
+      "outcomes": {
+        "loss": 30717,
+        "tie": 116,
+        "win": 19167
+      },
+      "turns": 823979
+    },
+    "baseline": {
+      "coverage": {
+        "decisions": 474787,
+        "q_updates": 474787,
+        "states": 13609,
+        "unseen": 13609,
+        "unseen_fraction": 0.028663379578632103
+      },
+      "elapsed_seconds": 92.75217242800863,
+      "episodes": 30000,
+      "episodes_per_second": 323.4425589684713,
+      "first_layout_seed": 0,
+      "frozen_after": [],
+      "frozen_before": [],
+      "outcomes": {
+        "loss": 19105,
+        "tie": 56,
+        "win": 10839
+      },
+      "turns": 474787
+    },
+    "ghost": {
+      "coverage": {
+        "decisions": 9101,
+        "q_updates": 9101,
+        "states": 1413,
+        "unseen": 1424,
+        "unseen_fraction": 0.1564663223821558
+      },
+      "elapsed_seconds": 68.92930854298174,
+      "episodes": 30000,
+      "episodes_per_second": 435.2285063369397,
+      "first_layout_seed": 30000,
+      "frozen_after": [
+        "4601b3ad7082ae09130ca17307855300bf98cdce095131a440ac3ce3dfd7d8d7",
+        "322a48349855543ced52f0b53dfd7ff9f0fa49f1d2e651b51321a1d1b263396f",
+        "f25089992d9669e81090bb0d250995e81f3d238735fb32b45f3455d660c0866e"
+      ],
+      "frozen_before": [
+        "4601b3ad7082ae09130ca17307855300bf98cdce095131a440ac3ce3dfd7d8d7",
+        "322a48349855543ced52f0b53dfd7ff9f0fa49f1d2e651b51321a1d1b263396f",
+        "f25089992d9669e81090bb0d250995e81f3d238735fb32b45f3455d660c0866e"
+      ],
+      "outcomes": {
+        "loss": 13042,
+        "tie": 188,
+        "win": 16770
+      },
+      "turns": 584564
+    }
+  },
+  "training_policy_identity": "Mutable policies use training-update-N revision identifiers; frozen policies use SHA256 table hashes."
+}
