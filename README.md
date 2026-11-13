@@ -33,6 +33,13 @@ Both move one square per turn. Pac-Man moves first.
 
 **Ties (optional).** By default a tie carries no reward: the turn limit is treated as a cut-off, so running out the clock costs only the step penalties and the learner can come to prefer it. `--set tie_update=terminal --set reward_tie=-100 --set discount=1.0` makes a tie a final outcome worth exactly as much as being caught. Without `discount=1.0`, a tie 100 turns away is discounted to about a third of its value, and the learner still leans towards it. The tie reward is a training signal only; recorded episode returns do not include it. Every reported result uses the default.
 
+**Training refinements (optional).** Three learner settings change only how Pac-Man trains, never the game:
+
+- `--set training_maps=winnable` trains only on maps some sequence of moves can win, found by the same search evaluation uses. Screening costs about 3 ms per map, and roughly half of all maps qualify.
+- `--set final_learning_rate_fraction=0.1` lowers the learning rate steadily, to that share of `learning_rate` by the last episode. Together with `epsilon_end=0.0` it lets the table settle instead of drifting.
+- `--set keep_table=best` saves the table from the learning-curve checkpoint with the highest win rate instead of the last one. The checkpoints play the first 200 validation seeds, which the final validation also includes, so that figure is slightly optimistic; the test split stays independent.
+- `--set ghost_feature=race` changes one of the learned agent's inputs. Instead of whether the ghost has a clear line to Pac-Man, which no longer matters against a ghost that always knows where he is, it records whether Pac-Man's route to his target is shorter than the ghost's. A policy is always evaluated with the input it was trained with. Pac-Man is still never told the move count (PRD OQ-14).
+
 ## What we measure
 
 Every agent plays the same seeds. Only games that can be won count: since the ghost is predictable, an exact search over Pac-Man's moves, with the whole map known, decides for each seed whether any route wins, and the other seeds are neither played nor counted. Of the first 1,000 validation seeds, 483 can be won. The generator keeps test layouts separate from training and validation; layouts can repeat within a split. Training still uses every training map. We report wins, losses and ties with 95% confidence intervals, and use a paired McNemar test to check whether the learned agent beats each baseline.

@@ -22,6 +22,8 @@ def test_defaults_match_the_approved_game_and_learner_settings():
             "epsilon_start": 1.0, "epsilon_end": 0.05,
             "epsilon_decay_fraction": 0.5, "episodes": 50_000,
             "tie_update": "bootstrap", "reward_tie": 0.0,
+            "training_maps": "all", "final_learning_rate_fraction": 1.0, "keep_table": "final",
+            "ghost_feature": "sight",
         },
     }
 
@@ -97,6 +99,9 @@ def test_invalid_game_settings_fail_at_construction(field, value):
     ("reward_win", "100"), ("reward_step", None),
     ("reward_tie", None), ("reward_tie", "-100"),
     ("reward_tie", -100.0),  # a bootstrapped tie is a cut-off, so it cannot carry a reward
+    ("training_maps", "some"), ("training_maps", None),
+    ("final_learning_rate_fraction", 0), ("final_learning_rate_fraction", 1.5),
+    ("keep_table", "worst"), ("keep_table", True), ("ghost_feature", "smell"),
 ])
 def test_invalid_learner_settings_fail_at_construction(field, value):
     with pytest.raises(ValueError, match=field):

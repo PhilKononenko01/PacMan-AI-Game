@@ -124,6 +124,10 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `episodes` | int | 50,000 | 1 to 1,000,000 | episodes |
 | `tie_update` | str | `"bootstrap"` | `"bootstrap"` or `"terminal"` | §10.5 |
 | `reward_tie` | float | 0.0 | any finite number; nonzero needs `tie_update="terminal"` | reward added to a terminal tie in training only; opt-in extension, see `review.md` |
+| `training_maps` | str | `"all"` | `"all"` or `"winnable"` | with `"winnable"`, training plays only seeds `winnable.winning_moves` can win, in seed order; the policy's training seeds are the first and last played |
+| `final_learning_rate_fraction` | float | 1.0 | greater than 0 to 1.0 | the learning rate falls linearly from `learning_rate` at episode 0 to this share of it at the last; 1.0 keeps it constant |
+| `keep_table` | str | `"final"` | `"final"` or `"best"` | with `"best"`, the saved and validated table is a copy taken at the curve point with the highest win rate, the earliest on a tie |
+| `ghost_feature` | str | `"sight"` | `"sight"` or `"race"` | the state's two-valued ghost flag: line of sight on the remembered map, or whether Pac-Man's remembered-map distance to his planned target is strictly less than the ghost's; same 122,880 rows either way; `evaluate`, `simulate` and `watch` refuse a value that differs from the policy's |
 
 `tie_update` is a learner setting: it changes how the agent learns, not how hard the game is.
 

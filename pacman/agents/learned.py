@@ -28,6 +28,8 @@ class LearnedAgent:
         self.q = q
         self.training = training
         self.epsilon = 0.0  # the training loop sets it before each episode
+        self.learning_rate = settings.learning_rate  # likewise, when its schedule decays
+        self.race = settings.ghost_feature == "race"
         self.rng: random.Random | None = None
         self._state: int | None = None      # state of the pending transition, set by act
         self._action: Direction | None = None
@@ -41,7 +43,7 @@ class LearnedAgent:
         self._next_state = None
 
     def act(self, observation: Observation) -> Direction:
-        state = self._next_state if self._next_state is not None else state_index(observation)
+        state = self._next_state if self._next_state is not None else state_index(observation, self.race)
         self._next_state = None
         if self.training and self.rng.random() < self.epsilon:
             action = Direction(pick(self.rng, 4))
@@ -59,12 +61,12 @@ class LearnedAgent:
         settings = self.settings
         bootstrap = outcome is None or (outcome is Outcome.TIE and settings.tie_update == "bootstrap")
         if bootstrap:
-            next_state = state_index(observation)
+            next_state = state_index(observation, self.race)
             target = reward + settings.discount * float(numpy.max(self.q[next_state]))
         else:
             # WIN, LOSS or a terminal TIE: the final observation is never encoded.
             target = reward + (settings.reward_tie if outcome is Outcome.TIE else 0.0)
-        self.q[state, action] += settings.learning_rate * (target - self.q[state, action])
+        self.q[state, action] += self.learning_rate * (target - self.q[state, action])
         self._next_state = next_state if outcome is None else None
         self._state = None
         self._action = None

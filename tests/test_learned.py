@@ -175,7 +175,7 @@ def test_the_tie_reward_is_never_added_to_a_win():
 def test_the_next_state_index_is_cached_while_the_game_continues(monkeypatch):
     calls = []
     real = learned_module.state_index
-    monkeypatch.setattr(learned_module, "state_index", lambda obs: calls.append(obs) or real(obs))
+    monkeypatch.setattr(learned_module, "state_index", lambda obs, *rest: calls.append(obs) or real(obs, *rest))
     agent = trainer(0.9, 0.9)
     agent.act(START)
     assert len(calls) == 1
@@ -191,7 +191,7 @@ def test_the_next_state_index_is_cached_while_the_game_continues(monkeypatch):
 def test_no_transition_survives_a_final_outcome(monkeypatch, outcome, observation):
     calls = []
     real = learned_module.state_index
-    monkeypatch.setattr(learned_module, "state_index", lambda obs: calls.append(obs) or real(obs))
+    monkeypatch.setattr(learned_module, "state_index", lambda obs, *rest: calls.append(obs) or real(obs, *rest))
     agent = trainer(0.9, 0.9)
     agent.act(START)
     agent.observe(-0.05, observation, outcome)
@@ -278,3 +278,22 @@ def test_an_evaluation_game_visits_more_than_one_state():
     agent.q[:] = numpy.linspace(0.0, 1.0, agent.q.size).reshape(agent.q.shape)
     play_episode(Environment(config), Referee(config.game.max_steps), agent, 1_000_000)
     assert len(set(agent.states)) > 1
+
+
+def test_an_update_uses_the_learning_rate_the_training_loop_set():
+    agent = trainer(0.9)
+    assert agent.learning_rate == 0.1          # the setting, until the loop changes it
+    agent.learning_rate = 0.5
+    s = state_index(START)
+    agent.act(START)
+    agent.observe(-0.05, CAUGHT, Outcome.LOSS)
+    assert agent.q[s, UP] == pytest.approx(0.5 * -0.05)
+
+
+def test_a_race_learner_reads_the_race_feature():
+    race = LearnedAgent(LearnerSettings(ghost_feature="race"))
+    race.reset(Scripted())
+    s = state_index(NEXT, race=True)
+    assert s != state_index(NEXT)
+    race.q[s] = [0.0, 0.0, 3.0, 0.0]
+    assert race.act(NEXT) == Direction.DOWN

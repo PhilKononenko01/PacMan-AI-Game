@@ -68,6 +68,11 @@ class LearnerSettings:
     episodes: int = 50_000
     tie_update: str = "bootstrap"
     reward_tie: float = 0.0  # added to a terminal tie's reward in training; ties carry nothing by default
+    # Opt-in training refinements; the defaults train exactly as before.
+    training_maps: str = "all"               # "winnable": skip training maps no move sequence can win
+    final_learning_rate_fraction: float = 1.0  # the learning rate falls linearly to this share of it
+    keep_table: str = "final"                # "best": keep the table from the best curve point
+    ghost_feature: str = "sight"             # "race": the flag says Pac-Man is nearer his target
 
     def __post_init__(self) -> None:
         for name in ("reward_win", "reward_loss", "reward_corner", "reward_step", "reward_tie"):
@@ -85,6 +90,16 @@ class LearnerSettings:
             "bootstrap", "terminal",
         ):
             raise ValueError("tie_update must be 'bootstrap' or 'terminal'")
+        for name, allowed in (
+            ("training_maps", ("all", "winnable")), ("keep_table", ("final", "best")),
+            ("ghost_feature", ("sight", "race")),
+        ):
+            if not isinstance(getattr(self, name), str) or getattr(self, name) not in allowed:
+                raise ValueError(f"{name} must be one of {', '.join(map(repr, allowed))}")
+        _number(
+            "final_learning_rate_fraction", self.final_learning_rate_fraction,
+            0, 1, minimum_exclusive=True,
+        )
         if self.reward_tie != 0 and self.tie_update != "terminal":
             raise ValueError(
                 "reward_tie must be 0 unless tie_update is 'terminal':"

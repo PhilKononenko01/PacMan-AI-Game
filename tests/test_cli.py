@@ -154,6 +154,8 @@ def test_evaluate_refuses_a_game_knob_that_differs_from_the_policy(run, trained)
     assert code == 1 and "max_steps" in err
     code, _, err = run("evaluate", "--split", "val", "--policy", trained / "policy.npz", "--set", "learning_rate=0.5")
     assert code == 0, err
+    code, _, err = run("evaluate", "--split", "val", "--policy", trained / "policy.npz", "--set", "ghost_feature=race")
+    assert code == 1 and "ghost_feature=race (policy: sight)" in err  # the table would be misread
 
 
 def test_check_plays_the_baselines_and_shows_the_stored_policy_with_differing_knobs(run, trained):
@@ -260,3 +262,12 @@ def test_ctrl_c_ends_a_command_quietly_with_exit_130(run, monkeypatch):
     code, output, err = run("watch", "--agent", "random", "--seed", 0, "--delay", 0)
     assert code == 130
     assert "Traceback" not in err and "error:" not in err
+
+
+def test_train_says_which_checkpoint_it_kept(run, tmp_path):
+    code, output, err = run(
+        "train", "--out", tmp_path / "best", "--set", "episodes=4", "--set", "max_steps=20",
+        "--set", "keep_table=best",
+    )
+    assert code == 0, err
+    assert any(line.startswith("kept the table from episode ") for line in output.splitlines())

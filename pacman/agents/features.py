@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from pacman.agents.pathfinding import plan, remembered_open
 from pacman.env import KnownCell, Observation
-from pacman.grid import COLS, DELTAS, Direction, in_grid, line_of_sight
+from pacman.grid import COLS, DELTAS, Direction, bfs, in_grid, line_of_sight
 
 STATES = 4 * 16 * 80 * 4 * 2 * 3  # 122,880 rows; policy_io.TABLE_SHAPE must agree
 
@@ -15,19 +15,23 @@ class Features:
     open_mask: int   # bit i set when the neighbour in direction i is known open, 0..15
     offset: int      # ghost's (row, col) offset from Pac-Man, centre removed, 0..79
     distance: int    # shortest-path distance to the ghost, bucketed 1, 2, 3, 4+, as 0..3
-    seen: int        # line of sight on the remembered map, 0..1
+    ghost_flag: int  # line of sight on the remembered map, or with race, Pac-Man nearer his target, 0..1
     remaining: int   # unvisited corners minus one, 0..2
 
     @property
     def index(self) -> int:
         return (
             (((self.step * 16 + self.open_mask) * 80 + self.offset) * 4 + self.distance) * 2
-            + self.seen
+            + self.ghost_flag
         ) * 3 + self.remaining
 
 
-def features(observation: Observation) -> Features:
-    """Encode an observation the game is still running from; captures are never states."""
+def features(observation: Observation, race: bool = False) -> Features:
+    """Encode an observation the game is still running from; captures are never states.
+
+    The ghost flag is line of sight by default. With `race` it is whether Pac-Man's route to his
+    target is strictly shorter than the ghost's, both on his remembered map.
+    """
     (pacman_row, pacman_col), (ghost_row, ghost_col) = observation.pacman, observation.ghost
     if observation.pacman == observation.ghost:
         raise ValueError("a captured Pac-Man is never a state")
@@ -42,9 +46,13 @@ def features(observation: Observation) -> Features:
     k = (ghost_row - pacman_row + 4) * 9 + (ghost_col - pacman_col + 4)
     offset = k - 1 if k > 40 else k
     distance = min(current.distances[observation.ghost], 4) - 1
-    seen = int(line_of_sight(observation.ghost, observation.pacman, remembered_open(observation)))
-    return Features(int(current.step), open_mask, offset, distance, seen, current.remaining - 1)
+    passable = remembered_open(observation)
+    if race:
+        flag = int(current.distances[current.target] < bfs(observation.ghost, passable)[current.target])
+    else:
+        flag = int(line_of_sight(observation.ghost, observation.pacman, passable))
+    return Features(int(current.step), open_mask, offset, distance, flag, current.remaining - 1)
 
 
-def state_index(observation: Observation) -> int:
-    return features(observation).index
+def state_index(observation: Observation, race: bool = False) -> int:
+    return features(observation, race).index

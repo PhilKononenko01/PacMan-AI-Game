@@ -90,6 +90,11 @@ def policy_config(args: argparse.Namespace, policy: Policy) -> Config:
     if differences:
         listed = ", ".join(f"{name}={now} (policy: {stored})" for name, (now, stored) in differences.items())
         raise ValueError(f"game knobs differ from the policy's: {listed}")
+    if config.learner.ghost_feature != policy.config.learner.ghost_feature:
+        raise ValueError(
+            "the policy's table is read with its own inputs: ghost_feature="
+            f"{config.learner.ghost_feature} (policy: {policy.config.learner.ghost_feature})"
+        )
     return config
 
 
@@ -146,6 +151,8 @@ def _train(args: argparse.Namespace) -> None:
         )
 
     result = training.train(config, on_progress=progress)
+    if config.learner.keep_table == "best":
+        print(f"kept the table from episode {result.kept_episodes}")
     print(TABLE_HEADER)
     print(format_summary_row(result.validation))
     training.write_outputs(out, result)

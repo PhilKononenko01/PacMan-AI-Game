@@ -19,6 +19,7 @@ from pacman.train import (
     CURVE_GAMES,
     TrainingResult,
     epsilon_for,
+    learning_rate_for,
     prepare_output_dir,
     train,
     write_outputs,
@@ -40,7 +41,7 @@ def small_sizes(monkeypatch):
 @pytest.fixture
 def spy(monkeypatch):
     """Record every evaluation run and every training episode the loop makes."""
-    calls = {"runs": [], "episodes": [], "agents": []}
+    calls = {"runs": [], "episodes": [], "agents": [], "rates": []}
     real_run_split = train_module.run_split
     real_play = train_module.play_episode
 
@@ -50,11 +51,13 @@ def spy(monkeypatch):
         calls["runs"].append({
             "split": split, "games": games, "training": agent.training,
             "unchanged": numpy.array_equal(agent.q, before), "table": agent.q.copy(),
+            "win_rate": sum(r.outcome.value == "win" for r in records) / len(records),
         })
         return records
 
     def play_episode(environment, referee, agent, seed):
         calls["episodes"].append((seed, agent.epsilon, agent.training))
+        calls["rates"].append(agent.learning_rate)
         calls["agents"].append(agent)
         return real_play(environment, referee, agent, seed)
 
@@ -212,3 +215,52 @@ def test_the_policy_is_saved_before_the_curve_is_drawn(small_sizes, tmp_path, mo
         write_outputs(out, result)
     monkeypatch.setattr(builtins, "__import__", real_import)
     assert numpy.array_equal(load_policy(out / "policy.npz").q, result.policy.q)
+
+
+def test_the_learning_rate_is_constant_by_default():
+    assert {learning_rate_for(k, LearnerSettings()) for k in (0, 25_000, 49_999)} == {0.1}
+
+
+def test_the_learning_rate_falls_linearly_to_its_final_fraction():
+    settings = LearnerSettings(episodes=10, learning_rate=0.2, final_learning_rate_fraction=0.5)
+    assert [round(learning_rate_for(k, settings), 4) for k in (0, 5, 10)] == [0.2, 0.15, 0.1]
+
+
+def test_each_episode_trains_at_the_scheduled_learning_rate(small_sizes, spy):
+    config = Config(game=SHORT.game, learner=LearnerSettings(episodes=5, final_learning_rate_fraction=0.5))
+    train(config)
+    assert spy["rates"] == pytest.approx([0.1, 0.09, 0.08, 0.07, 0.06])
+
+
+def test_winnable_training_plays_only_maps_that_can_be_won(small_sizes, spy):
+    # At max_steps=30 the first winnable training seeds are 1, 6, 9, 13 and 15.
+    config = Config(game=SHORT.game, learner=LearnerSettings(episodes=5, training_maps="winnable"))
+    result = train(config)
+    assert [seed for seed, _, _ in spy["episodes"]] == [1, 6, 9, 13, 15]
+    assert result.policy.training_seeds == (1, 15)
+
+
+def test_keeping_the_best_table_saves_the_first_highest_checkpoint(small_sizes, spy):
+    config = Config(game=SHORT.game, learner=LearnerSettings(episodes=8, keep_table="best"))
+    result = train(config)
+    checkpoints = spy["runs"][:-1]
+    assert len(checkpoints) == 4
+    best = max(range(4), key=lambda i: (checkpoints[i]["win_rate"], -i))
+    numpy.testing.assert_array_equal(result.policy.q, checkpoints[best]["table"])
+    numpy.testing.assert_array_equal(spy["runs"][-1]["table"], checkpoints[best]["table"])  # validated
+    assert result.kept_episodes == 2 * (best + 1)
+
+
+def test_by_default_the_final_table_is_kept(small_sizes, spy):
+    result = train(Config(game=SHORT.game, learner=LearnerSettings(episodes=8)))
+    numpy.testing.assert_array_equal(result.policy.q, spy["agents"][-1].q)
+    assert result.kept_episodes == 8
+
+
+def test_running_out_of_winnable_training_maps_is_a_clear_error(monkeypatch):
+    seeds = dict(train_module.SPLIT_SEEDS)
+    seeds[Split.TRAIN] = range(0, 10)  # only seeds 1, 6 and 9 can be won at max_steps=30
+    monkeypatch.setattr(train_module, "SPLIT_SEEDS", seeds)
+    config = Config(game=SHORT.game, learner=LearnerSettings(episodes=5, training_maps="winnable"))
+    with pytest.raises(ValueError, match="only 3 winnable training maps"):
+        train(config)

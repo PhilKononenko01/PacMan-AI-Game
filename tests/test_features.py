@@ -33,7 +33,7 @@ def test_state_count_matches_the_policy_table():
 def test_features_and_index_of_the_start_observation():
     start = observation(known=memory(open=[(0, 1), (1, 0)]))
     result = features(start)
-    assert result == Features(step=1, open_mask=0b0110, offset=79, distance=3, seen=0, remaining=2)
+    assert result == Features(step=1, open_mask=0b0110, offset=79, distance=3, ghost_flag=0, remaining=2)
     assert result.index == ((((1 * 16 + 6) * 80 + 79) * 4 + 3) * 2 + 0) * 3 + 2 == 44156
     assert state_index(start) == 44156
 
@@ -100,11 +100,30 @@ def test_distance_is_measured_on_the_remembered_map():
     assert features(observation(ghost=(0, 2), known=memory(wall=[(0, 1)]))).distance == 3
 
 
-def test_seen_is_line_of_sight_on_the_remembered_map():
-    assert features(observation(ghost=(0, 3))).seen == 1                       # unknown counts open
-    assert features(observation(ghost=(0, 3), known=memory(wall=[(0, 1)]))).seen == 0
-    assert features(observation(ghost=(0, 3), known=memory(wall=[(1, 1)]))).seen == 1
-    assert features(observation(ghost=(1, 3))).seen == 0
+def test_the_ghost_flag_is_line_of_sight_on_the_remembered_map_by_default():
+    assert features(observation(ghost=(0, 3))).ghost_flag == 1                       # unknown counts open
+    assert features(observation(ghost=(0, 3), known=memory(wall=[(0, 1)]))).ghost_flag == 0
+    assert features(observation(ghost=(0, 3), known=memory(wall=[(1, 1)]))).ghost_flag == 1
+    assert features(observation(ghost=(1, 3))).ghost_flag == 0
+
+
+def test_with_the_race_feature_the_flag_says_pacman_is_nearer_his_target_than_the_ghost():
+    # Pac-Man at (0, 1) heads for (0, 4), three steps away; the ghost at (4, 4) is four away.
+    assert features(observation(pacman=(0, 1)), race=True).ghost_flag == 1
+    assert features(observation(pacman=(0, 1), ghost=(1, 4)), race=True).ghost_flag == 0  # one away
+    assert features(observation(pacman=(0, 0), ghost=(4, 4)), race=True).ghost_flag == 0  # a tie, 4 and 4
+    # A remembered wall at (0, 2) makes his route five steps; the ghost is still four away.
+    walled = observation(pacman=(0, 1), known=memory(wall=[(0, 2)]))
+    assert features(walled, race=True).ghost_flag == 0
+    assert features(walled).ghost_flag == 0 and features(observation(pacman=(0, 1))).ghost_flag == 0
+
+
+def test_the_race_feature_changes_only_the_flag():
+    plain = features(observation(pacman=(0, 1)))
+    raced = features(observation(pacman=(0, 1)), race=True)
+    assert (plain.step, plain.open_mask, plain.offset, plain.distance, plain.remaining) == (
+        raced.step, raced.open_mask, raced.offset, raced.distance, raced.remaining)
+    assert state_index(observation(pacman=(0, 1)), race=True) == raced.index
 
 
 @pytest.mark.parametrize("visited,expected", [
