@@ -48,6 +48,9 @@ class GameKnobs:
     # Where the three pellets Pac-Man collects lie: "corners", the accepted game, or "anywhere",
     # three random open cells besides his start, drawn per game from the seed.
     pellets: str = "corners"
+    # How many corners besides the start Pac-Man must visit; the rest are drawn at random each
+    # game and count as visited from the start. 3, every corner, is the accepted game.
+    corners_to_visit: int = 3
 
     def __post_init__(self) -> None:
         _number("ghost_move_prob", self.ghost_move_prob, 0, 1)
@@ -57,6 +60,9 @@ class GameKnobs:
         _integer("max_steps", self.max_steps, 1)
         if not isinstance(self.pellets, str) or self.pellets not in ("corners", "anywhere"):
             raise ValueError(f"pellets must be 'corners' or 'anywhere', got {self.pellets!r}")
+        _integer("corners_to_visit", self.corners_to_visit, 1, 3)
+        if self.corners_to_visit != 3 and self.pellets != "corners":
+            raise ValueError("corners_to_visit applies only when pellets is 'corners'")
 
 
 @dataclass(frozen=True, slots=True)

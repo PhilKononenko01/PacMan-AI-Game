@@ -14,6 +14,7 @@ def test_defaults_match_the_approved_game_and_learner_settings():
         "game": {
             "ghost_move_prob": 1.0, "wall_density": 0.20,
             "max_walls": 6, "min_loops": 4, "max_steps": 100, "pellets": "corners",
+            "corners_to_visit": 3,
         },
         "learner": {
             "reward_win": 100.0, "reward_loss": -100.0,
@@ -82,6 +83,7 @@ def test_invalid_json_structure_is_rejected(text):
     ("max_steps", 0), ("max_steps", True),
     ("ghost_move_prob", False), ("wall_density", None),
     ("pellets", "everywhere"), ("pellets", None),
+    ("corners_to_visit", 0), ("corners_to_visit", 4), ("corners_to_visit", 2.0), ("corners_to_visit", True),
 ])
 def test_invalid_game_settings_fail_at_construction(field, value):
     with pytest.raises(ValueError, match=field):
@@ -125,7 +127,7 @@ def test_nonfinite_json_values_are_rejected(constant):
 
 def test_valid_boundaries_and_impossible_generator_settings_remain_expressible():
     # Map generation, not configuration, owns bounded rejection of these maps.
-    game = GameKnobs(ghost_move_prob=0, wall_density=1, max_walls=0, min_loops=17, max_steps=1)
+    game = GameKnobs(ghost_move_prob=0, wall_density=1, max_walls=0, min_loops=17, max_steps=1, corners_to_visit=1)
     learner = LearnerSettings(
         learning_rate=1, discount=0, epsilon_start=0, epsilon_end=0,
         epsilon_decay_fraction=1, episodes=1_000_000, tie_update="terminal",
@@ -160,3 +162,9 @@ def test_a_file_from_when_the_ghost_was_a_choice_loads_only_if_it_names_the_path
 def test_a_tie_reward_is_accepted_when_ties_are_terminal():
     settings = LearnerSettings(reward_tie=-100.0, tie_update="terminal")
     assert (settings.reward_tie, settings.tie_update) == (-100.0, "terminal")
+
+
+def test_fewer_corners_cannot_be_combined_with_pellets_anywhere():
+    with pytest.raises(ValueError, match="corners_to_visit"):
+        GameKnobs(pellets="anywhere", corners_to_visit=2)
+    assert GameKnobs(pellets="anywhere", corners_to_visit=3).pellets == "anywhere"

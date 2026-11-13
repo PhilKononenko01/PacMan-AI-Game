@@ -23,6 +23,8 @@ Both move one square per turn. Pac-Man moves first.
 
 **Pellets anywhere (optional).** `--set pellets=anywhere` replaces the three corners Pac-Man must reach with three pellets on random open squares, drawn per game from the seed. He knows where they are, as he knows the corners, and collecting all three wins. Plain frames draw uncollected pellets as `o` and collected ones as `*`. The default, `corners`, is the accepted game.
 
+**Fewer corners (optional).** `--set corners_to_visit=2` asks Pac-Man for only two of the three other corners, picked at random each game from the seed. The skipped corner counts as visited from the start, so it shows as `*` and earns no reward. It applies only to the corners, not with `pellets=anywhere`. The default, 3, is the accepted game.
+
 ## The agents
 
 | Agent | How it plays |

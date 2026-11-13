@@ -69,7 +69,7 @@ class Environment:
         self.pacman = PACMAN_START
         self.ghost = Ghost(derive(seed, "ghost"), self.config.game.ghost_move_prob)
         self.targets = self._targets(seed, game_map)
-        self.visited = {PACMAN_START}
+        self.visited = {PACMAN_START} | self._skipped_corners(seed)
         self.known = [KnownCell.UNKNOWN] * (ROWS * COLS)
         self.outcome = None
         self._sense(game_map)
@@ -112,6 +112,16 @@ class Environment:
         ]
         pellets = [cells.pop(pick(rng, len(cells))) for _ in range(len(CORNERS) - 1)]
         return tuple(sorted([PACMAN_START, *pellets]))
+
+    def _skipped_corners(self, seed: int) -> set[Cell]:
+        """Corners left out of this game's objective; none, and no draw, by default."""
+        others = [corner for corner in CORNERS if corner != PACMAN_START]
+        skipped: set[Cell] = set()
+        if self.config.game.corners_to_visit < len(others):
+            rng = derive(seed, "corners")
+            while len(others) > self.config.game.corners_to_visit:
+                skipped.add(others.pop(pick(rng, len(others))))
+        return skipped
 
     def _sense(self, game_map: GameMap) -> None:
         """Record each in-grid neighbour of Pac-Man as open or a wall."""

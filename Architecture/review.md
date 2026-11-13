@@ -37,6 +37,29 @@ On the first 100 seeds, pellets anywhere give learned 32/13/55, pathfinding 14/8
 
 ---
 
+## Fewer corners: an opt-in game knob
+
+**Date:** 2026-11-13. Branch `feature/corner-count`, stacked on `feature/ghost-pathfinding`. Christian asked what happens if Pac-Man needs only two random corners instead of the three beyond his start.
+
+**What changed:** a game knob, `corners_to_visit` (default 3, valid 1 to 3), is how many corners besides the start Pac-Man must visit. `Environment.reset` draws the others from `derive(seed, "corners")` with `pick` and marks them visited at step 0, so the features, the pathfinding baseline, the corner reward and the win rule work unchanged: they already chase unvisited corners. At the default no corner is skipped and no draw is taken; the frozen policy again reproduced all 3,000 recorded validation games.
+
+**Measured** on the first 1,000 validation seeds, one 50,000-episode training run per row at default learner settings. The three-corner rows are the submitted policy and the earlier pathfinding-ghost run. Perfect play is the exact breadth-first search with Pac-Man knowing the whole map; it reproduces 483 for three corners.
+
+| Ghost | Corners | Learned win / loss / tie | Pathfinding wins | Random wins | Maps winnable with perfect play |
+|---|---|---|---|---|---|
+| Vision | 3 | 69.1% / 26.7% / 4.2% | 14.2% | 0.0% | not computed |
+| Vision | 2 | 70.7% / 21.7% / 7.6% | 18.8% | 0.2% | not computed |
+| Pathfinding | 3 | 8.8% / 21.5% / 69.7% | 0.8% | 0.0% | 483 |
+| Pathfinding | 2 | 23.3% / 25.2% / 51.5% | 1.4% | 0.0% | 602 |
+
+Both two-corner learners beat both baselines, p < 0.0001. Against the vision ghost, two corners barely changes the learner's win rate, though its wins are shorter, 28.9 steps against 37.4: dodging the ghost, not route length, limits it. Its win rate is 78.2% when the ghost's corner is skipped and 65.8% to 68.5% otherwise. Against the pathfinding ghost the win rate rises 2.6-fold, and the learner takes 233 of 602 winnable maps, against 88 of 483 with three corners.
+
+**Limits:** one run per setting on validation seeds; nothing tuned; no test seed played. The defaults and every reported result are unchanged.
+
+**Tests:** `test_env.py` covers a random skipped corner per seed that every corner can be, repeatability, no reward for the skipped corner and a win on the two chosen ones. `test_config.py` covers the default, the range and type checks and the boundary 1. Suite: 493 tests.
+
+---
+
 ## Tie reward: stopping the learner from settling for ties
 
 **Date:** 2026-11-13. Branch `feature/tie-penalty`, stacked on `feature/ghost-pathfinding`. Christian asked that the learner not prefer ties; against the pathfinding ghost about 70% of its games were ties.
