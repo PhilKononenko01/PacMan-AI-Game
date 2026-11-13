@@ -123,6 +123,7 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `epsilon_decay_fraction` | float | 0.5 | above 0, at most 1 | fraction of training episodes |
 | `episodes` | int | 50,000 | 1 to 1,000,000 | episodes |
 | `tie_update` | str | `"bootstrap"` | `"bootstrap"` or `"terminal"` | §10.5 |
+| `reward_tie` | float | 0.0 | any finite number; nonzero needs `tie_update="terminal"` | reward added to a terminal tie in training only; opt-in extension, see `review.md` |
 
 `tie_update` is a learner setting: it changes how the agent learns, not how hard the game is.
 
