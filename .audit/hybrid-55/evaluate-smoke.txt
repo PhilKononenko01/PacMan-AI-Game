@@ -1,0 +1,37 @@
+{
+  "games": 10,
+  "loss": 9,
+  "mean_turns": 10.1,
+  "per_layout": {
+    "127c5690ec5bd8644384bf2227ff15451c6a666aa064d4fe6f6de316e681ec6c": {
+      "games": 2,
+      "wins": 0
+    },
+    "3d51ab9a4b367db5950aa90bcf713327b097ed2b46493f6f909d69fbbebef908": {
+      "games": 2,
+      "wins": 1
+    },
+    "7b6bd54a108ed348c0e6bc6e34aeceea30699ffb1b22863b1034e936efd8bf86": {
+      "games": 2,
+      "wins": 0
+    },
+    "a37e8677a92a77d65d08a5815fb63df9894d26e13b7a1f1efc6e9d801f40cd79": {
+      "games": 2,
+      "wins": 0
+    },
+    "bf240da6abe4f7f601195446af43c6628fb81fbfaa4c48738209da7d5e1776a8": {
+      "games": 2,
+      "wins": 0
+    }
+  },
+  "target_55_observed": false,
+  "tie": 0,
+  "unique_layouts": 5,
+  "wilson_95": [
+    0.017876213095072896,
+    0.4041500267952385
+  ],
+  "wilson_caveat": "Unclustered game-level interval; repeated seeds and identical layouts are correlated.",
+  "win": 1,
+  "win_rate": 0.1
+}

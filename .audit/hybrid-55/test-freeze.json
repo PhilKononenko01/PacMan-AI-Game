@@ -1,0 +1,43 @@
+{
+  "all_scheduled_games_count": true,
+  "episode_keys_per_slot": 2,
+  "frozen_at_utc": "2026-11-13T22:41:31.268309+00:00",
+  "historical_layout_use": "These wall-layout test partitions were evaluated for the earlier corner game.",
+  "layout_seed_slots": 1000,
+  "policy_files_sha256": {
+    "runs/hybrid-55-replicate-0/ghost.npz": "f7aa637bc6f97292184f008451983f5a6dc7be91c8c5842bd0bd24384df9585a",
+    "runs/hybrid-55-replicate-0/pacman-baseline-1.npz": "40d22044b051323866956cfc965368b469a58bb99f917dd85a091abfb38ae94f",
+    "runs/hybrid-55-replicate-0/pacman-baseline-2.npz": "b3660704babe57afacfe63aa1a04d17850afd0542909c8f1cca61267fa5d4f64",
+    "runs/hybrid-55-replicate-0/pacman-baseline-3.npz": "e2c066a0d0ab8f2d56291324bac41f5473e20827e712382b895d54cd35d19ea0",
+    "runs/hybrid-55-replicate-0/pacman.npz": "acb0350c986db1f0822631797c7a798f1817663b7eead68b409fec0b7cdc1a0b",
+    "runs/hybrid-55-replicate-1/ghost.npz": "4278be148d594e4b11c27cabb6c212c102ed3be0ccb9eea2f65fd828e7a6d64b",
+    "runs/hybrid-55-replicate-1/pacman-baseline-1.npz": "49a2c6a8ec6b8ddeaea543862eef27e7291b0699ef1ca523a7e561142dd031af",
+    "runs/hybrid-55-replicate-1/pacman-baseline-2.npz": "ddd57f3874e29d37fc591ebe09f498fa2358057656bf4f88070f50b75b933809",
+    "runs/hybrid-55-replicate-1/pacman-baseline-3.npz": "7ed5c7d058b49e49a7a04507f567cfba18baedb7a1e8e13862293ed7368ceba2",
+    "runs/hybrid-55-replicate-1/pacman.npz": "55e6d55ad5f2f405af778e8321bcc26e2959384c6fbaabd7d1603bf5fb828f60",
+    "runs/hybrid-55-replicate-2/ghost.npz": "d1a2c0053cdbaf56678d2c22d2bc3e2dcbf37a325a0af3b7af6533fe9315ccd6",
+    "runs/hybrid-55-replicate-2/pacman-baseline-1.npz": "e8302fe8bf3ba26da711cbce0b065e60884e79e5bc6d72576e453b672438a7a3",
+    "runs/hybrid-55-replicate-2/pacman-baseline-2.npz": "d24347fef866a29d68ea8fc2c5faab77311d4f3ba92fa0bb33c95f31dff5597a",
+    "runs/hybrid-55-replicate-2/pacman-baseline-3.npz": "3b11b1eff863f5ac543c349912730e23508818ef0bd191f06dc59e7cefa2bb5a",
+    "runs/hybrid-55-replicate-2/pacman.npz": "7c36ec20334945decf43eafcc9d3c2541662ba04c50e5688364d0eccc138f01f",
+    "runs/hybrid-55-replicate-3/ghost.npz": "fad0b304130dcdc88eb9c9beb9bb730b5f1ba42c53cc466a6b7c3d92ba97291f",
+    "runs/hybrid-55-replicate-3/pacman-baseline-1.npz": "be43b86443fc2290a7f435fc689de0018577b595da066f0a6bd0c346e82cf900",
+    "runs/hybrid-55-replicate-3/pacman-baseline-2.npz": "41c9b363dee0afaf27ecaaf16bdf2a26e920aae7c3def80a52d7029f806528c2",
+    "runs/hybrid-55-replicate-3/pacman-baseline-3.npz": "f825228b274c71d09298bdb7e3690ca1c338ac61c23febb1521e3d2bb4dd6a12",
+    "runs/hybrid-55-replicate-3/pacman.npz": "63ca7cff833e58ee36073ae27d591a5e4c07360ff5cff520509c5c33d03b940f",
+    "runs/hybrid-55-replicate-4/ghost.npz": "6bd7d0bdcfa156090b71e3b73834be2dd827085f88027b9f2b9338071385e524",
+    "runs/hybrid-55-replicate-4/pacman-baseline-1.npz": "705b25f7053f7d6590157898080ee6c0e2e9e7f8e7f7c115cd895253c4d6df7e",
+    "runs/hybrid-55-replicate-4/pacman-baseline-2.npz": "d3d466261c5dade899f5114b9139e2f690a6856b3e6d7fc4c687497ec5a56c73",
+    "runs/hybrid-55-replicate-4/pacman-baseline-3.npz": "65304e00d9515f23eaddc8559fe2de96c4088ccd3663b7134af1feb7b7adbcb1",
+    "runs/hybrid-55-replicate-4/pacman.npz": "6207d24b58e0e840ef5ff79004fe431722954c71037124dd5fa554a672c67e58"
+  },
+  "replicates": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "selection": "All five final policies retained; no test-driven selection or tuning.",
+  "split": "test"
+}

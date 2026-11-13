@@ -1,0 +1,6 @@
+{"episodes": 1000, "rows": 2519}
+{"episodes": 2000, "rows": 3808}
+{"episodes": 3000, "rows": 5092}
+{"episodes": 4000, "rows": 6098}
+{"episodes": 5000, "rows": 6917}
+{"all_games": 200, "results": [{"agent": "pathfinding", "win": 95, "loss": 105, "tie": 0}, {"agent": "learned", "win": 86, "loss": 114, "tie": 0}], "seconds": 15.199688819004223}

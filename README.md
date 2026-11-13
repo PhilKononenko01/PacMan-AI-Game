@@ -14,6 +14,8 @@ python -m pacman.hybrid watch --pac-policy runs/hybrid/pacman.npz --ghost-policy
 
 See [the experiment rules and training protocol](Architecture/hybrid-experiment.md). The 55% win-rate target requires measured results; training does not guarantee it.
 
+The [completed experiment report](reports/hybrid-learning.md) records a 66.91% Pac-Man win rate across five training runs and 10,000 frozen test games against learned ghosts.
+
 > **Status: the ghost changed after acceptance.** On 2026-11-13 the team kept only the pathfinding ghost, which always knows where Pac-Man is. The accepted results, a frozen policy winning 73.6% of 1,000 held-out games against pathfinding's 14.9% and random's 0.0%, were measured against the original ghost, which saw Pac-Man only along rows and columns. Those results, `reports/results/` and the submitted report describe that earlier game; see [`Architecture/review.md`](Architecture/review.md).
 
 ## The game

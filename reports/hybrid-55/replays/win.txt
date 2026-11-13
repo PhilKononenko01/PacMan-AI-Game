@@ -1,0 +1,169 @@
+P . ? ? o
+. ? ? ? ?
+? ? ? ? ?
+? ? ? ? ?
+? ? ? o G
+turn=0/100 pellets=2/2 ghost=wander outcome=playing
+. P . ? o
+. . ? ? ?
+? ? ? ? ?
+? ? ? ? G
+? ? ? o ?
+turn=1/100 pellets=2/2 ghost=wander outcome=playing
+. . P . o
+. . . ? ?
+? ? ? ? ?
+? ? ? ? ?
+? ? ? o G
+turn=2/100 pellets=2/2 ghost=wander outcome=playing
+. . . P o
+. . . . ?
+? ? ? ? ?
+? ? ? ? G
+? ? ? o ?
+turn=3/100 pellets=2/2 ghost=wander outcome=playing
+. . P . o
+. . . . ?
+? ? ? ? ?
+? ? ? G ?
+? ? ? o ?
+turn=4/100 pellets=2/2 ghost=wander outcome=playing
+. P . . o
+. . . . ?
+? ? ? ? ?
+? ? ? ? G
+? ? ? o ?
+turn=5/100 pellets=2/2 ghost=wander outcome=playing
+. . P . o
+. . . . ?
+? ? ? ? G
+? ? ? ? ?
+? ? ? o ?
+turn=6/100 pellets=2/2 ghost=wander outcome=playing
+. P . . o
+. . . . ?
+? ? ? ? ?
+? ? ? ? G
+? ? ? o ?
+turn=7/100 pellets=2/2 ghost=wander outcome=playing
+. . P . o
+. . . . ?
+? ? ? ? ?
+? ? ? G ?
+? ? ? o ?
+turn=8/100 pellets=2/2 ghost=wander outcome=playing
+. P . . o
+. . . . ?
+? ? ? ? ?
+? ? G ? ?
+? ? ? o ?
+turn=9/100 pellets=2/2 ghost=wander outcome=playing
+P . . . o
+. . . . ?
+? ? ? ? ?
+? G ? ? ?
+? ? ? o ?
+turn=10/100 pellets=2/2 ghost=wander outcome=playing
+. . . . o
+P . . . ?
+. ? ? ? ?
+? ? G ? ?
+? ? ? o ?
+turn=11/100 pellets=2/2 ghost=wander outcome=playing
+. . . . o
+. P . . ?
+. . ? ? ?
+? ? ? ? ?
+? ? G o ?
+turn=12/100 pellets=2/2 ghost=wander outcome=playing
+. . . . o
+P . . . ?
+. . ? ? ?
+? ? ? ? ?
+? G ? o ?
+turn=13/100 pellets=2/2 ghost=wander outcome=playing
+P . . . o
+. . . . ?
+. . ? ? ?
+? G ? ? ?
+? ? ? o ?
+turn=14/100 pellets=2/2 ghost=wander outcome=playing
+. . . . o
+P . . . ?
+. . ? ? ?
+G ? ? ? ?
+? ? ? o ?
+turn=15/100 pellets=2/2 ghost=wander outcome=playing
+. . . . o
+. P . . ?
+. . ? ? ?
+? G ? ? ?
+? ? ? o ?
+turn=16/100 pellets=2/2 ghost=wander outcome=playing
+. . . . o
+. . P . ?
+. . . ? ?
+G ? ? ? ?
+? ? ? o ?
+turn=17/100 pellets=2/2 ghost=wander outcome=playing
+. . P . o
+. . . . ?
+G . . ? ?
+? ? ? ? ?
+? ? ? o ?
+turn=18/100 pellets=2/2 ghost=wander outcome=playing
+. . . P o
+G . . . ?
+. . . ? ?
+? ? ? ? ?
+? ? ? o ?
+turn=19/100 pellets=2/2 ghost=wander outcome=playing
+G . P . o
+. . . . ?
+. . . ? ?
+? ? ? ? ?
+? ? ? o ?
+turn=20/100 pellets=2/2 ghost=wander outcome=playing
+. G . P o
+. . . . ?
+. . . ? ?
+? ? ? ? ?
+? ? ? o ?
+turn=21/100 pellets=2/2 ghost=chase outcome=playing
+. . G . P
+. . . . .
+. . . ? ?
+? ? ? ? ?
+? ? ? o ?
+turn=22/100 pellets=1/2 ghost=chase outcome=playing
+. . . G .
+. . . . P
+. . . ? .
+? ? ? ? ?
+? ? ? o ?
+turn=23/100 pellets=1/2 ghost=pursue outcome=playing
+. . . . G
+. . . . .
+. . . . P
+? ? ? ? .
+? ? ? o ?
+turn=24/100 pellets=1/2 ghost=pursue outcome=playing
+. . . . .
+. . . . G
+. . . . .
+? ? ? . P
+? ? ? o .
+turn=25/100 pellets=1/2 ghost=chase outcome=playing
+. . . . .
+. . . . .
+. . . . G
+? ? ? . .
+? ? ? o P
+turn=26/100 pellets=1/2 ghost=chase outcome=playing
+. . . . .
+. . . . .
+. . . . G
+? ? ? . .
+? ? . P .
+turn=27/100 pellets=0/2 ghost=chase outcome=win
+{"episode_key": 4623642752459706441, "ghost_policy_hash": "3fe2afd3ac865c175a08da1424de49eea26ab96d284946c429a29a3df639996c", "ghost_return": -1.0, "initial_pellets": [[0, 4], [4, 3]], "layout_hash": "b7bce985c39409cc0504aa9dd356c00f862dd5e048e4c7df57156e90d2fa3ba4", "layout_seed": 2000000, "outcome": "win", "pac_policy_hash": "0d7e33901dfa3089c82642326bab52f57cad22571cae86c72247567ca359b901", "pac_return": 100.65, "turns": 27}

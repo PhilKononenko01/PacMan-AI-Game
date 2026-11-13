@@ -1,0 +1,105 @@
+replicate=3 stage=baseline episodes=5000/30000 outcomes={'win': 597, 'loss': 4397, 'tie': 6}
+replicate=3 stage=baseline episodes=10000/30000 outcomes={'win': 1568, 'loss': 8419, 'tie': 13}
+replicate=3 stage=baseline episodes=15000/30000 outcomes={'win': 3069, 'loss': 11907, 'tie': 24}
+replicate=3 stage=baseline episodes=20000/30000 outcomes={'win': 5288, 'loss': 14680, 'tie': 32}
+replicate=3 stage=baseline episodes=25000/30000 outcomes={'win': 8116, 'loss': 16848, 'tie': 36}
+replicate=3 stage=baseline episodes=30000/30000 outcomes={'win': 11045, 'loss': 18911, 'tie': 44}
+replicate=3 stage=ghost episodes=5000/30000 outcomes={'win': 2829, 'loss': 2127, 'tie': 44}
+replicate=3 stage=ghost episodes=10000/30000 outcomes={'win': 5676, 'loss': 4244, 'tie': 80}
+replicate=3 stage=ghost episodes=15000/30000 outcomes={'win': 8498, 'loss': 6388, 'tie': 114}
+replicate=3 stage=ghost episodes=20000/30000 outcomes={'win': 11321, 'loss': 8537, 'tie': 142}
+replicate=3 stage=ghost episodes=25000/30000 outcomes={'win': 14100, 'loss': 10715, 'tie': 185}
+replicate=3 stage=ghost episodes=30000/30000 outcomes={'win': 16921, 'loss': 12862, 'tie': 217}
+replicate=3 stage=adapt episodes=5000/50000 outcomes={'win': 488, 'loss': 4507, 'tie': 5}
+replicate=3 stage=adapt episodes=10000/50000 outcomes={'win': 1253, 'loss': 8738, 'tie': 9}
+replicate=3 stage=adapt episodes=15000/50000 outcomes={'win': 2310, 'loss': 12673, 'tie': 17}
+replicate=3 stage=adapt episodes=20000/50000 outcomes={'win': 3628, 'loss': 16345, 'tie': 27}
+replicate=3 stage=adapt episodes=25000/50000 outcomes={'win': 5334, 'loss': 19627, 'tie': 39}
+replicate=3 stage=adapt episodes=30000/50000 outcomes={'win': 7489, 'loss': 22462, 'tie': 49}
+replicate=3 stage=adapt episodes=35000/50000 outcomes={'win': 10126, 'loss': 24808, 'tie': 66}
+replicate=3 stage=adapt episodes=40000/50000 outcomes={'win': 13087, 'loss': 26820, 'tie': 93}
+replicate=3 stage=adapt episodes=45000/50000 outcomes={'win': 16136, 'loss': 28755, 'tie': 109}
+replicate=3 stage=adapt episodes=50000/50000 outcomes={'win': 19164, 'loss': 30710, 'tie': 126}
+{
+  "out": "runs/hybrid-55-replicate-3",
+  "replicate": 3,
+  "stages": {
+    "baseline": {
+      "episodes": 30000,
+      "outcomes": {
+        "win": 11045,
+        "loss": 18911,
+        "tie": 44
+      },
+      "turns": 470861,
+      "elapsed_seconds": 94.55681030199048,
+      "episodes_per_second": 317.2695853866856,
+      "frozen_before": [],
+      "frozen_after": [],
+      "first_layout_seed": 600000,
+      "coverage": {
+        "decisions": 470861,
+        "unseen": 13642,
+        "unseen_fraction": 0.028972456839704286,
+        "states": 13642,
+        "q_updates": 470861
+      }
+    },
+    "ghost": {
+      "episodes": 30000,
+      "outcomes": {
+        "win": 16921,
+        "loss": 12862,
+        "tie": 217
+      },
+      "turns": 570431,
+      "elapsed_seconds": 67.33836154598976,
+      "episodes_per_second": 445.5112852651018,
+      "frozen_before": [
+        "660c07e2bb105c8a63c3bb5aef168ef824d560bccf0078e539be1c08e7a48305",
+        "0da5f9b8dedff904d1b149e74b230cc55987420e5b800bbe3a15b57210a96150",
+        "1d9f2d5e29d3347c6dbf19a6db3dbacb4f111cef250aff1c263c01c341e2430a"
+      ],
+      "frozen_after": [
+        "660c07e2bb105c8a63c3bb5aef168ef824d560bccf0078e539be1c08e7a48305",
+        "0da5f9b8dedff904d1b149e74b230cc55987420e5b800bbe3a15b57210a96150",
+        "1d9f2d5e29d3347c6dbf19a6db3dbacb4f111cef250aff1c263c01c341e2430a"
+      ],
+      "first_layout_seed": 630000,
+      "coverage": {
+        "decisions": 10277,
+        "unseen": 1449,
+        "unseen_fraction": 0.14099445363432908,
+        "states": 1440,
+        "q_updates": 10277
+      }
+    },
+    "adapt": {
+      "episodes": 50000,
+      "outcomes": {
+        "win": 19164,
+        "loss": 30710,
+        "tie": 126
+      },
+      "turns": 830100,
+      "elapsed_seconds": 159.46915405901382,
+      "episodes_per_second": 313.5402598391962,
+      "frozen_before": [
+        "1d9f2d5e29d3347c6dbf19a6db3dbacb4f111cef250aff1c263c01c341e2430a",
+        "cc6b00ac159f8af8e7bc54786d07863a1accedb7f28c196d61a47f3ed6eb396c"
+      ],
+      "frozen_after": [
+        "1d9f2d5e29d3347c6dbf19a6db3dbacb4f111cef250aff1c263c01c341e2430a",
+        "cc6b00ac159f8af8e7bc54786d07863a1accedb7f28c196d61a47f3ed6eb396c"
+      ],
+      "first_layout_seed": 660000,
+      "coverage": {
+        "decisions": 830100,
+        "unseen": 4383,
+        "unseen_fraction": 0.005280086736537766,
+        "states": 18025,
+        "q_updates": 830100
+      }
+    }
+  }
+}

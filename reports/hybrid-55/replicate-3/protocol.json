@@ -1,0 +1,57 @@
+{
+  "budgets": {
+    "adapt": 50000,
+    "baseline": 30000,
+    "ghost": 30000
+  },
+  "episode_key_scheme": "derive(replicate, hybrid-{stage}-{index}).getrandbits(63)",
+  "epsilon": "linear 1.0 to 0.05 during first 70% of each stage, then 0.05",
+  "evaluation": "All scheduled games; ties and losses remain in denominator; validation only.",
+  "features": {
+    "ghost": "sighting-search-v1",
+    "pacman": "pellet-route-ghost-clock-v1"
+  },
+  "layout_seed_block": [
+    600000,
+    799999
+  ],
+  "learning_parameters": {
+    "ghost": {
+      "alpha": 0.1,
+      "capture": 1.0,
+      "gamma": 0.97,
+      "pacman_win": -1.0,
+      "timeout": 0.0
+    },
+    "pacman": {
+      "alpha": 0.1,
+      "gamma": 1.0,
+      "loss": -100.0,
+      "pellet": 1.0,
+      "step": -0.05,
+      "timeout": -100.0,
+      "win": 100.0
+    }
+  },
+  "replicate": 3,
+  "rules": {
+    "max_steps": 100,
+    "memory_turns": 12,
+    "search_choices": 3,
+    "search_distance": 3,
+    "search_moves": 4
+  },
+  "rules_version": "two-pellets-sight-memory-v1",
+  "source_files_sha256": {
+    "__init__.py": "774bf41cb25b32eb6206192cc4927fce05c284a4814b1c102fe699df7d8f5eba",
+    "__main__.py": "d6d3610361646c2e0dadd178ae784bc47c084ca917583a5c461cbc0da1f78989",
+    "artifacts.py": "56b04a87123a6d304336de11eb4ef02839997cde6f54b2bf7409a8ea53c550f2",
+    "experiment.py": "de0d2f6e20855eb92c7ba54dc0c32ab5a67c1ea92b4c508a4c246b61b94c7fe4",
+    "game.py": "21f237379ea071239ef40efddfd9b8e7b541029eecf3678df2dd2531058fc9db",
+    "ghost.py": "016a5ae8e6146e623456d4311e5599dc0d301d113f0ede96e2f93eafd55eb9a6",
+    "learning.py": "e209d293d32e57d212d1adce82f3aff276b4d671e4eea657c6d5bdc15a32aa42",
+    "models.py": "93a5612d5f6797ebf131b28a2222e385083436bfb3babc144f2744db7329ec8f"
+  },
+  "stages": {},
+  "training_policy_identity": "Mutable policies use training-update-N revision identifiers; frozen policies use SHA256 table hashes."
+}
