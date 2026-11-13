@@ -1,6 +1,24 @@
 # PacMan-AI-Game
 
-A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
+A small Pac-Man game with a Q-learning player and a ghost that combines BFS pursuit with learned search. The final experiment uses two randomly placed pellets.
+
+## Run the final game
+
+From the repository root, run:
+
+```sh
+./play
+```
+
+This watches the saved Q-learning Pac-Man and learning search ghost. Use
+`./play --delay 0 --plain` for immediate text output, or `./play --key 43` for
+another episode. The launcher uses `.venv/bin/python` when available and otherwise
+`python3`. Set up the project dependencies below before first use.
+
+The [final submission notebook](submission/CSCI_3202_Final_Report.ipynb) contains
+the report, visible source, saved evidence, live examples, and cited AI appendix.
+The [submission guide](submission/final_README.md) explains how to run or rebuild it.
+The cited extra-credit explanation and its two-page PDF copy are embedded in the notebook.
 
 ## Two-pellet hybrid experiment
 
@@ -16,9 +34,9 @@ See [the experiment rules and training protocol](Architecture/hybrid-experiment.
 
 The [completed experiment report](reports/hybrid-learning.md) records a 66.91% Pac-Man win rate across five training runs and 10,000 frozen test games against learned ghosts.
 
-> **Status: the ghost changed after acceptance.** On 2026-11-13 the team kept only the pathfinding ghost, which always knows where Pac-Man is. The accepted results, a frozen policy winning 73.6% of 1,000 held-out games against pathfinding's 14.9% and random's 0.0%, were measured against the original ghost, which saw Pac-Man only along rows and columns. Those results, `reports/results/` and the submitted report describe that earlier game; see [`Architecture/review.md`](Architecture/review.md).
+> **Legacy four-corner status.** On 2026-11-13 the team kept only the pathfinding ghost, which always knows where Pac-Man is. The accepted results, a frozen policy winning 73.6% of 1,000 held-out games against pathfinding's 14.9% and random's 0.0%, were measured against the original ghost, which saw Pac-Man only along rows and columns. Those results, `reports/results/` and the submitted report describe that earlier game; see [`Architecture/review.md`](Architecture/review.md).
 
-## The game
+## Legacy four-corner game
 
 - A **5x5 grid** with randomly generated walls. Every map is guaranteed to be fully connected, and corners are never walls.
 - **Pac-Man** starts in the top-left corner and must **visit all four corners** to win.
