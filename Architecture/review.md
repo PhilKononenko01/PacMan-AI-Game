@@ -4,6 +4,42 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## A stronger learner, and two random pellets (target: about 55% wins)
+
+**Date:** 2026-11-13. Branch `feature/stronger-learner`, from main `eff686b`. Christian asked how to get the learned agent to about 55%, then to implement the suggestions, then chose two randomly placed pellets as the win condition.
+
+**What changed:** four opt-in learner settings and one game setting, all off by default; default training is byte-identical to main.
+- `reward_tie`, from PR #25: a tie penalty, which needs `tie_update=terminal`.
+- `training_maps="winnable"`: training plays only seeds `winning_moves` can win; the policy records the first and last seeds played.
+- `final_learning_rate_fraction`: the learning rate falls linearly to that share of `learning_rate` by the last episode. `LearnedAgent.learning_rate` is set per episode like `epsilon`.
+- `keep_table="best"`: the saved and validated table is a copy from the curve point with the highest win rate, the earliest on a tie. The curve plays the first 200 validation seeds, which the full validation includes, so a kept table that is not the last is slightly favoured on validation; the test split is unaffected.
+- `ghost_feature="race"`: the state's two-valued ghost flag becomes whether Pac-Man's remembered-map distance to his planned target is strictly less than the ghost's. Line of sight carries no information against the pathfinding ghost. The table keeps 122,880 rows, and `evaluate`, `simulate` and `watch` refuse a `ghost_feature` that differs from the policy's. A "turns left" input was considered and not built: OQ-14 keeps the move count from Pac-Man.
+- `pellets="anywhere"` and `pellet_count` (1 to 3, default 3), from PR #25 plus the count: the pellets are drawn per game from `derive(seed, "pellets")`. With 3 the draws are unchanged, and the earlier three-pellet policy re-scores identically: 716 counted, wins 1, 111 and 278.
+
+**Slowing the ghost was tried first and rejected:** with `ghost_move_prob` 0.9, 0.8 and 0.7 the learner won 12.6%, 19.6% and 23.7% of winnable maps. A ghost that pauses at random makes the solver count maps winnable given its exact future pauses, which no player can know, so the counted maps grew from 483 to 843, 963 and 985.
+
+**Measured** against the pathfinding ghost on the winnable maps among the first 1,000 validation seeds; one training run per row. "Refined" is `tie_update=terminal reward_tie=-100 discount=1.0 training_maps=winnable epsilon_end=0.0 epsilon_decay_fraction=0.8 final_learning_rate_fraction=0.1 keep_table=best`.
+
+| Objective | Training | Counted | Learned win / loss / tie | Pathfinding wins |
+|---|---|---|---|---|
+| Three corners | default, 50,000 games | 483 | 18.2% / 14.5% / 67.3% | 1.7% |
+| Three corners | tie penalty and winnable maps | 483 | 26.9% / 22.6% / 50.5% | 1.7% |
+| Three corners | refined without the tie penalty | 483 | 30.6% / 23.2% / 46.2% | 1.7% |
+| Three corners | refined | 483 | 33.3% / 27.7% / 38.9% | 1.7% |
+| Three corners | refined, 100,000 games | 483 | 42.7% / 27.5% / 29.8% | 1.7% |
+| Three corners | refined with race | 483 | 42.7% / 24.4% / 32.9% | 1.7% |
+| Two pellets | default | 782 | 46.4% / 11.1% / 42.5% | 33.0% |
+| Two pellets | refined | 782 | 57.2% / 20.2% / 22.6% | 33.0% |
+| Two pellets | refined with race | 782 | 61.9% / 14.2% / 23.9% | 33.0% |
+
+Two pellets refined: 447 wins, interval [53.7, 60.6]; McNemar b=439/c=3 against random and b=264/c=75 against pathfinding, both p < 0.0001; its kept table is the final one. With race: 484 wins, [58.4, 65.2]; b=478/c=5 and b=290/c=64; kept from episode 47,500. On the first 100 seeds, 86 of them winnable, the two-pellet refined policy went 48 / 16 / 22 and the race policy 57 / 9 / 20.
+
+**Limits:** one run per row, on validation seeds; no test seed was played; nothing in `reports/results/` changed. The corner game stays the default. Making two pellets and these settings the project's game would need a team decision, a frozen policy and a new held-out evaluation.
+
+**Tests:** settings validation and defaults; the learning-rate schedule and its per-episode use; winnable-only training seeds and the error when the split runs out; keeping the best table and validating it; the race flag, including a remembered wall and an equal-distance case; the refusal of a different `ghost_feature`; pellet counts; the solver replaying wins for three and two pellets. Suite: 516 tests.
+
+---
+
 ## Pellets anywhere: an opt-in game knob
 
 **Date:** 2026-11-13. Branch `feature/pellets`, stacked on `feature/ghost-pathfinding`. Christian asked what happens if the pellets Pac-Man must collect could spawn anywhere instead of only in the corners.
