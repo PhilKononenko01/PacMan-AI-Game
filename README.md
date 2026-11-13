@@ -33,6 +33,8 @@ Both move one square per turn. Pac-Man moves first.
 
 **Rewards used in training:** +100 for a win, -100 for being caught, +1 for each new corner, and -0.05 per step to keep Pac-Man moving.
 
+**Ties (optional).** By default a tie carries no reward: the turn limit is treated as a cut-off, so running out the clock costs only the step penalties and the learner can come to prefer it. `--set tie_update=terminal --set reward_tie=-100 --set discount=1.0` makes a tie a final outcome worth exactly as much as being caught. Without `discount=1.0`, a tie 100 turns away is discounted to about a third of its value, and the learner still leans towards it. The tie reward is a training signal only; recorded episode returns do not include it. Every reported result uses the default.
+
 ## What we measure
 
 Every agent plays the same 1,000 test seeds. The generator keeps test layouts separate from training and validation; layouts can repeat within a split. We report wins, losses and ties with 95% confidence intervals, and use a paired McNemar test to check whether the learned agent beats each baseline.

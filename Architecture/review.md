@@ -37,6 +37,31 @@ On the first 100 seeds, pellets anywhere give learned 32/13/55, pathfinding 14/8
 
 ---
 
+## Tie reward: stopping the learner from settling for ties
+
+**Date:** 2026-11-13. Branch `feature/tie-penalty`, stacked on `feature/ghost-pathfinding`. Christian asked that the learner not prefer ties; against the pathfinding ghost about 70% of its games were ties.
+
+**Why it preferred them:** with the defaults a tie carries no reward. `tie_update=bootstrap` treats the turn limit as a cut-off, so running out the clock costs only the step penalties, about 5, against 100 for being caught.
+
+**What changed:** a new learner setting, `reward_tie` (default 0.0), is added to the target of a terminal tie in `LearnedAgent.observe`. A nonzero value requires `tie_update=terminal`, because a bootstrapped tie is not an outcome. It is a training signal only; recorded episode returns do not include it. `apply_sets` now applies every `--set` before the settings are checked, so dependent settings such as these two, or `epsilon_start` and `epsilon_end`, work in any order; a later `--set` of the same name still wins. At the defaults nothing changes: a 3,000-episode training run with the previous code and with this code gives byte-identical tables.
+
+**Measured** against the pathfinding ghost, 50,000 training games each, on the first 1,000 validation seeds (win / loss / tie):
+
+| Setting | Wins | Losses | Ties |
+|---|---|---|---|
+| Default: no tie reward, ties bootstrapped | 8.8% | 21.5% | 69.7% |
+| `reward_tie=-100`, terminal ties | 8.6% | 27.3% | 64.1% |
+| `reward_tie=-300`, terminal ties | 11.9% | 38.9% | 49.2% |
+| `reward_tie=-100`, terminal ties, `discount=1.0` | 15.4% | 39.5% | 45.1% |
+
+On the first 100 seeds the same four give 9/13/78, 7/28/65, 9/37/54 and 19/42/39. At 100,000 training games, `reward_tie=-100` alone gave 12.4% / 30.3% / 57.3% against 12.6% / 28.1% / 59.3% without it. A penalty equal to a loss barely helps at `discount=0.99`: the tie arrives at turn 100, so from early in a game it is discounted to about a third, and a distant tie still looks better than a likely capture soon. Pac-Man's state has no clock, so he cannot tell how near the tie is. With `discount=1.0` a tie is worth exactly a loss, so the learner has no reason to prefer it; wins nearly double and ties fall by a third. The remaining ties are games where his attempts run out of time, not a preference.
+
+**Limits:** one run per setting, against the pathfinding ghost only, on validation seeds; no test seed was played. The defaults, the frozen policy and every reported result are unchanged. Adopting these settings for the main game would be a team decision and would need a retrained policy and a new frozen evaluation.
+
+**Tests:** `test_learned.py` covers the tie reward on a terminal tie and its absence on a win. `test_config.py` covers the default, the type checks, the refusal with bootstrapped ties and a JSON round trip. `test_cli.py` covers the two settings in either order and a repeated `--set`. Suite: 496 tests.
+
+---
+
 ## Pathfinding ghost: an opt-in game knob
 
 **Date:** 2026-11-13. Branch `feature/ghost-pathfinding`, based on main `d3120d1`. Christian asked to add pathfinding to the ghost.

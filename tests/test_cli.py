@@ -83,6 +83,19 @@ def test_load_config_applies_sets_by_bare_name_on_top_of_a_file(tmp_path):
     assert load_config(None, []) == Config()
 
 
+@pytest.mark.parametrize("sets", [
+    ["reward_tie=-100", "tie_update=terminal"],
+    ["tie_update=terminal", "reward_tie=-100"],
+])
+def test_sets_are_checked_together_so_their_order_does_not_matter(sets):
+    config = load_config(None, sets)
+    assert config.learner == LearnerSettings(reward_tie=-100.0, tie_update="terminal")
+
+
+def test_a_later_set_of_the_same_name_wins():
+    assert load_config(None, ["max_steps=50", "max_steps=60"]).game.max_steps == 60
+
+
 @pytest.mark.parametrize("setting", [
     "speed=1", "max_steps", "max_steps=5.0", "max_steps=fast", "episodes=0", "ghost_mode=pathfinding",
 ])

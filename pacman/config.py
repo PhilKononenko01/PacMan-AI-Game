@@ -72,9 +72,10 @@ class LearnerSettings:
     epsilon_decay_fraction: float = 0.5
     episodes: int = 50_000
     tie_update: str = "bootstrap"
+    reward_tie: float = 0.0  # added to a terminal tie's reward in training; ties carry nothing by default
 
     def __post_init__(self) -> None:
-        for name in ("reward_win", "reward_loss", "reward_corner", "reward_step"):
+        for name in ("reward_win", "reward_loss", "reward_corner", "reward_step", "reward_tie"):
             _number(name, getattr(self, name))
         _number("learning_rate", self.learning_rate, 0, 1, minimum_exclusive=True)
         _number("discount", self.discount, 0, 1)
@@ -89,6 +90,11 @@ class LearnerSettings:
             "bootstrap", "terminal",
         ):
             raise ValueError("tie_update must be 'bootstrap' or 'terminal'")
+        if self.reward_tie != 0 and self.tie_update != "terminal":
+            raise ValueError(
+                "reward_tie must be 0 unless tie_update is 'terminal':"
+                " a bootstrapped tie is a cut-off, not an outcome"
+            )
 
 
 def _reject_json_constant(value: str) -> None:
