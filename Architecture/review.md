@@ -6,7 +6,7 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ## Only winnable games count (PRD OQ-17)
 
-**Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options` (PR #25). Christian ruled: "All maps should be winnable to be counted in the tests."
+**Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options` (PR #25). Christian ruled: "All maps should be winnable to be counted in the tests." At his request the rule, with the pathfinding ghost, was also pushed to main first as `eff686b`, adapted to the corners-only game; this branch merges that main and keeps its own version, which also covers the options.
 
 **What changed:** `pacman/winnable.py` decides each seed exactly. The pathfinding ghost's move depends only on the true map, its cell, Pac-Man's cell and one move draw per step from `derive(seed, "ghost")`, so a game is a fixed puzzle once its seed is known. `winning_moves` searches Pac-Man's moves breadth first with the whole map known, mirroring `Environment.step`, and returns the shortest win or `None`; `is_winnable` caches the answer per game knobs and seed. The ghost's move rule moved into `ghost.chase_step`, which `Ghost.act` and the search share. `run_split` plays and counts only the winnable seeds among those requested, so evaluation, the difficulty check, simulation, the learning curve and a policy's stored validation all count winnable games; with none it raises. Training still plays every training seed. The report header now reads, for example, "483 winnable of the first 1000 seeds".
 
