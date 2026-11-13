@@ -107,6 +107,8 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `max_walls` | int | 6 | 0 or more | walls |
 | `min_loops` | int | 4 | 0 or more | independent loops |
 | `max_steps` | int | 100 | 1 or more | moves; read only by the referee (§7.4) |
+| `pellets` | str | `"corners"` | `"corners"` or `"anywhere"` | where Pac-Man's targets lie: the corners, or the start plus three open cells drawn per game from `derive(seed, "pellets")`; observations carry them as `targets`; opt-in extension, see `review.md` |
+| `corners_to_visit` | int | 3 | 1 to 3 | corners besides the start Pac-Man must visit; the others are drawn per game from `derive(seed, "corners")` and count as visited from step 0; only with `pellets="corners"`; opt-in extension, see `review.md` |
 
 **Learner settings** (`LearnerSettings`):
 
@@ -123,6 +125,7 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `epsilon_decay_fraction` | float | 0.5 | above 0, at most 1 | fraction of training episodes |
 | `episodes` | int | 50,000 | 1 to 1,000,000 | episodes |
 | `tie_update` | str | `"bootstrap"` | `"bootstrap"` or `"terminal"` | §10.5 |
+| `reward_tie` | float | 0.0 | any finite number; nonzero needs `tie_update="terminal"` | reward added to a terminal tie in training only; opt-in extension, see `review.md` |
 
 `tie_update` is a learner setting: it changes how the agent learns, not how hard the game is.
 
@@ -459,7 +462,7 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 
 ### 13.1 Running a split
 
-`run_split(config, agent, split, games)` plays the winnable seeds among the first `games` of the split, in seed order, and returns their `EpisodeRecord`s; with none it raises `ValueError` (PRD OQ-17). `winnable.winning_moves(config, seed)` decides each seed by breadth-first search over (Pac-Man's cell, the ghost's cell, visited corners), mirroring `Environment.step`'s order and taking the ghost's move draws from `derive(seed, "ghost")` in advance; when the ghost moves on every step or on none, states are not revisited across moves. `is_winnable` caches the answer per `GameKnobs` and seed. Every agent sees the same seeds, so the same maps and the same ghost generator streams (FR-10). A learned agent is evaluated with `training = False`.
+`run_split(config, agent, split, games)` plays the winnable seeds among the first `games` of the split, in seed order, and returns their `EpisodeRecord`s; with none it raises `ValueError` (PRD OQ-17). `winnable.winning_moves(config, seed)` decides each seed by breadth-first search over (Pac-Man's cell, the ghost's cell, visited targets), mirroring `Environment.step`'s order and taking the ghost's move draws from `derive(seed, "ghost")` in advance; when the ghost moves on every step or on none, states are not revisited across moves. `is_winnable` caches the answer per `GameKnobs` and seed. Every agent sees the same seeds, so the same maps and the same ghost generator streams (FR-10). A learned agent is evaluated with `training = False`.
 
 ### 13.2 Statistics (`stats.py`)
 
@@ -474,7 +477,7 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 Example layout, with the measured validation numbers for the two baselines at the defaults:
 
 ```
-split val, 483 winnable of the first 1000 seeds, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
+split val, 483 winnable of the first 1000 seeds, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100 pellets=corners corners_to_visit=3
 agent         wins                  losses                ties                  steps/win
 random          0   0.0% [ 0.0,  0.8]   483 100.0% [99.2,100.0]    0   0.0% [ 0.0,  0.8]   n/a
 pathfinding     8   1.7% [ 0.8,  3.2]   475  98.3% [96.8, 99.2]    0   0.0% [ 0.0,  0.8]   14.2

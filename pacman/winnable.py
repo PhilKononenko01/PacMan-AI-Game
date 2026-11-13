@@ -11,21 +11,21 @@ from functools import lru_cache
 from pacman.config import Config, GameKnobs
 from pacman.env import Environment
 from pacman.ghost import chase_step
-from pacman.grid import CORNERS, Cell, Direction, move
+from pacman.grid import Cell, Direction, move
 from pacman.rng import derive
 
-State = tuple[Cell, Cell, frozenset[Cell]]  # Pac-Man's cell, the ghost's cell, visited corners
+State = tuple[Cell, Cell, frozenset[Cell]]  # Pac-Man's cell, the ghost's cell, visited targets
 
 
 def winning_moves(config: Config, seed: int) -> tuple[Direction, ...] | None:
     """The shortest sequence of Pac-Man's moves that wins the seed's game, or None.
 
     It follows `Environment.step`'s order: Pac-Man moves, walking into the ghost loses, a new
-    corner counts and the last one wins, then the ghost takes its drawn move.
+    target counts and the last one wins, then the ghost takes its drawn move.
     """
     env = Environment(config)
     env.reset(seed)
-    game_map, targets, game = env.game_map, frozenset(CORNERS), config.game
+    game_map, targets, game = env.game_map, frozenset(env.targets), config.game
     passable = game_map.is_open
     draws = derive(seed, "ghost")  # the ghost's own stream: one draw per step, as in Ghost.act
     ghost_moves = [draws.random() < game.ghost_move_prob for _ in range(game.max_steps)]

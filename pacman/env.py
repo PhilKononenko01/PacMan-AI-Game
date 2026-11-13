@@ -7,7 +7,7 @@ from pacman.config import Config
 from pacman.ghost import Ghost
 from pacman.grid import COLS, CORNERS, ROWS, Cell, Direction, move, neighbours
 from pacman.mapgen import GameMap, generate, split_of_seed
-from pacman.rng import derive
+from pacman.rng import derive, pick
 
 PACMAN_START: Cell = (0, 0)
 
@@ -30,10 +30,12 @@ class Observation:
     ghost: Cell
     visited: frozenset[Cell]
     known: tuple[KnownCell, ...]
+    targets: tuple[Cell, ...] = CORNERS  # the cells to visit, in reading order; the start is first
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "visited", frozenset(self.visited))
         object.__setattr__(self, "known", tuple(self.known))
+        object.__setattr__(self, "targets", tuple(self.targets))
         if len(self.known) != ROWS * COLS:
             raise ValueError("known must contain 25 row-major cells")
 
@@ -57,6 +59,7 @@ class Environment:
         self.ghost: Ghost | None = None
         self.visited: set[Cell] = set()
         self.known: list[KnownCell] = []
+        self.targets: tuple[Cell, ...] = CORNERS
 
     def reset(self, seed: int, game_map: GameMap | None = None) -> Observation:
         """Start an episode on the seed's map, or on a hand-built map for tests."""
@@ -65,7 +68,8 @@ class Environment:
         self.game_map = game_map
         self.pacman = PACMAN_START
         self.ghost = Ghost(derive(seed, "ghost"), self.config.game.ghost_move_prob)
-        self.visited = {PACMAN_START}
+        self.targets = self._targets(seed, game_map)
+        self.visited = {PACMAN_START} | self._skipped_corners(seed)
         self.known = [KnownCell.UNKNOWN] * (ROWS * COLS)
         self.outcome = None
         self._sense(game_map)
@@ -84,10 +88,10 @@ class Environment:
         if self.pacman == ghost.cell:
             reward += rewards.reward_loss
             return self._end(Outcome.LOSS, reward)
-        if self.pacman in CORNERS and self.pacman not in self.visited:
+        if self.pacman in self.targets and self.pacman not in self.visited:
             self.visited.add(self.pacman)
             reward += rewards.reward_corner
-            if len(self.visited) == len(CORNERS):
+            if len(self.visited) == len(self.targets):
                 reward += rewards.reward_win
                 return self._end(Outcome.WIN, reward)
         self._sense(game_map)
@@ -96,6 +100,28 @@ class Environment:
             reward += rewards.reward_loss
             return self._end(Outcome.LOSS, reward)
         return StepResult(self._observation(), reward, None)
+
+    def _targets(self, seed: int, game_map: GameMap) -> tuple[Cell, ...]:
+        """The corners, or the start plus three random open cells; no draw for corners."""
+        if self.config.game.pellets == "corners":
+            return CORNERS
+        rng = derive(seed, "pellets")
+        cells = [
+            (row, col) for row in range(ROWS) for col in range(COLS)
+            if (row, col) != PACMAN_START and game_map.is_open((row, col))
+        ]
+        pellets = [cells.pop(pick(rng, len(cells))) for _ in range(len(CORNERS) - 1)]
+        return tuple(sorted([PACMAN_START, *pellets]))
+
+    def _skipped_corners(self, seed: int) -> set[Cell]:
+        """Corners left out of this game's objective; none, and no draw, by default."""
+        others = [corner for corner in CORNERS if corner != PACMAN_START]
+        skipped: set[Cell] = set()
+        if self.config.game.corners_to_visit < len(others):
+            rng = derive(seed, "corners")
+            while len(others) > self.config.game.corners_to_visit:
+                skipped.add(others.pop(pick(rng, len(others))))
+        return skipped
 
     def _sense(self, game_map: GameMap) -> None:
         """Record each in-grid neighbour of Pac-Man as open or a wall."""
@@ -106,7 +132,7 @@ class Environment:
 
     def _observation(self) -> Observation:
         assert self.ghost is not None
-        return Observation(self.pacman, self.ghost.cell, self.visited, self.known)
+        return Observation(self.pacman, self.ghost.cell, self.visited, self.known, self.targets)
 
     def _end(self, outcome: Outcome, reward: float) -> StepResult:
         self.outcome = outcome

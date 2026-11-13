@@ -289,3 +289,75 @@ def test_env_imports_only_the_game_modules():
         "pacman", "pacman.config", "pacman.rng", "pacman.grid", "pacman.mapgen",
         "pacman.ghost", "pacman.env",
     }
+
+
+PELLETS = Config(game=GameKnobs(pellets="anywhere", ghost_move_prob=0.0))
+
+
+def test_by_default_the_targets_are_the_four_corners():
+    assert Environment(Config()).reset(0, EMPTY).targets == ((0, 0), (0, 4), (4, 0), (4, 4))
+
+
+def test_pellets_anywhere_put_three_on_random_open_cells_besides_the_start():
+    walls = GameMap({(1, 1), (2, 3), (3, 1)})
+    layouts = []
+    for seed in range(40):
+        targets = Environment(PELLETS).reset(seed, walls).targets
+        assert targets[0] == (0, 0) and len(set(targets)) == 4
+        assert list(targets) == sorted(targets)
+        assert all(walls.is_open(cell) for cell in targets)
+        layouts.append(targets)
+    assert len(set(layouts)) > 20                                           # they move around
+    assert any(not set(t[1:]) & {(0, 4), (4, 0), (4, 4)} for t in layouts)  # not tied to corners
+    again = [Environment(PELLETS).reset(seed, walls).targets for seed in range(40)]
+    assert again == layouts                                                 # the seed decides
+
+
+def test_collecting_every_pellet_wins_and_an_empty_corner_pays_nothing():
+    env = Environment(PELLETS)
+    env.reset(0, EMPTY)
+    env.targets = ((0, 0), (1, 3), (2, 1), (3, 4))  # a hand-built layout; the still ghost stays in (4, 4)
+    place(env, pacman=(3, 0))
+    assert env.step(DOWN, 1).reward == pytest.approx(-0.05)       # (4, 0) is a corner, not a pellet
+    place(env, pacman=(0, 3))
+    assert env.step(DOWN, 2).reward == pytest.approx(-0.05 + 1)   # pellet (1, 3)
+    place(env, pacman=(2, 0))
+    assert env.step(RIGHT, 3).reward == pytest.approx(-0.05 + 1)  # pellet (2, 1)
+    place(env, pacman=(2, 4))
+    result = env.step(DOWN, 4)                                     # the last pellet, (3, 4)
+    assert result.outcome is Outcome.WIN
+    assert result.reward == pytest.approx(-0.05 + 1 + 100)
+
+
+TWO_CORNERS = Config(game=GameKnobs(corners_to_visit=2, ghost_move_prob=0.0))
+OTHER_CORNERS = {(0, 4), (4, 0), (4, 4)}
+INTO_CORNER = {(0, 4): ((1, 4), UP), (4, 0): ((3, 0), DOWN), (4, 4): ((3, 4), DOWN)}
+
+
+def test_fewer_corners_mark_a_random_skipped_corner_visited_at_reset():
+    def skipped(seed):
+        visited = Environment(TWO_CORNERS).reset(seed, EMPTY).visited
+        assert (0, 0) in visited and len(visited) == 2
+        return next(iter(visited - {(0, 0)}))
+
+    first = [skipped(seed) for seed in range(30)]
+    assert set(first) == OTHER_CORNERS                 # every corner is left out on some seed
+    assert [skipped(seed) for seed in range(30)] == first  # and the seed decides which
+
+
+def test_visiting_both_chosen_corners_wins_and_the_skipped_one_pays_nothing():
+    env = Environment(TWO_CORNERS)
+    skipped = next(iter(env.reset(5, EMPTY).visited - {(0, 0)}))
+    first, second = sorted(OTHER_CORNERS - {skipped})
+    place(env, ghost=(2, 2))
+    cell, action = INTO_CORNER[skipped]
+    place(env, pacman=cell)
+    assert env.step(action, 1).reward == pytest.approx(-0.05)
+    cell, action = INTO_CORNER[first]
+    place(env, pacman=cell)
+    result = env.step(action, 2)
+    assert result.outcome is None and result.reward == pytest.approx(-0.05 + 1)
+    cell, action = INTO_CORNER[second]
+    place(env, pacman=cell)
+    result = env.step(action, 3)
+    assert result.outcome is Outcome.WIN and result.reward == pytest.approx(-0.05 + 1 + 100)

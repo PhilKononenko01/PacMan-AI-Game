@@ -21,6 +21,10 @@ A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether 
 
 Both move one square per turn. Pac-Man moves first.
 
+**Pellets anywhere (optional).** `--set pellets=anywhere` replaces the three corners Pac-Man must reach with three pellets on random open squares, drawn per game from the seed. He knows where they are, as he knows the corners, and collecting all three wins. Plain frames draw uncollected pellets as `o` and collected ones as `*`. The default, `corners`, is the accepted game.
+
+**Fewer corners (optional).** `--set corners_to_visit=2` asks Pac-Man for only two of the three other corners, picked at random each game from the seed. The skipped corner counts as visited from the start, so it shows as `*` and earns no reward. It applies only to the corners, not with `pellets=anywhere`. The default, 3, is the accepted game.
+
 ## The agents
 
 | Agent | How it plays |
@@ -30,6 +34,8 @@ Both move one square per turn. Pac-Man moves first.
 | **Learned** | Tabular Q-learning over a compact summary of the situation: where the nearest corner is, which moves are open, where the ghost is and whether the two are in a clear line. |
 
 **Rewards used in training:** +100 for a win, -100 for being caught, +1 for each new corner, and -0.05 per step to keep Pac-Man moving.
+
+**Ties (optional).** By default a tie carries no reward: the turn limit is treated as a cut-off, so running out the clock costs only the step penalties and the learner can come to prefer it. `--set tie_update=terminal --set reward_tie=-100 --set discount=1.0` makes a tie a final outcome worth exactly as much as being caught. Without `discount=1.0`, a tie 100 turns away is discounted to about a third of its value, and the learner still leans towards it. The tie reward is a training signal only; recorded episode returns do not include it. Every reported result uses the default.
 
 ## What we measure
 
