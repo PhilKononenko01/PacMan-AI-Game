@@ -39,7 +39,7 @@ Both move one square per turn. Pac-Man moves first.
 
 ## What we measure
 
-Every agent plays the same 1,000 test seeds. The generator keeps test layouts separate from training and validation; layouts can repeat within a split. We report wins, losses and ties with 95% confidence intervals, and use a paired McNemar test to check whether the learned agent beats each baseline.
+Every agent plays the same seeds. Only games that can be won count: since the ghost is predictable, an exact search over Pac-Man's moves, with the whole map known, decides for each seed whether any route wins, and the other seeds are neither played nor counted. Of the first 1,000 validation seeds, 483 can be won. The generator keeps test layouts separate from training and validation; layouts can repeat within a split. Training still uses every training map. We report wins, losses and ties with 95% confidence intervals, and use a paired McNemar test to check whether the learned agent beats each baseline.
 
 **Targets:**
 - The learned agent wins roughly **50% to 90%** of games. This is a rough guide to whether the game is balanced, not a hard pass/fail line.
@@ -52,9 +52,9 @@ Everything runs as `python -m pacman <command>`. Every command takes `--config F
 | Command | What it does |
 |---|---|
 | `train --out DIR` | Trains the learned agent on the training maps, prints a learning-curve point every 2,500 episodes, and writes `policy.npz`, `curve.csv`, `curve.png` and `config.json` into `DIR`. Refuses a `DIR` that already holds a policy. |
-| `evaluate --split val\|test --policy FILE` | Plays all three agents on every seed of the split under the policy's configuration, prints the table with 95% intervals and the two McNemar tests, and writes `eval-<split>.json` beside the policy so any game can be replayed. |
-| `check [--policy FILE]` | Plays the two baselines on the validation maps under the given knobs, and with a policy shows its stored validation result and marks any knob that differs. Never trains. |
-| `simulate --agent NAME ... --split S --games N` | Plays the first `N` seeds of a split for each named agent with no graphics and prints the summary. |
+| `evaluate --split val\|test --policy FILE` | Plays all three agents on every winnable seed of the split under the policy's configuration, prints the table with 95% intervals and the two McNemar tests, and writes `eval-<split>.json` beside the policy so any game can be replayed. |
+| `check [--policy FILE]` | Plays the two baselines on the winnable validation maps under the given knobs, and with a policy shows its stored validation result and marks any knob that differs. Never trains. |
+| `simulate --agent NAME ... --split S --games N` | Plays the winnable seeds among the first `N` of a split for each named agent with no graphics and prints the summary. |
 | `watch --agent NAME --seed SEED [--policy FILE] [--delay S] [--plain]` | Plays one game and animates it in the terminal as pixel art, one frame per step, with the move count, corners visited and the outcome. `--plain` (or a non-terminal, `NO_COLOR` or `TERM=dumb`) draws plain text. |
 
 A game is identified by its seed: seeds 0 to 999,999 are training maps, 1,000,000 to 1,000,999 validation and 2,000,000 to 2,000,999 test. To replay an evaluated game, take its `seed` and `agent` from `eval-<split>.json` and pass the same `--policy`.

@@ -4,6 +4,26 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## Only winnable games count (PRD OQ-17)
+
+**Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options` (PR #25). Christian ruled: "All maps should be winnable to be counted in the tests."
+
+**What changed:** `pacman/winnable.py` decides each seed exactly. The pathfinding ghost's move depends only on the true map, its cell, Pac-Man's cell and one move draw per step from `derive(seed, "ghost")`, so a game is a fixed puzzle once its seed is known. `winning_moves` searches Pac-Man's moves breadth first with the whole map known, mirroring `Environment.step`, and returns the shortest win or `None`; `is_winnable` caches the answer per game knobs and seed. The ghost's move rule moved into `ghost.chase_step`, which `Ghost.act` and the search share. `run_split` plays and counts only the winnable seeds among those requested, so evaluation, the difficulty check, simulation, the learning curve and a policy's stored validation all count winnable games; with none it raises. Training still plays every training seed. The report header now reads, for example, "483 winnable of the first 1000 seeds".
+
+**Verification:** for the default, a half-moving ghost, pellets anywhere and two corners, every win the search finds wins the real game on its last move when replayed through `Environment`. The search reproduces the 48 winnable maps among the first 100 validation seeds from the earlier independent search. Re-scoring every experiment's policy left every agent's win count unchanged, as it must, since no game outside the search can be won; only the games counted fell, to 483, 602 and 716. Suite: 499 tests, about 12 s.
+
+**Re-scored** on the winnable validation maps, wins / losses / ties against the pathfinding ghost:
+
+| Policy | Counted | Random | Pathfinding | Learned | Learned win rate |
+|---|---|---|---|---|---|
+| Corners, 50,000 training games | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 88 / 70 / 325 | 18.2% |
+| Corners, 100,000 training games | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 126 / 99 / 258 | 26.1% |
+| Tie penalty, no discounting | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 154 / 120 / 209 | 31.9% |
+| Two random corners | 602 | 0 / 602 / 0 | 14 / 588 / 0 | 233 / 105 / 264 | 38.7% |
+| Pellets anywhere | 716 | 1 / 715 / 0 | 111 / 605 / 0 | 278 / 83 / 355 | 38.8% |
+
+---
+
 ## Combined for review: the pathfinding ghost and three opt-in options
 
 **Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options`, for Phillip's review. It starts from `feature/pellets`, which holds the pathfinding ghost and pellets, and adds the tie-reward and two-corner commits. Those two were cut before the ghost switch was removed; their conflicts were resolved by dropping `ghost_mode`. The learning-ghost experiment is not included; Christian had it deleted.

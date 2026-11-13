@@ -1,6 +1,6 @@
 # Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.12**. OQ-1 to OQ-16 are answered. v0.12 (2026-11-13) replaces the vision ghost with the pathfinding ghost (OQ-16); the accepted results were measured under v0.11. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `foundation-handoff.md`.
+**Status:** DRAFT **v0.12**. OQ-1 to OQ-17 are answered. v0.12 (2026-11-13) replaces the vision ghost with the pathfinding ghost (OQ-16); the accepted results were measured under v0.11. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `foundation-handoff.md`.
 **Date:** 2026-10-28
 **Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10 and architecture v0.2 before issue #4. The foundation handoff identifies implemented configuration, RNG and type contracts; gameplay and evaluation behavior below remains a requirement for subsequent tickets.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
@@ -193,7 +193,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | FR-7 | The reward table in §2.6 is applied each step. Every value is read from the configuration (§2.7). |
 | FR-8 | The random, pathfinding and learned agents implement one interface with reset, act and observe operations (§2.8). The environment does not branch on agent type. |
 | FR-9 | Training runs Q-learning on training-split maps (§2.7) and saves the table with its configuration and seed range. |
-| FR-10 | Evaluation plays every agent from the same starting conditions: the same maps and the same episode seeds, all 1,000 seeds of the split (§2.8). It reports, per agent, the win, loss and tie rates, each with a 95% Wilson confidence interval, and the mean steps to a win. |
+| FR-10 | Evaluation plays every agent from the same starting conditions: the same maps and the same episode seeds, every winnable seed among the split's 1,000 (§2.8, OQ-17). A seed is winnable when some sequence of Pac-Man's moves, with the whole map known, wins its game; other seeds are not played or counted. It reports, per agent, the win, loss and tie rates, each with a 95% Wilson confidence interval, and the mean steps to a win. |
 | FR-11 | Evaluation reports a one-sided exact McNemar test of the learned agent against each baseline. Each episode's outcome is reduced to win or not-win (loss and tie both count as not-win), and outcomes are paired by episode seed. A paired test is required because every agent starts each game from the same conditions; the games then differ only through the agents' choices. |
 | FR-12 | Training records a learning curve: the greedy validation win rate every 2,500 episodes on the first 200 validation seeds (§2.8), saved and plotted. |
 | FR-13 | Watch mode animates a game as terminal pixel art, one frame per step, as in §2.9, with a plain-text fallback. |
@@ -227,7 +227,7 @@ Freeze the policy and all settings before the final held-out evaluation. If a ta
 
 ## 6. Questions
 
-No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on 2026-10-27, OQ-13 on 2026-10-27 and revised on 2026-10-28, OQ-14 and OQ-15 on 2026-10-28, and OQ-16 on 2026-11-13. Each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
+No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on 2026-10-27, OQ-13 on 2026-10-27 and revised on 2026-10-28, OQ-14 and OQ-15 on 2026-10-28, and OQ-16 and OQ-17 on 2026-11-13. Each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
 
 - **OQ-1: Start positions.** *Answered:* Pac-Man at `(0, 0)`, ghost at `(4, 4)`, and Pac-Man's start corner counts as visited (§2.2).
 - **OQ-2: How much does Pac-Man know?** *Answered:* he always knows where the ghost is, but senses only the walls next to him. He remembers walls he has sensed and plans as if unknown cells are open (§2.6). The agent learns from computed features, not from the raw board (ADR-2).
@@ -245,6 +245,7 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on
 - **OQ-14: Who keeps the move count?** *Answered:* a referee outside the game. It counts moves, stops the episode at `max_steps`, and tells the agent it was a tie; nothing in the game or the observations sees the count (§2.4, §2.8, FR-4, NFR-7).
 - **OQ-15: Can the grid size change?** *Answered:* no. The grid is always 5x5; it is not a parameter, even for tests (non-goals, §2.1).
 - **OQ-16: Which ghost does the game use?** *Answered 2026-11-13 (Christian):* only the pathfinding ghost, which always knows where Pac-Man is and takes a shortest-path step towards him. It replaces the vision ghost of P2, P3 and OQ-5. The accepted results, the frozen policy and the submitted report were measured against the vision ghost (§2.5, FR-5, FR-6).
+- **OQ-17: Do unwinnable games count?** *Answered 2026-11-13 (Christian):* no: "All maps should be winnable to be counted in the tests." Because the pathfinding ghost's moves are fixed by the map, Pac-Man's cell and the seed's draws, an exact search decides each seed. Evaluation, the difficulty check, simulation and the learning curve count only winnable seeds; training still uses every training seed (FR-10).
 
 ## 7. SDLC state
 

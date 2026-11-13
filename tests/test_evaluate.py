@@ -49,16 +49,18 @@ def test_full_evaluation_size_is_the_prd_constant():
     assert FULL_GAMES == 1_000
 
 
-def test_run_split_plays_the_first_seeds_of_the_split_in_order():
-    records = run_split(CONFIG, PathfindingAgent(), Split.VAL, 5)
-    assert [r.seed for r in records] == list(range(1_000_000, 1_000_005))
+def test_run_split_plays_the_winnable_seeds_among_the_first_in_order():
+    # Of the first ten validation seeds, 1,000,000 to 1,000,002 and 1,000,009 can be won; of
+    # the first ten training seeds, 1, 6 and 9.
+    records = run_split(CONFIG, PathfindingAgent(), Split.VAL, 10)
+    assert [r.seed for r in records] == [1_000_000, 1_000_001, 1_000_002, 1_000_009]
     assert {r.agent for r in records} == {"pathfinding"}
     expected = [
         play_episode(Environment(CONFIG), Referee(CONFIG.game.max_steps), PathfindingAgent(), seed)
-        for seed in range(1_000_000, 1_000_005)
+        for seed in (1_000_000, 1_000_001, 1_000_002, 1_000_009)
     ]
     assert records == expected
-    assert [r.seed for r in run_split(CONFIG, RandomAgent(), Split.TRAIN, 3)] == [0, 1, 2]
+    assert [r.seed for r in run_split(CONFIG, RandomAgent(), Split.TRAIN, 10)] == [1, 6, 9]
 
 
 def test_every_agent_gets_the_same_seeds():
@@ -128,8 +130,8 @@ def test_summary_rows_reproduce_the_architecture_example():
 
 
 def test_header_and_comparison_lines_follow_the_layout():
-    assert format_header(Split.VAL, 1000, CONFIG.game) == (
-        "split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2"
+    assert format_header(Split.VAL, 1000, 483, CONFIG.game) == (
+        "split val, 483 winnable of the first 1000 seeds, knobs: ghost_move_prob=1.0 wall_density=0.2"
         " max_walls=6 min_loops=4 max_steps=100 pellets=corners corners_to_visit=3"
     )
     line = format_comparison(Comparison("learned", "pathfinding", 30, 10, 0.001))
@@ -143,7 +145,7 @@ def test_report_assembles_header_table_and_comparisons():
     summaries = [summarise("random", random_records), summarise("learned", learned)]
     report = format_report(Split.VAL, 2, CONFIG.game, summaries, [compare(learned, random_records)])
     lines = report.split("\n")
-    assert lines[0].startswith("split val, 2 games per agent")
+    assert lines[0].startswith("split val, 2 winnable of the first 2 seeds")
     assert lines[1] == "agent         wins                  losses                ties                  steps/win"
     assert lines[2].startswith("random ") and lines[3].startswith("learned ")
     assert lines[4].startswith("learned vs random:")
@@ -187,7 +189,7 @@ def test_difficulty_check_plays_the_baselines_on_validation_without_training(mon
     monkeypatch.setattr(evaluate_module, "FULL_GAMES", 8)
     check = difficulty_check(CONFIG)
     assert [summary.agent for summary in check.baselines] == ["random", "pathfinding"]
-    assert all(summary.games == 8 for summary in check.baselines)
+    assert all(summary.games == 3 for summary in check.baselines)  # winnable of the first 8
     assert check.stored is None and check.knobs == {}
     expected = summarise("pathfinding", run_split(CONFIG, PathfindingAgent(), Split.VAL, 8))
     assert check.baselines[1] == expected
@@ -213,7 +215,7 @@ def test_difficulty_check_shows_the_stored_learned_summary_and_flags_knobs(monke
 def test_simulate_summarises_each_agent_on_the_same_games():
     summaries = simulate(CONFIG, [RandomAgent(), PathfindingAgent()], Split.VAL, 6)
     assert [summary.agent for summary in summaries] == ["random", "pathfinding"]
-    assert all(summary.games == 6 for summary in summaries)
+    assert all(summary.games == 3 for summary in summaries)  # winnable of the first 6
     assert summaries[1] == summarise("pathfinding", run_split(CONFIG, PathfindingAgent(), Split.VAL, 6))
     with pytest.raises(ValueError):
         simulate(CONFIG, [RandomAgent()], Split.VAL, 5_000)
@@ -222,8 +224,9 @@ def test_simulate_summarises_each_agent_on_the_same_games():
 def test_the_full_validation_run_reproduces_the_architecture_figures():
     random_summary = summarise("random", run_split(CONFIG, RandomAgent(), Split.VAL, FULL_GAMES))
     path_summary = summarise("pathfinding", run_split(CONFIG, PathfindingAgent(), Split.VAL, FULL_GAMES))
-    assert (random_summary.wins, random_summary.losses, random_summary.ties) == (0, 1000, 0)
-    assert (path_summary.wins, path_summary.losses, path_summary.ties) == (8, 992, 0)
+    # Only the 483 winnable maps count; all 8 pathfinding wins are among them.
+    assert (random_summary.wins, random_summary.losses, random_summary.ties) == (0, 483, 0)
+    assert (path_summary.wins, path_summary.losses, path_summary.ties) == (8, 475, 0)
     assert path_summary.mean_steps_to_win == pytest.approx(14.25)  # 114 steps over 8 wins
 
 
@@ -234,4 +237,20 @@ def test_run_split_refuses_an_agent_still_in_training_mode():
         run_split(CONFIG, agent, Split.TEST, 2)
     assert numpy.array_equal(agent.q, before)        # nothing was learned from held-out seeds
     agent.training = False
-    assert len(run_split(CONFIG, agent, Split.VAL, 2)) == 2
+    assert run_split(CONFIG, agent, Split.VAL, 10)                # plays once it is greedy
+
+
+def test_only_winnable_seeds_are_played_and_counted():
+    from pacman.winnable import is_winnable
+
+    first = range(1_000_000, 1_000_020)
+    expected = [seed for seed in first if is_winnable(CONFIG, seed)]
+    assert 0 < len(expected) < len(first)
+    for agent in (RandomAgent(), PathfindingAgent()):
+        assert [record.seed for record in run_split(CONFIG, agent, Split.VAL, 20)] == expected
+
+
+def test_a_split_with_no_winnable_seed_is_an_error():
+    too_short = Config(game=GameKnobs(max_steps=11))
+    with pytest.raises(ValueError, match="winnable"):
+        run_split(too_short, RandomAgent(), Split.VAL, 5)
