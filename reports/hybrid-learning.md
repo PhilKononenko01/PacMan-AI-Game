@@ -100,3 +100,5 @@ The [full rules and implementation contract](../Architecture/hybrid-experiment.m
 The complete test suite passes **545 tests**. Verification tooling also includes negative controls for incorrect totals, altered individual games with unchanged outcome counts, missing reports or scheduled games, wrong policies, wrong rules, wrong features, and wrong replicate IDs. Sampled replay explicitly cannot claim complete verification.
 
 Before archival, **all 125,000 saved evaluation games replayed exactly**, including every validation checkpoint, validation cross-play matchup, and frozen test matchup. Each archived run includes its complete verification result. The [source manifest](hybrid-55/source-manifest.json), [pre-test policy freeze](hybrid-55/test-freeze.json), and [file inventory](hybrid-55/sha256.json) identify the implementation, tools, policies, and saved evidence.
+
+The archived run summaries retain training budgets, stage outcomes, and policy identities. Detailed cross-play summaries are stored once in their corresponding compressed validation reports, rather than duplicated in each training summary.
