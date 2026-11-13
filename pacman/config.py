@@ -45,6 +45,9 @@ class GameKnobs:
     max_walls: int = 6
     min_loops: int = 4
     max_steps: int = 100
+    # Where the three pellets Pac-Man collects lie: "corners", the accepted game, or "anywhere",
+    # three random open cells besides his start, drawn per game from the seed.
+    pellets: str = "corners"
 
     def __post_init__(self) -> None:
         _number("ghost_move_prob", self.ghost_move_prob, 0, 1)
@@ -52,6 +55,8 @@ class GameKnobs:
         _integer("max_walls", self.max_walls, 0)
         _integer("min_loops", self.min_loops, 0)
         _integer("max_steps", self.max_steps, 1)
+        if not isinstance(self.pellets, str) or self.pellets not in ("corners", "anywhere"):
+            raise ValueError(f"pellets must be 'corners' or 'anywhere', got {self.pellets!r}")
 
 
 @dataclass(frozen=True, slots=True)

@@ -107,6 +107,7 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `max_walls` | int | 6 | 0 or more | walls |
 | `min_loops` | int | 4 | 0 or more | independent loops |
 | `max_steps` | int | 100 | 1 or more | moves; read only by the referee (§7.4) |
+| `pellets` | str | `"corners"` | `"corners"` or `"anywhere"` | where Pac-Man's targets lie: the corners, or the start plus three open cells drawn per game from `derive(seed, "pellets")`; observations carry them as `targets`; opt-in extension, see `review.md` |
 
 **Learner settings** (`LearnerSettings`):
 

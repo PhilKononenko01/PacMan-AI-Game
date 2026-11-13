@@ -21,6 +21,8 @@ A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether 
 
 Both move one square per turn. Pac-Man moves first.
 
+**Pellets anywhere (optional).** `--set pellets=anywhere` replaces the three corners Pac-Man must reach with three pellets on random open squares, drawn per game from the seed. He knows where they are, as he knows the corners, and collecting all three wins. Plain frames draw uncollected pellets as `o` and collected ones as `*`. The default, `corners`, is the accepted game.
+
 ## The agents
 
 | Agent | How it plays |

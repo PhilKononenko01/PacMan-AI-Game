@@ -13,7 +13,7 @@ def test_defaults_match_the_approved_game_and_learner_settings():
     assert json.loads(config.to_json()) == {
         "game": {
             "ghost_move_prob": 1.0, "wall_density": 0.20,
-            "max_walls": 6, "min_loops": 4, "max_steps": 100,
+            "max_walls": 6, "min_loops": 4, "max_steps": 100, "pellets": "corners",
         },
         "learner": {
             "reward_win": 100.0, "reward_loss": -100.0,
@@ -81,6 +81,7 @@ def test_invalid_json_structure_is_rejected(text):
     ("min_loops", -1), ("min_loops", "4"),
     ("max_steps", 0), ("max_steps", True),
     ("ghost_move_prob", False), ("wall_density", None),
+    ("pellets", "everywhere"), ("pellets", None),
 ])
 def test_invalid_game_settings_fail_at_construction(field, value):
     with pytest.raises(ValueError, match=field):
