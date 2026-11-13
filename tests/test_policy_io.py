@@ -310,11 +310,12 @@ def test_a_file_that_is_not_an_npz_archive_is_refused(tmp_path):
         load_policy(junk)
 
 
-def test_a_policy_saved_before_the_ghost_mode_knob_loads_with_the_vision_ghost(tmp_path):
+def test_a_policy_from_when_the_ghost_was_a_choice_loads_if_it_names_the_pathfinding_ghost(tmp_path):
     meta = meta_of_policy(policy())
-    meta["config"]["game"] = {
-        "ghost_move_prob": 0.9, "wall_density": 0.2, "max_walls": 6, "min_loops": 4, "max_steps": 80,
-    }
-    write_raw(tmp_path / "old.npz", meta=meta)
-    assert load_policy(tmp_path / "old.npz").config == CONFIG
-    assert CONFIG.game.ghost_mode == "vision"
+    meta["config"]["game"]["ghost_mode"] = "pathfinding"
+    write_raw(tmp_path / "pathfinding.npz", meta=meta)
+    assert load_policy(tmp_path / "pathfinding.npz").config == CONFIG
+    meta["config"]["game"]["ghost_mode"] = "vision"
+    write_raw(tmp_path / "vision.npz", meta=meta)
+    with pytest.raises(ValueError, match="ghost_mode"):
+        load_policy(tmp_path / "vision.npz")

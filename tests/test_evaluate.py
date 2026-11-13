@@ -130,7 +130,7 @@ def test_summary_rows_reproduce_the_architecture_example():
 def test_header_and_comparison_lines_follow_the_layout():
     assert format_header(Split.VAL, 1000, CONFIG.game) == (
         "split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2"
-        " max_walls=6 min_loops=4 max_steps=100 ghost_mode=vision"
+        " max_walls=6 min_loops=4 max_steps=100"
     )
     line = format_comparison(Comparison("learned", "pathfinding", 30, 10, 0.001))
     assert line.startswith("learned vs pathfinding:  b=30 c=10 one-sided exact McNemar p=")
@@ -223,8 +223,8 @@ def test_the_full_validation_run_reproduces_the_architecture_figures():
     random_summary = summarise("random", run_split(CONFIG, RandomAgent(), Split.VAL, FULL_GAMES))
     path_summary = summarise("pathfinding", run_split(CONFIG, PathfindingAgent(), Split.VAL, FULL_GAMES))
     assert (random_summary.wins, random_summary.losses, random_summary.ties) == (0, 1000, 0)
-    assert (path_summary.wins, path_summary.losses, path_summary.ties) == (142, 858, 0)
-    assert path_summary.mean_steps_to_win == pytest.approx(13.6, abs=0.05)
+    assert (path_summary.wins, path_summary.losses, path_summary.ties) == (8, 992, 0)
+    assert path_summary.mean_steps_to_win == pytest.approx(14.25)  # 114 steps over 8 wins
 
 
 def test_run_split_refuses_an_agent_still_in_training_mode():

@@ -13,7 +13,7 @@ def test_defaults_match_the_approved_game_and_learner_settings():
     assert json.loads(config.to_json()) == {
         "game": {
             "ghost_move_prob": 1.0, "wall_density": 0.20,
-            "max_walls": 6, "min_loops": 4, "max_steps": 100, "ghost_mode": "vision",
+            "max_walls": 6, "min_loops": 4, "max_steps": 100,
         },
         "learner": {
             "reward_win": 100.0, "reward_loss": -100.0,
@@ -28,7 +28,7 @@ def test_defaults_match_the_approved_game_and_learner_settings():
 
 def test_json_round_trip_preserves_nondefault_settings():
     config = Config(
-        game=GameKnobs(ghost_move_prob=0.75, wall_density=0.3, max_steps=200, ghost_mode="pathfinding"),
+        game=GameKnobs(ghost_move_prob=0.75, wall_density=0.3, max_steps=200),
         learner=LearnerSettings(episodes=200, epsilon_start=0.4, tie_update="terminal"),
     )
     assert Config.from_json(config.to_json()) == config
@@ -81,7 +81,6 @@ def test_invalid_json_structure_is_rejected(text):
     ("min_loops", -1), ("min_loops", "4"),
     ("max_steps", 0), ("max_steps", True),
     ("ghost_move_prob", False), ("wall_density", None),
-    ("ghost_mode", "teleport"), ("ghost_mode", None), ("ghost_mode", 1),
 ])
 def test_invalid_game_settings_fail_at_construction(field, value):
     with pytest.raises(ValueError, match=field):
@@ -145,3 +144,11 @@ def test_configuration_cannot_be_changed_during_an_episode():
 def test_constructor_requires_validated_config_sections(parts):
     with pytest.raises(ValueError):
         Config(**parts)
+
+
+def test_a_file_from_when_the_ghost_was_a_choice_loads_only_if_it_names_the_pathfinding_ghost():
+    assert Config.from_json('{"game": {"ghost_mode": "pathfinding", "max_steps": 80}}') == Config(
+        game=GameKnobs(max_steps=80),
+    )
+    with pytest.raises(ValueError, match="ghost_mode"):
+        Config.from_json('{"game": {"ghost_mode": "vision"}}')

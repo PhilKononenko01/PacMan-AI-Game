@@ -1,14 +1,9 @@
-"""The ghost: row/column vision, BFS chase, pursuit of the last sighting, search.
-
-A `pathfinding` ghost skips vision: it always knows where Pac-Man is and chases him.
-"""
+"""The ghost: it always knows where Pac-Man is and takes a shortest-path step towards him."""
 
 import random
 
-from pacman.config import _ghost_mode
-from pacman.grid import Cell, Passable, first_step, line_of_sight, move, neighbours
+from pacman.grid import Cell, first_step, move
 from pacman.mapgen import GameMap
-from pacman.rng import pick
 
 GHOST_START: Cell = (4, 4)
 
@@ -18,38 +13,17 @@ class Ghost:
 
     def __init__(
         self, rng: random.Random, move_prob: float = 1.0, start: Cell = GHOST_START,
-        mode: str = "vision",
     ) -> None:
-        _ghost_mode(mode)
-        self.mode = mode
         self.cell = start
-        self.last_seen: Cell | None = None
-        self.last_visit: dict[Cell, int] = {start: 0}
         self.rng = rng
         self.move_prob = move_prob
 
-    def act(self, pacman: Cell, game_map: GameMap, t: int) -> None:
-        """One ghost move: vision, the move draw, then chase, pursue or search."""
-        passable = game_map.is_open
-        if self.mode == "pathfinding" or line_of_sight(self.cell, pacman, passable):
-            self.last_seen = pacman  # a pathfinding ghost always has a fresh target, so never searches
+    def act(self, pacman: Cell, game_map: GameMap) -> None:
+        """The move draw, then the first step of a shortest true-map path to Pac-Man.
+
+        The environment ends the game before the ghost acts if Pac-Man is on its cell.
+        """
         if not self.rng.random() < self.move_prob:
             return
-        if self.last_seen is not None:
-            self.cell = move(self.cell, first_step(self.cell, self.last_seen, passable), passable)
-        else:
-            self.cell = self._least_recent(passable)
-        if self.cell == self.last_seen:
-            self.last_seen = None
-        self.last_visit[self.cell] = t
-
-    def _least_recent(self, passable: Passable) -> Cell:
-        """The least recently visited open neighbour; never visited counts as oldest."""
-        candidates = [cell for cell in neighbours(self.cell) if passable(cell)]
-        if not candidates:
-            raise ValueError(f"the ghost at {self.cell} has no open neighbour to move to")
-        oldest = min(self.last_visit.get(cell, -1) for cell in candidates)
-        ties = [cell for cell in candidates if self.last_visit.get(cell, -1) == oldest]
-        if len(ties) == 1:
-            return ties[0]
-        return ties[pick(self.rng, len(ties))]
+        passable = game_map.is_open
+        self.cell = move(self.cell, first_step(self.cell, pacman, passable), passable)

@@ -147,20 +147,8 @@ def test_frames_are_sent_at_reset_and_after_every_step_with_the_ruling_last():
     assert {frame.max_steps for frame in frames} == {50}
 
 
-def test_frames_report_whether_the_ghost_sees_pacman_on_the_true_map():
-    env = FakeEnvironment(going(ALIGNED), ended(Outcome.LOSS, ALIGNED))
-    env.game_map = GameMap({(2, 2)})
-    frames = []
-    play_episode(env, Referee(50), SpyAgent(), 1, on_frame=frames.append)
-    assert [frame.ghost_sees for frame in frames] == [False, False, False]
-    env = FakeEnvironment(ended(Outcome.LOSS, ALIGNED))
-    frames = []
-    play_episode(env, Referee(50), SpyAgent(), 1, on_frame=frames.append)
-    assert [frame.ghost_sees for frame in frames] == [False, True]
-
-
 def test_frames_are_immutable():
-    frame = Frame(START, 0, None, False, 100)
+    frame = Frame(START, 0, None, 100)
     with pytest.raises(AttributeError):
         frame.t = 1
 

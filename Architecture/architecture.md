@@ -1,6 +1,6 @@
 # Grid World, Ghost and Learned Pac-Man: Architecture
 
-**Status:** DRAFT **v0.3**. Implements PRD v0.11. Issue #4 implements configuration, RNG and shared types; gameplay modules remain planned. D-1 is confirmed as bootstrap. D-2 through D-7 retain their existing implementation defaults; see `foundation-handoff.md` for scope and ownership.
+**Status:** DRAFT **v0.4**. Implements PRD v0.12; v0.4 (2026-11-13) makes §8 the pathfinding ghost (OQ-16). Issue #4 implements configuration, RNG and shared types; gameplay modules remain planned. D-1 is confirmed as bootstrap. D-2 through D-7 retain their existing implementation defaults; see `foundation-handoff.md` for scope and ownership.
 **Date:** 2026-10-28
 **Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10, architecture v0.2 and the review log before issue #4. The foundation handoff identifies implemented configuration, RNG and shared type contracts; all other modules and commands below remain planned. Game/training measurements come from a discarded exploratory probe (Python 3.9.6 with NumPy 2.0.2; see `review.md`) and must be checked against the implementation.
 **Authority:** the PRD. This document decides only what PRD §7 leaves to it, plus the module, type and command structure needed to build the PRD. Where it seems to disagree with the PRD, the PRD wins and this document is wrong.
@@ -107,7 +107,6 @@ All types are immutable unless the row says otherwise. Coordinates are cells, no
 | `max_walls` | int | 6 | 0 or more | walls |
 | `min_loops` | int | 4 | 0 or more | independent loops |
 | `max_steps` | int | 100 | 1 or more | moves; read only by the referee (§7.4) |
-| `ghost_mode` | str | `"vision"` | `"vision"` or `"pathfinding"` | how the ghost finds Pac-Man (§8.2); opt-in extension, see `review.md` |
 
 **Learner settings** (`LearnerSettings`):
 
@@ -142,7 +141,7 @@ derive(seed: int, component: str) -> random.Random
 | Component name | Used by | Draws per step |
 |---|---|---|
 | `"map"` | `mapgen.generate` | none during play; 21 per candidate map, one per non-corner cell (§6.1) |
-| `"ghost"` | `Ghost` | one move draw every step, plus one tie draw when searching with tied candidates (§8.3) |
+| `"ghost"` | `Ghost` | one move draw every step (§8.3) |
 | `"agent"` | the agent's `reset` (random agent's moves, learned agent's exploration) | random agent: one; learned agent in training: one or two (§10.5); otherwise none |
 
 Each component's stream is independent of every other's, so for one seed the map and the ghost's draws are the same whichever agent plays (the pairing that FR-10 and FR-11 rely on).
@@ -276,35 +275,18 @@ The referee's ruling is what the agent receives (§10.1) and what the record sto
 | Field | Type | Initial value |
 |---|---|---|
 | `cell` | `Cell` | `(4, 4)` |
-| `last_seen` | `Cell \| None` | `None` |
-| `last_visit` | `dict[Cell, int]`, step of the most recent visit | `{start cell: 0}` |
 | `rng` | `random.Random` from `derive(seed, "ghost")` | |
 
-### 8.2 One ghost move, `act(pacman, map, t)`
+Since PRD v0.12 (OQ-16) the ghost is the pathfinding ghost. The vision ghost it replaced also kept `last_seen` and `last_visit` for its pursuit and search modes; both are gone.
 
-1. **Vision.** If `line_of_sight(cell, pacman, open on the true map)`, set `last_seen = pacman`. With `ghost_mode="pathfinding"` the ghost skips this test and always sets `last_seen = pacman`, so it chases every step and never searches; the move draw and everything else below are unchanged.
-2. **Move draw.** `u = rng.random()`. This draw happens every step. If not `u < ghost_move_prob`, the ghost stays put this step and nothing else changes.
-3. **Mode and move:**
+### 8.2 One ghost move, `act(pacman, map)`
 
-| Mode | Condition | Move |
-|---|---|---|
-| Chase | Step 1 saw Pac-Man (so `last_seen` is Pac-Man's current cell) | `first_step(cell, last_seen)` on the true map |
-| Pursue | Step 1 did not see Pac-Man, `last_seen` is set | `first_step(cell, last_seen)` on the true map |
-| Search | `last_seen` is `None` | Least recently visited open neighbour (below) |
-
-4. If `cell == last_seen` after the move, set `last_seen = None` (PRD §2.5, "reaching it clears the record").
-5. `last_visit[cell] = t`, in every mode.
-
-Chase and pursue use the same code path; they differ only in whether `last_seen` was refreshed this step. The mode is not stored.
-
-**Search.** The candidates are the in-grid open neighbours, in direction order. Each candidate's key is `last_visit.get(cell, -1)`, so a never-visited cell is less recent than any visited one. The candidates with the smallest key are the ties. One tie is taken directly. Two or more are chosen by `pick(rng, number of ties)` over the ties in direction order. An accepted map is connected and has at least two open cells, so a candidate always exists.
+1. **Move draw.** `u = rng.random()`. This draw happens every step. If not `u < ghost_move_prob`, the ghost stays put this step.
+2. **Chase.** Otherwise `cell = move(cell, first_step(cell, pacman))` on the true map. The environment ends the game before the ghost acts when Pac-Man is on its cell, so `first_step` always has two different cells.
 
 ### 8.3 Ghost draw order per step
 
-1. One move draw, every step.
-2. One tie draw, only on a step when the ghost moves in search mode and two or more candidates tie.
-
-No other draw is taken from the ghost's generator.
+One move draw, every step. No other draw is taken from the ghost's generator.
 
 ## 9. Planning primitives (`grid.py`)
 
@@ -492,10 +474,10 @@ One NumPy `.npz` file, written with `numpy.savez` and read with `numpy.load(...,
 Example layout, with the measured validation numbers for the two baselines at the defaults:
 
 ```
-split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100 ghost_mode=vision
+split val, 1000 games per agent, knobs: ghost_move_prob=1.0 wall_density=0.2 max_walls=6 min_loops=4 max_steps=100
 agent         wins                  losses                ties                  steps/win
 random          0   0.0% [ 0.0,  0.4]  1000 100.0% [99.6,100.0]    0   0.0% [ 0.0,  0.4]   n/a
-pathfinding   142  14.2% [12.2, 16.5]   858  85.8% [83.5, 87.8]    0   0.0% [ 0.0,  0.4]   13.6
+pathfinding     8   0.8% [ 0.4,  1.6]   992  99.2% [98.4, 99.6]    0   0.0% [ 0.0,  0.4]   14.2
 learned       ...
 learned vs random:       b=... c=... one-sided exact McNemar p=...
 learned vs pathfinding:  b=... c=... one-sided exact McNemar p=...
@@ -529,14 +511,14 @@ It also writes `runs/<name>/eval-<split>.json`: the configuration, and every `Ep
 
 ### 14.6 Rendering (`render.py`, PRD §2.9)
 
-- **Frames.** One frame at reset and one after each step, through a callback from the episode loop. Each frame redraws the grid, then a status line: the referee's move count `t` of `max_steps`, corners visited out of 4, and whether the ghost can see Pac-Man (line of sight on the true map at the end of the step). The last frame adds the referee's ruling.
+- **Frames.** One frame at reset and one after each step, through a callback from the episode loop. Each frame redraws the grid, then a status line: the referee's move count `t` of `max_steps`, and corners visited out of 4. The last frame adds the referee's ruling.
 - **Pixel art.** Each cell is a 4-by-4-pixel sprite drawn with the upper half block `▀` (U+2580): every character shows two pixels, its foreground the upper and its background the lower, so a cell is 4 characters wide and 2 lines tall. Colours are 256-colour ANSI escapes (`ESC[38;5;Nm`, `ESC[48;5;Nm`). Sprites, each a constant 4x4 grid of colour indices: Pac-Man, ghost, wall, unknown cell, unvisited corner, visited corner, open floor. Pac-Man and the ghost are drawn over their cell's sprite.
 - **What is drawn.** Walls and unknown cells are drawn from Pac-Man's memory, so the viewer sees what he knows: a cell he has not sensed shows the unknown sprite, whether it is open or a wall. Pac-Man, the ghost and the corners are always drawn where they are (§16).
 - **Plain-text fallback.** One character per cell: `P` Pac-Man, `G` ghost, `#` known wall, `?` unknown, `o` unvisited corner, `*` visited corner, `.` known open. It is used when `--plain` is given, when standard output is not a terminal, when `NO_COLOR` is set, or when `TERM` is `dumb`, and it is what tests check. The renderer returns each frame as a string; only the CLI writes it and sleeps.
 
 ## 15. Game-knob sweep (measured)
 
-Each row changes one knob from the defaults and plays the random and pathfinding agents on all 1,000 validation seeds. The random agent won at most 0.2% in every row.
+Measured with the vision ghost, before PRD v0.12 replaced it with the pathfinding ghost; the directions, not the values, carry over. Each row changes one knob from the defaults and plays the random and pathfinding agents on all 1,000 validation seeds. The random agent won at most 0.2% in every row.
 
 | Knob | Value | Pathfinding wins | 95% interval |
 |---|---|---|---|
@@ -590,7 +572,7 @@ One test file per module. Every test is headless, needs no Matplotlib except `te
 | `test_grid.py` | `move` into walls and off the grid; `first_step` direction-order ties; line of sight in all four directions, blocked and clear, adjacent | FR-1, FR-5, NFR-7 |
 | `test_env.py` | Sensing at reset and after each move; memory resets; no observation's `known` ever shows a wall Pac-Man has not sensed (checked against the true map over many games); every row of the §7.2 table, including Pac-Man stepping onto the ghost's cell, a win before the ghost moves and a loss on the ghost's move; the environment never returns `TIE`; reward totals for each outcome | FR-3, FR-4, FR-7, FR-16, NFR-7 |
 | `test_referee.py` | Counts from 1 after `start`; calls `TIE` exactly on move `max_steps` and not before; a win or loss on move `max_steps` stays a win or loss; the agent receives the ruling, and is asked for no move after one; the observation carries no move count | FR-4, NFR-7 |
-| `test_ghost.py` | Chase, pursue and search, and every transition between them; clearing `last_seen` on arrival; search least-recent rule and never-visited counts as least recent; random tie draw; stays put on a failed move draw with no visit recorded; draw order (§8.3) | FR-6, NFR-7 |
+| `test_ghost.py` | Shortest-path chase of a Pac-Man the ghost cannot see, direction-order ties, routing round walls on the true map; stays put on a failed move draw; one draw per step (§8.3); same seed, same path | FR-5, FR-6, NFR-7 |
 | `test_agents.py` | Interface conformance of all three; pathfinding corner-order and path ties; a path always exists on memory; feature ranges and the 122,880-row index on 5x5; greedy tie-break; Q update arithmetic on hand-built steps, including win, loss and both `tie_update` settings | FR-8, ADR-2, NFR-7 |
 | `test_stats.py` | Wilson against known values; McNemar exact values for small `n`, and `n = 0` | FR-10, FR-11 |
 | `test_train.py` | Epsilon schedule values at the start, the decay end and after it; with `CURVE_EVERY` lowered, curve points at the right episode counts, on the right seeds, with the table unchanged by them; the final validation summary stored | FR-9, FR-12 |

@@ -2,7 +2,7 @@
 
 A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether a reinforcement-learning agent can learn to beat a scripted ghost. This is our final project.
 
-> **Status: accepted.** The frozen policy wins 73.6% of 1,000 held-out games, compared with pathfinding's 14.9% and random's 0.0%. Both paired significance tests pass. The full suite passes 476 tests. Phillip confirmed both teammates approve the final tables; see [`reports/results.md`](reports/results.md).
+> **Status: the ghost changed after acceptance.** On 2026-11-13 the team kept only the pathfinding ghost, which always knows where Pac-Man is. The accepted results, a frozen policy winning 73.6% of 1,000 held-out games against pathfinding's 14.9% and random's 0.0%, were measured against the original ghost, which saw Pac-Man only along rows and columns. Those results, `reports/results/` and the submitted report describe that earlier game; see [`Architecture/review.md`](Architecture/review.md).
 
 ## The game
 
@@ -15,18 +15,11 @@ A Pac-Man-style pathfinding game inspired by Wumpus World, used to test whether 
 
 | | Pac-Man | Ghost |
 |---|---|---|
-| The other's position | Always knows where the ghost is | Sees Pac-Man only along a shared row or column with no wall in between |
+| The other's position | Always knows where the ghost is | Always knows where Pac-Man is |
 | The walls | Senses only the four squares next to him, and remembers what he has seen | Knows the whole map |
-| Behaviour | Controlled by one of three agents (below) | Chases when it sees Pac-Man, heads to where it last saw him, then searches the squares it has checked least recently |
+| Behaviour | Controlled by one of three agents (below) | Takes one step along a shortest path to Pac-Man every turn |
 
 Both move one square per turn. Pac-Man moves first.
-
-**Pathfinding ghost (optional).** `--set ghost_mode=pathfinding` gives the ghost Pac-Man's position every turn, so it always takes a shortest-path step towards him and never searches. It is off by default, and every reported result uses the default ghost. A policy only plays against the ghost it was trained with, so train a separate policy for this mode:
-
-```sh
-python -m pacman check --set ghost_mode=pathfinding
-python -m pacman train --out runs/pathfinding-ghost --set ghost_mode=pathfinding
-```
 
 ## The agents
 
@@ -34,7 +27,7 @@ python -m pacman train --out runs/pathfinding-ghost --set ghost_mode=pathfinding
 |---|---|
 | **Random** | Picks a random direction each turn. The floor. |
 | **Pathfinding** | Takes the shortest known route to the nearest unvisited corner and ignores the ghost. |
-| **Learned** | Tabular Q-learning over a compact summary of the situation: where the nearest corner is, which moves are open, where the ghost is and whether it can see Pac-Man. |
+| **Learned** | Tabular Q-learning over a compact summary of the situation: where the nearest corner is, which moves are open, where the ghost is and whether the two are in a clear line. |
 
 **Rewards used in training:** +100 for a win, -100 for being caught, +1 for each new corner, and -0.05 per step to keep Pac-Man moving.
 
@@ -56,7 +49,7 @@ Everything runs as `python -m pacman <command>`. Every command takes `--config F
 | `evaluate --split val\|test --policy FILE` | Plays all three agents on every seed of the split under the policy's configuration, prints the table with 95% intervals and the two McNemar tests, and writes `eval-<split>.json` beside the policy so any game can be replayed. |
 | `check [--policy FILE]` | Plays the two baselines on the validation maps under the given knobs, and with a policy shows its stored validation result and marks any knob that differs. Never trains. |
 | `simulate --agent NAME ... --split S --games N` | Plays the first `N` seeds of a split for each named agent with no graphics and prints the summary. |
-| `watch --agent NAME --seed SEED [--policy FILE] [--delay S] [--plain]` | Plays one game and animates it in the terminal as pixel art, one frame per step, with the move count, corners visited, whether the ghost can see Pac-Man and the outcome. `--plain` (or a non-terminal, `NO_COLOR` or `TERM=dumb`) draws plain text. |
+| `watch --agent NAME --seed SEED [--policy FILE] [--delay S] [--plain]` | Plays one game and animates it in the terminal as pixel art, one frame per step, with the move count, corners visited and the outcome. `--plain` (or a non-terminal, `NO_COLOR` or `TERM=dumb`) draws plain text. |
 
 A game is identified by its seed: seeds 0 to 999,999 are training maps, 1,000,000 to 1,000,999 validation and 2,000,000 to 2,000,999 test. To replay an evaluated game, take its `seed` and `agent` from `eval-<split>.json` and pass the same `--policy`.
 

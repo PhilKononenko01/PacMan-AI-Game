@@ -64,8 +64,7 @@ class Environment:
             game_map = generate(seed, split_of_seed(seed), self.config)
         self.game_map = game_map
         self.pacman = PACMAN_START
-        game = self.config.game
-        self.ghost = Ghost(derive(seed, "ghost"), game.ghost_move_prob, mode=game.ghost_mode)
+        self.ghost = Ghost(derive(seed, "ghost"), self.config.game.ghost_move_prob)
         self.visited = {PACMAN_START}
         self.known = [KnownCell.UNKNOWN] * (ROWS * COLS)
         self.outcome = None
@@ -73,7 +72,7 @@ class Environment:
         return self._observation()
 
     def step(self, action: Direction, t: int) -> StepResult:
-        """Advance one turn; `t` only stamps the ghost's visit record."""
+        """Advance one turn; `t` is the referee's move number, which no game rule reads."""
         game_map, ghost = self.game_map, self.ghost
         if game_map is None or ghost is None:
             raise RuntimeError("reset the environment before stepping")
@@ -92,7 +91,7 @@ class Environment:
                 reward += rewards.reward_win
                 return self._end(Outcome.WIN, reward)
         self._sense(game_map)
-        ghost.act(self.pacman, game_map, t)
+        ghost.act(self.pacman, game_map)
         if ghost.cell == self.pacman:
             reward += rewards.reward_loss
             return self._end(Outcome.LOSS, reward)

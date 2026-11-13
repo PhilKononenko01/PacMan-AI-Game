@@ -4,6 +4,18 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ---
 
+## The pathfinding ghost replaces the vision ghost (PRD v0.12, OQ-16)
+
+**Date:** 2026-11-13. Branch `feature/ghost-pathfinding`. Christian ruled that the game keeps only the pathfinding ghost: "we're only keeping the pathfinding ghost", choosing to replace the original ghost rather than keep it as an option. The learning-ghost experiment branch was deleted at the same time. The tie-penalty and two-corner branches are kept as they are; they were cut from this branch's previous commit and still contain the `ghost_mode` choice.
+
+**What changed:** `Ghost` keeps only its cell, generator and move probability. Each step it takes its move draw, then the first step of a shortest true-map path to Pac-Man. Vision, pursuit, search, `last_seen` and `last_visit` are gone, and `act` no longer takes the move number. The `ghost_mode` knob is removed. `Config.from_json` still accepts a file written while the ghost was a choice if it names `ghost_mode: "pathfinding"`, so the policies trained against that ghost load. A file naming the vision ghost is refused. Watch mode's status line drops "Ghost sees Pac-Man", which reported a sight test nothing uses any more, and `Frame` loses `ghost_sees`. The learned agent keeps its line-of-sight feature, because changing the features would invalidate every trained table. PRD v0.12 records the ruling as OQ-16 and supersedes OQ-5; architecture v0.4 rewrites §8.
+
+**Verification:** a policy trained against the pathfinding ghost, `runs/pathfinding-ghost/policy.npz`, replays all 3,000 of its recorded validation games exactly, so the new ghost plays as the old pathfinding mode did. `test_ghost.py` is rewritten for the chase alone, and `test_evaluate.py`'s reproduction now expects the pathfinding ghost's baseline figures: random 0/1,000/0, pathfinding 8/992/0 with 14.25 steps per win. Suite: 465 tests.
+
+**Consequences:** the accepted results, `reports/results/`, `reports/results.md` and the submitted report and notebook all describe the vision ghost; none was edited. Against the pathfinding ghost the submitted policy wins 2.4% of the 1,000 validation games, loses 24.4% and ties 73.2%. The best policy trained against this ghost so far won 12.6% after 100,000 training games; the pathfinding baseline wins 0.8%; perfect play with the whole map could win 483 of the 1,000 maps. The test split was played once under v0.11. Any new acceptance, including whether and how held-out maps are used again, is a team decision.
+
+---
+
 ## Pathfinding ghost: an opt-in game knob
 
 **Date:** 2026-11-13. Branch `feature/ghost-pathfinding`, based on main `d3120d1`. Christian asked to add pathfinding to the ghost.

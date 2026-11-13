@@ -1,6 +1,6 @@
 # Grid World, Ghost and Learned Pac-Man: PRD
 
-**Status:** DRAFT **v0.11**. OQ-1 to OQ-15 are answered. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `foundation-handoff.md`.
+**Status:** DRAFT **v0.12**. OQ-1 to OQ-16 are answered. v0.12 (2026-11-13) replaces the vision ghost with the pathfinding ghost (OQ-16); the accepted results were measured under v0.11. Issue #4 implements the package foundation and records the confirmed tie-update, cache-reset, reproducibility and final-test decisions in `foundation-handoff.md`.
 **Date:** 2026-10-28
 **Design baseline:** `PhilKononenko01/PacMan-AI-Game` commit `90c6323`, which holds PRD v0.10 and architecture v0.2 before issue #4. The foundation handoff identifies implemented configuration, RNG and type contracts; gameplay and evaluation behavior below remains a requirement for subsequent tickets.
 **Design authority:** `Design/project-proposal.md`, the team's proposal recorded verbatim. It has four paragraphs, cited here as P1 (game), P2 (start positions and vision), P3 (learning and baselines) and P4 (targets).
@@ -13,7 +13,7 @@
 **Live on ship:**
 - A repeatable 5x5 grid game: random walls, one Pac-Man, one ghost, a four-corner objective, and win, loss and tie outcomes. Record the seed, configuration, agent/policy and supported runtime for replay.
 - A Pac-Man who always knows where the ghost is but discovers walls only as he moves next to them (P2, OQ-2).
-- A ghost that chases with shortest-path search when it can see Pac-Man and searches when it cannot (P3).
+- A ghost that always knows where Pac-Man is and chases him with shortest-path search (OQ-16; P3's ghost had limited sight).
 - Three Pac-Man agents behind one interface: a random agent, a pathfinding baseline, and a reinforcement-learning agent trained on generated maps (P3).
 - An evaluation harness that plays every agent on the same held-out maps and reports wins, losses and ties with confidence intervals, and a significance test against each baseline (P3, P4).
 - A watch mode that animates a game as pixel art in the terminal, and a simulation mode that plays many games with no graphics and prints a summary at the end (OQ-8).
@@ -26,7 +26,7 @@
 Build the game, the ghost, three agents, training, and evaluation, in that order. Each step is usable before the next one starts.
 
 1. **Environment.** Grid, map generator, Pac-Man's wall sensing and memory, movement, turn order, outcomes, rewards, the referee, watch and simulation modes.
-2. **Ghost.** Line of sight, chase, search.
+2. **Ghost.** Shortest-path chase.
 3. **Baselines.** Random agent and pathfinding agent. Running these first gives the first difficulty reading before any learning exists.
 4. **Learned agent.** Tabular Q-learning (ADR-2), training loop, saved policy.
 5. **Evaluation.** Held-out maps, paired comparison, report tables and the learning curve.
@@ -87,12 +87,10 @@ Because moves are sequential, the two can never pass through each other unseen: 
 
 ### 2.5 Ghost
 
-- **Vision (P2).** The ghost sees Pac-Man when they share a row or a column and every cell strictly between them is open. Vision is checked at the start of each ghost move. The ghost knows the whole map.
-- **Chase.** When it sees Pac-Man, the ghost takes the first step of a shortest path to Pac-Man's current cell, found by breadth-first search. It also records that cell as Pac-Man's last known position.
-- **Pursue last sighting.** When it cannot see Pac-Man but has a last known position it has not yet reached, it takes the first step of a shortest path to that cell. Reaching it clears the record (OQ-5).
-- **Search.** Otherwise it moves to the adjacent open cell it has visited least recently. A cell it has never visited counts as less recent than any cell it has. Its start cell counts as visited at step 0, and every cell the ghost moves onto counts as visited at that step, whichever mode moved it there. Ties are broken by a seeded random draw. On a step when it moves, it never stands still while a move exists (OQ-5).
+- **Knowledge (OQ-16).** The ghost always knows Pac-Man's current cell and the whole map. Until v0.12 it saw Pac-Man only along a shared row or column with no wall between them, pursued his last sighting and otherwise searched (P2, OQ-5); that ghost was removed.
+- **Chase.** Every step on which it moves, the ghost takes the first step of a shortest path to Pac-Man's current cell on the true map, found by breadth-first search.
 - **Speed.** The ghost moves at most one cell per step, the same as Pac-Man (OQ-6).
-- **Move probability (OQ-10).** Each step, after checking vision and updating its last known position, the ghost draws from its seeded generator and moves with probability `ghost_move_prob` (default 1.0, a §2.7 game knob). Otherwise it stays where it is for that step. The draw is made every step, including at 1.0. A step on which the ghost stays put does not change its visit record.
+- **Move probability (OQ-10).** Each step, the ghost draws from its seeded generator and moves with probability `ghost_move_prob` (default 1.0, a §2.7 game knob). Otherwise it stays where it is for that step. The draw is made every step, including at 1.0.
 - **Shortest-path ties** are broken by a fixed direction order (up, right, down, left), so the ghost is deterministic given the seed.
 
 ### 2.6 Pac-Man's knowledge and rewards
@@ -152,7 +150,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 
 ### 2.9 Watch mode and simulation mode
 
-- **Watch mode** plays one game and animates it in the terminal as pixel art: each cell is drawn as a small coloured block sprite using ANSI colour codes and Unicode block characters, with distinct sprites for Pac-Man, the ghost, walls, unknown cells, and visited and unvisited corners. One frame is drawn per step, with a short delay between frames. Each frame also shows the step number, the corners visited, whether the ghost can see Pac-Man, and at the end the outcome. Any evaluated game can be replayed this way (FR-14).
+- **Watch mode** plays one game and animates it in the terminal as pixel art: each cell is drawn as a small coloured block sprite using ANSI colour codes and Unicode block characters, with distinct sprites for Pac-Man, the ghost, walls, unknown cells, and visited and unvisited corners. One frame is drawn per step, with a short delay between frames. Each frame also shows the step number, the corners visited, and at the end the outcome. Any evaluated game can be replayed this way (FR-14).
 - **Simulation mode** plays many games with no graphics at all, then prints a summary per agent: wins, losses and ties as counts and percentages, with their 95% intervals, and the mean steps to a win. Training and evaluation run in this mode.
 - Both modes use the standard library only (ADR-1). Watch mode has a plain-text fallback for terminals without colour and for tests.
 
@@ -171,7 +169,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | Which of the four moves are open (always known, since adjacent cells are sensed) | 16 |
 | Where the ghost is, as its row offset and column offset from Pac-Man, each -4 to +4, never both 0 (OQ-9) | 80 |
 | Shortest-path distance to the ghost, bucketed: 1, 2, 3, 4 or more | 4 |
-| Whether the ghost could see Pac-Man, judged on the remembered map | 2 |
+| Whether Pac-Man and the ghost share a row or column with no remembered wall between them (it judged the vision ghost's sight; kept in v0.12 so trained tables still apply) | 2 |
 | Corners still unvisited: 1, 2 or 3 | 3 |
 
   That is 4 x 16 x 80 x 4 x 2 x 3 = 122,880 table rows, about 4 MB as a NumPy array of four 64-bit values per row. Most combinations cannot occur, because the offset limits the path distance and the open moves; the states actually reached are a small fraction, and the learning curve (FR-12) shows whether training visits them often enough. The offset tells Pac-Man where the ghost is; the path distance tells him how far that is once known walls are counted. Because unknown cells count as open, the distance and the line-of-sight feature can be optimistic: the ghost may be farther than it looks, and a wall Pac-Man has not sensed may in fact block the ghost's view. A state describes the situation relative to Pac-Man rather than in map coordinates, which is what lets the policy carry over to held-out maps. It is a summary, so situations that differ in detail can share a state, and the table learns the best action on average across them. In particular, the state does not say whether the ghost is chasing, pursuing or searching, or where it last saw Pac-Man, so two situations that call for different moves can look the same. On a game this small tabular Q-learning usually copes with this; the learning curve (FR-12) is where a failure would show.
@@ -190,8 +188,8 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | FR-2 | Map generation follows §2.3. Corners are never walls, and every accepted map is fully connected, has at most `max_walls` walls, has at least `min_loops` loops and belongs to its requested split. Other maps are rejected and redrawn. The generator does not depend on Pac-Man, the ghost or any non-generator knob. For a fixed generator configuration, a seed and split always produce the same map. If no map is accepted within the draw limit, generation fails with an error (§2.3). |
 | FR-3 | Pac-Man starts at `(0, 0)` and the ghost at `(4, 4)`. Pac-Man's start corner is visited at step 0 (§2.2). |
 | FR-4 | Each step follows the order in §2.4 and ends in win, loss or tie exactly as stated there. Only the referee counts moves and calls a tie, and it tells the agent the outcome (OQ-14). |
-| FR-5 | Ghost vision follows §2.5. The ghost sees Pac-Man only along a shared row or column with no wall between them. |
-| FR-6 | The ghost chases, pursues the last sighting, and searches exactly as in §2.5, moves with probability `ghost_move_prob`, and is deterministic for a given seed. |
+| FR-5 | The ghost knows Pac-Man's current cell and the true map every step (§2.5, OQ-16). |
+| FR-6 | The ghost takes the first step of a shortest true-map path to Pac-Man exactly as in §2.5, moves with probability `ghost_move_prob`, and is deterministic for a given seed. |
 | FR-7 | The reward table in §2.6 is applied each step. Every value is read from the configuration (§2.7). |
 | FR-8 | The random, pathfinding and learned agents implement one interface with reset, act and observe operations (§2.8). The environment does not branch on agent type. |
 | FR-9 | Training runs Q-learning on training-split maps (§2.7) and saves the table with its configuration and seed range. |
@@ -214,7 +212,7 @@ The observation holds Pac-Man's cell, the ghost's cell, the visited corners and 
 | NFR-4 | A full training run at the default episode count (§2.8), including its learning-curve checks, finishes in under 10 minutes on a team member's laptop. The architecture doc measures this before the episode count is fixed. |
 | NFR-5 | Dependencies are limited to those in ADR-1 unless the team agrees otherwise. |
 | NFR-6 | No map appears in more than one split, and a test asserts it: the generator never returns a map outside its requested split, and a sample of each split shares no layout with the others (§2.7). |
-| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, the winnability rules (including rejection of a map over the wall cap, and of a connected map with fewer than `min_loops` loops such as the ring around a 3x3 wall block), the error when no map is accepted within the draw limit, wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, the referee's tie on move `max_steps` (and that a win or loss on that move is not turned into a tie), each ghost mode and its transitions, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
+| NFR-7 | Unit tests cover map connectivity, the corner rule and split membership, the winnability rules (including rejection of a map over the wall cap, and of a connected map with fewer than `min_loops` loops such as the ring around a 3x3 wall block), the error when no map is accepted within the draw limit, wall sensing and memory (including that no observation leaks an unsensed wall), line of sight in every direction including blocked cases, each step of the turn order including Pac-Man moving onto the ghost's cell, the referee's tie on move `max_steps` (and that a win or loss on that move is not turned into a tie), the ghost's shortest-path chase including around walls, the ghost staying put when its move draw fails, all tie-break rules, and reward accounting for every outcome. |
 
 ## 5. Acceptance gate
 
@@ -229,13 +227,13 @@ Freeze the policy and all settings before the final held-out evaluation. If a ta
 
 ## 6. Questions
 
-No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on 2026-10-27, OQ-13 on 2026-10-27 and revised on 2026-10-28, and OQ-14 and OQ-15 on 2026-10-28. Each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
+No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on 2026-10-27, OQ-13 on 2026-10-27 and revised on 2026-10-28, OQ-14 and OQ-15 on 2026-10-28, and OQ-16 on 2026-11-13. Each answer is written into the section it names. A new question goes here first, with a proposal, before any section changes.
 
 - **OQ-1: Start positions.** *Answered:* Pac-Man at `(0, 0)`, ghost at `(4, 4)`, and Pac-Man's start corner counts as visited (§2.2).
 - **OQ-2: How much does Pac-Man know?** *Answered:* he always knows where the ghost is, but senses only the walls next to him. He remembers walls he has sensed and plans as if unknown cells are open (§2.6). The agent learns from computed features, not from the raw board (ADR-2).
 - **OQ-3: Cell walls or edge walls?** *Answered:* whole-cell walls (§2.1).
 - **OQ-4: What does hitting the turn limit count as?** *Answered:* a tie, reported alongside wins and losses and never counted as a win (§2.4). An earlier idea, ending the game when Pac-Man's score goes negative, was dropped: the step cost is only there to keep him moving.
-- **OQ-5: What does "explore" mean for the ghost?** *Answered:* go to where it last saw Pac-Man, then visit the cells it has visited least recently (§2.5).
+- **OQ-5: What does "explore" mean for the ghost?** *Answered:* go to where it last saw Pac-Man, then visit the cells it has visited least recently. *Superseded by OQ-16:* the ghost no longer explores.
 - **OQ-6: Does the ghost move at Pac-Man's speed?** *Answered:* yes, at most one cell per step. A faster ghost was considered as a difficulty knob and replaced by `ghost_move_prob` (OQ-10).
 - **OQ-7: Corner rewards?** *Answered:* +1 for the first visit to each corner (§2.6).
 - **OQ-8: A playable or graphical version?** *Answered:* watched games are animated as pixel art in the terminal; simulations have no graphics and print a summary of wins, losses and ties at the end. No graphical window and no human play (§2.9).
@@ -246,10 +244,11 @@ No question is open. OQ-1 to OQ-9 were answered on 2026-10-26, OQ-10 to OQ-12 on
 - **OQ-13: Can a connected but unwinnable map be accepted?** *Answered:* no, and winnability belongs to the map generator alone, with nothing to do with Pac-Man or the ghost. A map is winnable if it has at most `max_walls` walls and at least `min_loops` independent loops, so the routes branch rather than forming one path around a central block. Other maps are rejected and redrawn (§2.3, §2.7, FR-2, NFR-7).
 - **OQ-14: Who keeps the move count?** *Answered:* a referee outside the game. It counts moves, stops the episode at `max_steps`, and tells the agent it was a tie; nothing in the game or the observations sees the count (§2.4, §2.8, FR-4, NFR-7).
 - **OQ-15: Can the grid size change?** *Answered:* no. The grid is always 5x5; it is not a parameter, even for tests (non-goals, §2.1).
+- **OQ-16: Which ghost does the game use?** *Answered 2026-11-13 (Christian):* only the pathfinding ghost, which always knows where Pac-Man is and takes a shortest-path step towards him. It replaces the vision ghost of P2, P3 and OQ-5. The accepted results, the frozen policy and the submitted report were measured against the vision ghost (§2.5, FR-5, FR-6).
 
 ## 7. SDLC state
 
-PRD v0.11. Review rounds 1 to 3 and subsequent decisions are logged in `review.md`. Architecture v0.3 and the issue #4 foundation handoff define the shared contracts. The GitHub implementation tracker (#19) records the remaining module owners and dependencies. Next: review and merge the foundation, implement the remaining tickets, then run the §5 gate.
+PRD v0.12, after OQ-16. Review rounds 1 to 3 and subsequent decisions are logged in `review.md`. Architecture v0.3 and the issue #4 foundation handoff define the shared contracts. The GitHub implementation tracker (#19) records the remaining module owners and dependencies. Next: review and merge the foundation, implement the remaining tickets, then run the §5 gate.
 
 The architecture doc settles these, which this PRD leaves to it:
 

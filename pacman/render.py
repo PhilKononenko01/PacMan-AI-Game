@@ -134,8 +134,7 @@ def _pixels(observation: Observation, cell: Cell) -> Sprite:
 
 def _status(frame: Frame) -> list[str]:
     corners = sum(corner in frame.observation.visited for corner in CORNERS)
-    sees = "yes" if frame.ghost_sees else "no"
-    lines = [f"Move {frame.t}/{frame.max_steps}  Corners {corners}/4  Ghost sees Pac-Man: {sees}"]
+    lines = [f"Move {frame.t}/{frame.max_steps}  Corners {corners}/4"]
     if frame.outcome is not None:
         lines.append(f"Outcome: {frame.outcome.value}")
     return lines

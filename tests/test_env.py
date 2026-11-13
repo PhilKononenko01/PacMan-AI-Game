@@ -163,7 +163,6 @@ def test_pacman_stepping_onto_the_ghost_loses_before_the_corner_counts():
     assert result.reward == pytest.approx(-100.05)
     assert result.observation.pacman == result.observation.ghost == (4, 4)
     assert (4, 4) not in result.observation.visited
-    assert env.ghost.last_visit == {(4, 4): 0}  # the ghost never moved
 
 
 def test_the_last_corner_wins_before_the_ghost_moves():
@@ -216,14 +215,22 @@ def test_the_ghost_moves_with_the_configured_probability():
     assert moving.step(UP, 1).observation.ghost != (4, 4)
 
 
-def test_the_ghost_is_seeded_by_the_episode_and_stamps_visits_with_t():
+def test_the_ghost_is_seeded_by_the_episode():
+    config = Config(game=GameKnobs(ghost_move_prob=0.5))
+
+    def ghost_path(seed):
+        env = Environment(config)
+        env.reset(seed, EMPTY)
+        return [env.step(UP, t).observation.ghost for t in range(1, 5)]
+
+    assert ghost_path(3) == ghost_path(3)
+
+
+def test_the_ghost_hunts_a_still_pacman_by_the_shortest_path():
     env = Environment(Config())
-    env.reset(3, EMPTY)
-    env.step(UP, 7)
-    assert env.ghost.last_visit[env.ghost.cell] == 7
-    again = Environment(Config())
-    again.reset(3, EMPTY)
-    assert again.step(UP, 7).observation.ghost == env.ghost.cell
+    env.reset(0, EMPTY)
+    # Pac-Man stays in (0, 0), eight steps from the ghost: caught on move 8, never sooner.
+    assert [env.step(UP, t).outcome for t in range(1, 9)] == [None] * 7 + [Outcome.LOSS]
 
 
 def test_the_environment_never_calls_a_tie_and_ignores_t_otherwise():
@@ -282,12 +289,3 @@ def test_env_imports_only_the_game_modules():
         "pacman", "pacman.config", "pacman.rng", "pacman.grid", "pacman.mapgen",
         "pacman.ghost", "pacman.env",
     }
-
-
-@pytest.mark.parametrize("mode,expected", [("vision", (4, 3)), ("pathfinding", (3, 4))])
-def test_the_ghost_mode_knob_decides_how_the_ghost_moves(mode, expected):
-    env = Environment(Config(game=GameKnobs(ghost_mode=mode)))
-    env.reset(0, EMPTY)
-    env.ghost.last_visit[(3, 4)] = 0  # searching now goes left, to the never-visited (4, 3)
-    env.step(RIGHT, 1)                # Pac-Man to (0, 1): in neither the ghost's row nor column
-    assert env.ghost.cell == expected # pathfinding goes up, the first of two shortest steps

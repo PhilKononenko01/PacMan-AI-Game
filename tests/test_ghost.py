@@ -1,8 +1,6 @@
-"""Ghost vision, chase, pursuit, search and draw order on hand-built maps (FR-5, FR-6)."""
+"""The pathfinding ghost: a shortest-path step towards Pac-Man every step, gated by its move draw (FR-5, FR-6)."""
 
 import random
-
-import pytest
 
 from pacman.ghost import Ghost
 from pacman.mapgen import GameMap
@@ -25,204 +23,78 @@ class Scripted(random.Random):
         return self.values.pop(0)
 
 
-def test_start_state_matches_the_architecture_table():
-    ghost = Ghost(derive(0, "ghost"))
-    assert ghost.cell == (4, 4)
-    assert ghost.last_seen is None
-    assert ghost.last_visit == {(4, 4): 0}
+def test_the_ghost_starts_in_the_bottom_right_corner():
+    assert Ghost(derive(0, "ghost")).cell == (4, 4)
 
 
-def test_chase_takes_the_first_step_towards_a_visible_pacman():
+def test_shortest_path_ties_go_to_the_earlier_direction():
     ghost = Ghost(Scripted(0.5))
-    ghost.act((4, 0), EMPTY, 1)
-    assert ghost.cell == (4, 3)
-    assert ghost.last_seen == (4, 0)
-    assert ghost.last_visit[(4, 3)] == 1
+    ghost.act((0, 0), EMPTY)
+    assert ghost.cell == (3, 4)  # UP and LEFT are both shortest; UP comes first
 
 
-def test_a_wall_between_blocks_vision():
-    ghost = Ghost(Scripted(0.5, 0.0))
-    ghost.act((4, 0), GameMap({(4, 2)}), 1)
-    assert ghost.last_seen is None
-
-
-def test_vision_needs_a_shared_row_or_column():
-    ghost = Ghost(Scripted(0.5, 0.0))
-    ghost.act((3, 3), EMPTY, 1)
-    assert ghost.last_seen is None
-
-
-def test_pursue_heads_for_the_last_sighting_with_ties_in_direction_order():
-    ghost = Ghost(Scripted(0.5))
-    ghost.last_seen = (0, 0)
-    ghost.act((1, 3), EMPTY, 1)
-    assert ghost.cell == (3, 4)
-    assert ghost.last_seen == (0, 0)
-
-
-def test_pursue_routes_around_walls():
-    ghost = Ghost(Scripted(0.5))
-    ghost.last_seen = (0, 4)
-    ghost.act((1, 2), GameMap({(3, 4), (2, 4)}), 1)
-    assert ghost.cell == (4, 3)
-
-
-def test_reaching_the_last_sighting_clears_it():
-    ghost = Ghost(Scripted(0.5), start=(3, 4))
-    ghost.last_seen = (4, 4)
-    ghost.act((0, 0), EMPTY, 1)
-    assert ghost.cell == (4, 4)
-    assert ghost.last_seen is None
-
-
-def test_chase_then_pursue_then_search():
-    rng = Scripted(0.5, 0.5, 0.5, 0.5, 0.5, 0.0)
+def test_the_ghost_closes_in_on_pacman_without_seeing_him():
+    # (0, 0) shares no row or column with (4, 4): sight plays no part in the chase.
+    rng = Scripted(*[0.5] * 8)
     ghost = Ghost(rng)
-    ghost.act((4, 0), EMPTY, 1)                       # seen: chase
-    assert (ghost.cell, ghost.last_seen) == ((4, 3), (4, 0))
-    ghost.act((3, 0), EMPTY, 2)                       # hidden: pursue
-    assert (ghost.cell, ghost.last_seen) == ((4, 2), (4, 0))
-    ghost.act((3, 0), EMPTY, 3)                       # still hidden: pursue
-    assert (ghost.cell, ghost.last_seen) == ((4, 1), (4, 0))
-    ghost.act((2, 0), EMPTY, 4)                       # arrives: cleared
-    assert (ghost.cell, ghost.last_seen) == ((4, 0), None)
-    ghost.act((2, 2), EMPTY, 5)                       # search: (3, 0) never visited
-    assert ghost.cell == (3, 0)
-    assert rng.calls == 5
+    path = []
+    for _ in range(8):
+        ghost.act((0, 0), GameMap({(2, 2)}))
+        path.append(ghost.cell)
+    assert path == [(3, 4), (2, 4), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    assert rng.calls == 8  # one move draw per step and nothing else
 
 
-def test_moving_onto_pacman_clears_the_sighting():
-    ghost = Ghost(Scripted(0.5))
-    ghost.act((4, 3), EMPTY, 1)
-    assert ghost.cell == (4, 3)
-    assert ghost.last_seen is None
+def test_the_ghost_routes_around_walls_on_the_true_map():
+    open_row = Ghost(Scripted(0.5), start=(4, 3))
+    open_row.act((4, 0), EMPTY)
+    assert open_row.cell == (4, 2)
+    walled = Ghost(Scripted(0.5), start=(4, 3))
+    walled.act((4, 0), GameMap({(4, 2)}))
+    assert walled.cell == (3, 3)
 
 
-def test_search_prefers_a_never_visited_neighbour_without_a_tie_draw():
-    rng = Scripted(0.5)
-    ghost = Ghost(rng)
-    ghost.last_visit[(3, 4)] = 1
-    ghost.act((0, 0), EMPTY, 2)
-    assert ghost.cell == (4, 3)
-    assert ghost.last_visit[(4, 3)] == 2
-    assert rng.calls == 1
-
-
-def test_search_prefers_the_least_recently_visited_neighbour():
-    ghost = Ghost(Scripted(0.5))
-    ghost.last_visit.update({(3, 4): 1, (4, 3): 2})
-    ghost.act((0, 0), EMPTY, 3)
-    assert ghost.cell == (3, 4)
-
-
-@pytest.mark.parametrize("draw,expected", [(0.0, (3, 4)), (0.49, (3, 4)), (0.5, (4, 3)), (0.99, (4, 3))])
-def test_search_ties_use_one_draw_over_candidates_in_direction_order(draw, expected):
-    rng = Scripted(0.5, draw)
-    ghost = Ghost(rng)
-    ghost.act((0, 0), EMPTY, 1)
-    assert ghost.cell == expected
-    assert rng.calls == 2
-
-
-def test_search_never_stands_still_while_a_move_exists():
-    ghost = Ghost(Scripted(0.5))
-    ghost.last_visit[(4, 3)] = 1
-    ghost.act((0, 0), GameMap({(3, 4)}), 2)
-    assert ghost.cell == (4, 3)
-    assert ghost.last_visit[(4, 3)] == 2
-
-
-def test_search_skips_walls_when_choosing_candidates():
-    ghost = Ghost(Scripted(0.5), start=(2, 2))
-    ghost.act((0, 0), GameMap({(1, 2), (2, 3), (3, 2)}), 1)
-    assert ghost.cell == (2, 1)
-
-
-def test_failed_move_draw_keeps_the_ghost_still_and_refreshes_vision():
+def test_a_failed_move_draw_keeps_the_ghost_still():
     rng = Scripted(0.7)
     ghost = Ghost(rng, move_prob=0.5)
-    ghost.act((4, 0), EMPTY, 1)
+    ghost.act((4, 0), EMPTY)
     assert ghost.cell == (4, 4)
-    assert ghost.last_seen == (4, 0)
-    assert ghost.last_visit == {(4, 4): 0}
     assert rng.calls == 1
 
 
 def test_move_draw_succeeds_strictly_below_the_probability():
     stays = Ghost(Scripted(0.5), move_prob=0.5)
-    stays.act((4, 0), EMPTY, 1)
+    stays.act((4, 0), EMPTY)
     assert stays.cell == (4, 4)
     moves = Ghost(Scripted(0.4999), move_prob=0.5)
-    moves.act((4, 0), EMPTY, 1)
+    moves.act((4, 0), EMPTY)
     assert moves.cell == (4, 3)
 
 
 def test_move_draw_is_taken_every_step_even_at_probability_one():
     rng = Scripted(0.5, 0.5)
     ghost = Ghost(rng, move_prob=1.0)
-    ghost.act((4, 0), EMPTY, 1)
-    ghost.act((4, 0), EMPTY, 2)
+    ghost.act((0, 0), EMPTY)
+    ghost.act((0, 0), EMPTY)
     assert rng.calls == 2
 
 
 def test_zero_probability_never_moves():
     ghost = Ghost(Scripted(0.0), move_prob=0.0)
-    ghost.act((4, 0), EMPTY, 1)
+    ghost.act((4, 0), EMPTY)
     assert ghost.cell == (4, 4)
 
 
-def test_same_seed_gives_the_same_search_path():
+def test_the_same_seed_gives_the_same_path():
     paths = []
     for _ in range(2):
-        ghost = Ghost(derive(9, "ghost"))
+        ghost = Ghost(derive(9, "ghost"), move_prob=0.5)
         path = []
-        for t in range(1, 30):
-            ghost.act((0, 0), GameMap({(2, 2)}), t)
+        for _ in range(12):
+            ghost.act((0, 0), GameMap({(2, 2)}))
             path.append(ghost.cell)
             if ghost.cell == (0, 0):  # the environment ends the game here
                 break
         paths.append(path)
     assert paths[0] == paths[1]
-    assert len(set(paths[0])) > 1
-
-
-def test_ghost_uses_the_true_map_for_sight_and_movement():
-    walls = {(4, 1), (4, 2), (4, 3)}
-    ghost = Ghost(Scripted(0.5))
-    ghost.act((4, 0), GameMap(walls), 1)
-    assert ghost.last_seen is None
-    assert ghost.cell == (3, 4)
-
-
-def test_a_pathfinding_ghost_closes_in_on_a_pacman_it_cannot_see():
-    # (0, 0) shares no row or column with (4, 4), so a vision ghost would search instead.
-    rng = Scripted(*[0.5] * 8)
-    ghost = Ghost(rng, mode="pathfinding")
-    path = []
-    for t in range(1, 9):
-        ghost.act((0, 0), GameMap({(2, 2)}), t)
-        path.append(ghost.cell)
-    assert path == [(3, 4), (2, 4), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
-    assert rng.calls == 8                             # only the move draw: it never searches
-
-
-def test_a_pathfinding_ghost_routes_around_walls_to_a_hidden_pacman():
-    # The wall at (4, 2) blocks the row, so a vision ghost cannot see Pac-Man at (4, 0) and
-    # would search, picking the never-visited (4, 4). The only way round the wall is up.
-    ghost = Ghost(Scripted(0.5), mode="pathfinding", start=(4, 3))
-    ghost.last_visit[(3, 3)] = 0
-    ghost.act((4, 0), GameMap({(4, 2)}), 1)
-    assert ghost.cell == (3, 3)
-
-
-def test_a_pathfinding_ghost_still_takes_its_move_draw():
-    rng = Scripted(0.7)
-    ghost = Ghost(rng, move_prob=0.5, mode="pathfinding")
-    ghost.act((2, 2), EMPTY, 1)
-    assert ghost.cell == (4, 4)
-    assert rng.calls == 1
-
-
-def test_an_unknown_ghost_mode_is_refused():
-    with pytest.raises(ValueError, match="ghost_mode"):
-        Ghost(Scripted(), mode="teleport")
+    assert len(paths[0]) > len(set(paths[0]))  # some draws failed, so the ghost waited

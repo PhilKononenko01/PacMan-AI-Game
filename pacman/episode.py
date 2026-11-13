@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pacman.env import Environment, Observation, Outcome
-from pacman.grid import line_of_sight
 from pacman.referee import Referee
 from pacman.rng import derive
 
@@ -29,7 +28,6 @@ class Frame:
     observation: Observation
     t: int
     outcome: Outcome | None
-    ghost_sees: bool
     max_steps: int
 
 
@@ -67,6 +65,4 @@ def _frame(
     outcome: Outcome | None,
     max_steps: int,
 ) -> Frame:
-    assert environment.game_map is not None
-    sees = line_of_sight(observation.ghost, observation.pacman, environment.game_map.is_open)
-    return Frame(observation, t, outcome, sees, max_steps)
+    return Frame(observation, t, outcome, max_steps)

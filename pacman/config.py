@@ -38,16 +38,6 @@ def _number(
         raise ValueError(f"{name} must be at most {maximum}")
 
 
-# vision: the ghost chases only what it sees, then pursues the last sighting and searches (default).
-# pathfinding: the ghost always knows where Pac-Man is and takes a shortest-path step towards him.
-GHOST_MODES = ("vision", "pathfinding")
-
-
-def _ghost_mode(value: Any) -> None:
-    if not isinstance(value, str) or value not in GHOST_MODES:
-        raise ValueError(f"ghost_mode must be one of {', '.join(map(repr, GHOST_MODES))}, got {value!r}")
-
-
 @dataclass(frozen=True, slots=True)
 class GameKnobs:
     ghost_move_prob: float = 1.0
@@ -55,7 +45,6 @@ class GameKnobs:
     max_walls: int = 6
     min_loops: int = 4
     max_steps: int = 100
-    ghost_mode: str = "vision"
 
     def __post_init__(self) -> None:
         _number("ghost_move_prob", self.ghost_move_prob, 0, 1)
@@ -63,7 +52,6 @@ class GameKnobs:
         _integer("max_walls", self.max_walls, 0)
         _integer("min_loops", self.min_loops, 0)
         _integer("max_steps", self.max_steps, 1)
-        _ghost_mode(self.ghost_mode)
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +108,19 @@ def _section(data: Any, model: type, name: str) -> dict[str, Any]:
     return data
 
 
+def _without_retired_ghost_mode(game: Any) -> Any:
+    """Files written while the ghost was a choice may name it; only the pathfinding ghost remains."""
+    if not isinstance(game, dict) or "ghost_mode" not in game:
+        return game
+    game = dict(game)
+    mode = game.pop("ghost_mode")
+    if mode != "pathfinding":
+        raise ValueError(
+            f"ghost_mode {mode!r} is no longer available: the pathfinding ghost is the only ghost"
+        )
+    return game
+
+
 @dataclass(frozen=True, slots=True)
 class Config:
     game: GameKnobs = field(default_factory=GameKnobs)
@@ -144,6 +145,6 @@ class Config:
             object_pairs_hook=_unique_json_object,
         )
         data = _section(data, cls, "configuration")
-        game = _section(data.get("game", {}), GameKnobs, "game")
+        game = _section(_without_retired_ghost_mode(data.get("game", {})), GameKnobs, "game")
         learner = _section(data.get("learner", {}), LearnerSettings, "learner")
         return cls(game=GameKnobs(**game), learner=LearnerSettings(**learner))

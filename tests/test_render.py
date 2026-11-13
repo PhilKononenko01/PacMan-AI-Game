@@ -22,12 +22,11 @@ def memory(**cells):
     return tuple(known)
 
 
-def frame(pacman=(0, 1), ghost=(4, 3), visited=((0, 0),), known=None, t=3, outcome=None,
-          ghost_sees=False, max_steps=100):
+def frame(pacman=(0, 1), ghost=(4, 3), visited=((0, 0),), known=None, t=3, outcome=None, max_steps=100):
     if known is None:
         known = memory(open=[(0, 0), (1, 1)], wall=[(0, 2)])
     observation = Observation(pacman, ghost, frozenset(visited), known)
-    return Frame(observation, t, outcome, ghost_sees, max_steps)
+    return Frame(observation, t, outcome, max_steps)
 
 
 def grid_lines(text):
@@ -44,12 +43,12 @@ def test_plain_grid_draws_memory_actors_and_corners():
     ]
 
 
-def test_plain_status_line_shows_move_corners_and_sight():
-    lines = plain_frame(frame(t=3, ghost_sees=False)).split("\n")
-    assert lines[5] == "Move 3/100  Corners 1/4  Ghost sees Pac-Man: no"
+def test_plain_status_line_shows_move_and_corners():
+    lines = plain_frame(frame(t=3)).split("\n")
+    assert lines[5] == "Move 3/100  Corners 1/4"
     assert len(lines) == 6
-    lines = plain_frame(frame(t=0, ghost_sees=True, visited=[(0, 0), (0, 4)])).split("\n")
-    assert lines[5] == "Move 0/100  Corners 2/4  Ghost sees Pac-Man: yes"
+    lines = plain_frame(frame(t=0, visited=[(0, 0), (0, 4)])).split("\n")
+    assert lines[5] == "Move 0/100  Corners 2/4"
 
 
 @pytest.mark.parametrize("outcome,label", [
