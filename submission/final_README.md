@@ -60,8 +60,7 @@ games. The full 125,000-game replay and 545-test application suite are recorded
 results. Those full checks are not repeated by Run All. The ten-game example is
 a smoke check, not a new estimate of test performance.
 
-Training is disabled by default. The optional small training cell demonstrates
-the stages with tiny budgets and does not replace the reported policies.
+Running the notebook uses the saved policies and does not start training.
 
 The report explains the changes from the intermediate four-corner game to the
 final two-pellet game. The intermediate report, notebook, and original builder
