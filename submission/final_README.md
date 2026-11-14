@@ -14,9 +14,29 @@ From the repository root:
 ./play
 ```
 
-Use `./play --delay 0 --plain` for immediate text output or `./play --key 43` for
-another episode. Both characters act automatically using their saved policies.
-The default example ends in a Pac-Man win after 13 turns. Playback does not train.
+Each run chooses a fresh validation seed and episode key. Both characters use
+their saved policies without training. Use `./play --delay 0 --plain` for
+immediate text output. The final JSON records the seed and key.
+
+To run other configurations:
+
+```sh
+./play --seed 1000000 --key 42
+./play --seed 1000007 --key 43
+./play --pac-baseline bfs
+./play --pac-baseline random
+./play --fixed-ghost
+./play --evaluate --games 100 --repeats 2
+./play --evaluate --pac-baseline bfs --fixed-ghost --games 100 --repeats 2
+./play --help
+```
+
+The first command repeats the recorded 13-turn win. Without both identifiers,
+a watched game uses fresh random inputs. `--seed` changes the wall-layout input;
+`--key` changes pellets and episode randomness. Different inputs can still
+produce the same wall layout. `--fixed-ghost` uses fixed search instead of learned
+search. Batch evaluation uses a repeatable matched schedule and counts every
+game. A 100-seed schedule with two keys per seed contains 200 games.
 
 The launcher uses `.venv/bin/python` if available, otherwise `python3`. Set up
 Python 3.11+ and the project dependencies before first use:
@@ -35,7 +55,7 @@ Run All**. No repository checkout, Git, or internet connection is needed while
 it runs. The notebook creates a temporary workspace and prints its location.
 
 Run All checks the embedded source and evidence, recomputes recorded outcome
-tables, displays the chart, replays the 13-turn example, and runs ten validation
+tables, displays the chart, runs a fresh game and checks its exact replay, and runs ten validation
 games. The full 125,000-game replay and 545-test application suite are recorded
 results. Those full checks are not repeated by Run All. The ten-game example is
 a smoke check, not a new estimate of test performance.

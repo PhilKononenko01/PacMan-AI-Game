@@ -10,14 +10,37 @@ From the repository root, run:
 ./play
 ```
 
-This watches the saved Q-learning Pac-Man and learning search ghost. Use
-`./play --delay 0 --plain` for immediate text output, or `./play --key 43` for
-another episode. The launcher uses `.venv/bin/python` when available and otherwise
-`python3`. Set up the project dependencies below before first use.
+Each run starts a fresh game with the saved Q-learning Pac-Man and learned
+search ghost. The launcher randomly chooses a validation map seed and episode
+key. Layouts can repeat, but the key also changes pellet placement and movement
+randomness. The final JSON prints both identifiers so a game can be repeated.
+The players use their saved policies without training during the game.
+
+```sh
+./play --delay 0 --plain
+./play --seed 1000000 --key 42
+./play --seed 1000007 --key 43
+./play --pac-baseline bfs
+./play --pac-baseline random --fixed-ghost
+./play --fixed-ghost
+./play --evaluate --games 100 --repeats 2
+./play --evaluate --pac-baseline bfs --fixed-ghost --games 100 --repeats 2
+./play --help
+```
+
+`--seed` selects the wall layout input. `--key` selects pellet placement and
+random decisions. Specify both to replay exactly. BFS and random Pac-Man are
+comparison players. `--fixed-ghost` keeps the ghost's BFS and memory but removes
+learned search choices. `--evaluate` runs a matched validation schedule without
+animation and prints wins, losses, ties, and win rate. `--games 100 --repeats 2`
+runs 200 games. These demonstrations do not replace the recorded final test.
+
+The launcher uses `.venv/bin/python` when available and otherwise `python3`.
+Set up the project dependencies below before first use.
 
 The [final submission notebook](submission/CSCI_3202_Final_Report.ipynb) contains
 the report, visible source, saved evidence, live examples, and cited AI appendix.
-The [submission guide](submission/final_README.md) explains how to run or rebuild it.
+The [submission guide](submission/final_README.md) explains how to run it.
 The cited extra-credit explanation and its two-page PDF copy are embedded in the notebook.
 
 ## Two-pellet hybrid experiment
