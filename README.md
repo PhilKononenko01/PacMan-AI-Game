@@ -1,6 +1,26 @@
 # PacMan-AI-Game
 
-A small Pac-Man game with a Q-learning player and a ghost that combines BFS pursuit with learned search. The final experiment uses two randomly placed pellets.
+A small Pac-Man game with a Q-learning player and a ghost that combines BFS pursuit with learned search. The final experiment uses two randomly placed pellets. The same package still holds the earlier four-corner game that the intermediate report describes.
+
+## Status
+
+Snapshot taken 2026-11-20 on `main` at `29b9a2f`, level with `origin/main`, working tree clean.
+
+- **Final submission is complete.** [`submission/CSCI_3202_Final_Report.ipynb`](submission/CSCI_3202_Final_Report.ipynb) reports the two-pellet game: Pac-Man won 6,691 of 10,000 frozen test games, 66.91%, across five independent training runs. The [experiment report](reports/hybrid-learning.md) and the [evidence directory](reports/hybrid-55/) back it.
+- **Test suite is green.** `python -m pytest` gives 567 passed in 22.74 s on Python 3.14.10, NumPy 2.5.4, Matplotlib 3.11.2 and pytest 9.2.0. See [Tests](#tests) for the breakdown.
+- **Open work, not part of the submission.** [PR #25](https://github.com/PhilKononenko01/PacMan-AI-Game/pull/25) adds three opt-in options to the corner game and is mergeable, awaiting review. Branch `feature/stronger-learner` holds learner refinements for the corner game with no PR and overlaps PR #25.
+- **Held-out maps have been used twice.** Once under the original corner game on 2026-10-29 and once under the frozen two-pellet rules on 2026-11-13. Do not rerun or tune against the test split without a team decision.
+
+Two games live in this package:
+
+| | Final two-pellet game | Legacy four-corner game |
+|---|---|---|
+| Entry point | `./play`, `python -m pacman.hybrid` | `python -m pacman` |
+| Ghost | Sees Pac-Man only along clear rows and columns, remembers sightings, BFS pursuit, learned search choices | Always knows where Pac-Man is and takes one shortest-path step per turn |
+| Win | Collect two random pellets within 100 turns | Visit all four corners within 100 turns |
+| Games counted | Every scheduled game | Only seeds an exact solver proves winnable |
+| Learned Pac-Man | 66.91% of 10,000 frozen test games | 18.2% of 483 winnable validation maps at the defaults |
+| Evidence | [`reports/hybrid-learning.md`](reports/hybrid-learning.md), `reports/hybrid-55/` | [`Architecture/review.md`](Architecture/review.md), entries dated 2026-11-13 |
 
 ## Run the final game
 
@@ -11,10 +31,11 @@ From the repository root, run:
 ```
 
 Each run starts a fresh game with the saved Q-learning Pac-Man and learned
-search ghost. The launcher randomly chooses a validation map seed and episode
-key. Layouts can repeat, but the key also changes pellet placement and movement
-randomness. The final JSON prints both identifiers so a game can be repeated.
-The players use their saved policies without training during the game.
+search ghost from `reports/hybrid-55/replicate-0/`. The launcher randomly
+chooses a validation map seed and episode key. Layouts can repeat, but the key
+also changes pellet placement and movement randomness. The final JSON prints
+both identifiers so a game can be repeated. The players use their saved
+policies without training during the game.
 
 ```sh
 ./play --delay 0 --plain
@@ -45,19 +66,20 @@ The cited extra-credit explanation and its two-page PDF copy are embedded in the
 
 ## Two-pellet hybrid experiment
 
-The new experiment trains Q-learning Pac-Man against a ghost with line-of-sight sensing, sighting memory, BFS pursuit, and learned search choices. Pac-Man knows pellet and ghost positions while discovering maze walls. It counts every scheduled evaluation game. The historical commands and submitted corner-game results below use a different ruleset.
+The final experiment trains Q-learning Pac-Man against a ghost with line-of-sight sensing, sighting memory, BFS pursuit, and learned search choices. Pac-Man knows pellet and ghost positions while discovering maze walls. It counts every scheduled evaluation game. The legacy commands and the submitted corner-game results below use a different ruleset.
 
 ```bash
 python -m pacman.hybrid train --out runs/hybrid --replicate 0
 python -m pacman.hybrid evaluate --pac-policy runs/hybrid/pacman.npz --ghost-policy runs/hybrid/ghost.npz --split val --games 1000 --repeats 2
 python -m pacman.hybrid watch --pac-policy runs/hybrid/pacman.npz --ghost-policy runs/hybrid/ghost.npz --seed 1000000 --key 42 --plain
+python scripts/verify_hybrid_run.py reports/hybrid-55/replicate-0 --all
 ```
+
+`train` runs three stages with fixed budgets: 30,000 Pac-Man games against the fixed ghost, 30,000 ghost games against frozen Pac-Man checkpoints, then 50,000 Pac-Man games against a mixed fixed and learned ghost schedule. `evaluate` plays a matched schedule and writes a full JSON report with `--out`. `watch` animates one game. The verifier replays every saved game in a run directory and checks its totals, hashes and policies.
 
 See [the experiment rules and training protocol](Architecture/hybrid-experiment.md). The 55% win-rate target requires measured results; training does not guarantee it.
 
-The [completed experiment report](reports/hybrid-learning.md) records a 66.91% Pac-Man win rate across five training runs and 10,000 frozen test games against learned ghosts.
-
-> **Legacy four-corner status.** On 2026-11-13 the team kept only the pathfinding ghost, which always knows where Pac-Man is. The accepted results, a frozen policy winning 73.6% of 1,000 held-out games against pathfinding's 14.9% and random's 0.0%, were measured against the original ghost, which saw Pac-Man only along rows and columns. Those results, `reports/results/` and the submitted report describe that earlier game; see [`Architecture/review.md`](Architecture/review.md).
+The [completed experiment report](reports/hybrid-learning.md) records a 66.91% Pac-Man win rate across five training runs and 10,000 frozen test games against learned ghosts. Each run exceeded 55%, with win rates from 66.30% to 67.55%. All 125,000 saved evaluation games replayed exactly before archival, and an [independent review](reports/hybrid-55/final-review.md) reproduced the totals.
 
 ## Legacy four-corner game
 
@@ -75,6 +97,8 @@ The [completed experiment report](reports/hybrid-learning.md) records a 66.91% P
 | Behaviour | Controlled by one of three agents (below) | Takes one step along a shortest path to Pac-Man every turn |
 
 Both move one square per turn. Pac-Man moves first.
+
+> **Where the corner game stands.** On 2026-11-13 the team kept only the pathfinding ghost (PRD OQ-16) and ruled that only winnable games count (OQ-17). Against this ghost the learned agent at the default settings wins 88 of the 483 winnable validation maps, 18.2%, with 70 losses and 325 ties; 100,000 training games raise it to 26.1%. It still beats both baselines, pathfinding 8 wins and random 0, but sits below the 50% guideline. The accepted 73.6% in `reports/results/` and the intermediate report was measured against the original ghost, which saw Pac-Man only along rows and columns; that policy wins 2.4% of validation games against the current ghost. No held-out test game has been played under the current corner rules. See [`Architecture/review.md`](Architecture/review.md).
 
 ## The agents
 
@@ -115,6 +139,25 @@ python -m pacman watch --agent learned --seed 1000007 --policy runs/default/poli
 python -m pacman simulate --agent random --agent pathfinding --split val --games 200
 ```
 
+## Tests
+
+Run `python -m pytest` from the repository root. The suite is headless. The corner-game tests play no held-out test-seed games; map-generation and split tests inspect test layouts without playing them. One launcher test plays four two-pellet games on test seeds with the frozen final policies to check that `--split` is forwarded; it tunes nothing.
+
+Most recent full run, 2026-11-20 on `main` at `29b9a2f`:
+
+```
+567 passed in 22.74s
+```
+
+| Area | Files | Tests |
+|---|---|---:|
+| Shared primitives and the corner game | `test_grid`, `test_mapgen`, `test_rng`, `test_config`, `test_contracts`, `test_splits`, `test_ghost`, `test_env`, `test_referee`, `test_episode`, `test_winnable`, `test_baselines`, `test_features`, `test_learned`, `test_stats`, `test_evaluate`, `test_train`, `test_policy_io`, `test_render`, `test_plot`, `test_cli`, `test_determinism`, `test_integration` | 473 |
+| Two-pellet game | `test_hybrid_game`, `test_hybrid_artifacts`, `test_hybrid_experiment`, `test_hybrid_verifier` | 72 |
+| `./play` launcher | `test_play` | 22 |
+| **Total** | 28 files | **567** |
+
+`test_determinism.py` checks that the same seeds give the same games in and across processes, and `test_integration.py` trains, saves, loads, evaluates, records and replays in one process. `test_hybrid_verifier.py` includes a positive round trip and eight negative controls for altered or missing evidence. Earlier recorded counts were 476 at the corner-game acceptance on 2026-10-29 (`reports/results/tests-final.log`) and 545 when the two-pellet evidence was archived on 2026-11-13 (`reports/hybrid-55/final-tests.log`). `PACMAN_DEBUG=1` makes a failing command raise with a traceback instead of printing `error: ...`.
+
 ## Tech
 
 Python 3.11+, NumPy and pytest, with Matplotlib for plots. Runs use explicit component seeds and recorded configuration for replay within a supported runtime. Exact results across machines or library versions are not required.
@@ -122,13 +165,13 @@ Python 3.11+, NumPy and pytest, with Matplotlib for plots. Runs use explicit com
 ## Development setup
 
 ```sh
-python3.11 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-Any Python 3.11+ interpreter can create the virtual environment. The suite is one test file per module plus `test_determinism.py` (same seeds, same games, in and across processes) and `test_integration.py` (train, save, load, evaluate, record, replay in one process); it runs headless in well under the 30-second budget. `PACMAN_DEBUG=1` makes a failing command raise with a traceback instead of printing `error: ...`.
+Any Python 3.11+ interpreter can create the virtual environment. Training output goes to `runs/`, which git ignores; the committed evidence lives under `reports/`.
 
 See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ownership and interfaces, the [review log](<Architecture/review.md>) for what each ticket built and decided, and the [implementation tracker](https://github.com/PhilKononenko01/PacMan-AI-Game/issues/19) for dependencies.
 
@@ -137,12 +180,21 @@ See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ow
 | Path | What it is |
 |---|---|
 | [`Design/project-proposal.md`](Design/project-proposal.md) | The team's original proposal, the design authority. |
-| [`Architecture/prd.md`](<Architecture/prd.md>) | Requirements (PRD): rules, agents, evaluation and acceptance criteria. |
-| [`Architecture/review.md`](<Architecture/review.md>) | Review findings and team decisions behind the PRD. |
-| [`Architecture/architecture.md`](<Architecture/architecture.md>) | Module contracts, algorithms, configuration and commands. |
-| `pacman/` | The package: `grid`, `mapgen`, `ghost`, `env`, `referee`, `episode`, `agents/` (random, pathfinding, features, learned), `stats`, `evaluate`, `train`, `policy_io`, `render`, `plot`, `cli`. |
-| `tests/`, `pyproject.toml` | One test file per module, the determinism and integration suites, and package metadata. |
-| [`reports/results.md`](reports/results.md), `reports/results/` | The acceptance report and the policy, configuration and evaluation files it cites. |
+| [`Architecture/prd.md`](<Architecture/prd.md>) | Requirements (PRD) for the corner game: rules, agents, evaluation and acceptance criteria. |
+| [`Architecture/architecture.md`](<Architecture/architecture.md>) | Module contracts, algorithms, configuration and commands for the corner game. |
+| [`Architecture/hybrid-experiment.md`](Architecture/hybrid-experiment.md) | Rules, observation boundaries, rewards and training protocol for the two-pellet game. |
+| [`Architecture/review.md`](<Architecture/review.md>) | Review findings and team decisions, newest first. |
+| [`Architecture/foundation-handoff.md`](<Architecture/foundation-handoff.md>) | Module ownership and shared interfaces from the build phase. |
+| `pacman/` | The corner game: `grid`, `mapgen`, `ghost`, `env`, `referee`, `episode`, `winnable`, `agents/` (random, pathfinding, features, learned), `stats`, `evaluate`, `train`, `policy_io`, `render`, `plot`, `cli`. |
+| `pacman/hybrid/` | The two-pellet game: `game`, `ghost`, `learning`, `models`, `artifacts`, `experiment`, and its command line. |
+| `pacman/play.py`, `play` | The `./play` launcher that wraps `pacman.hybrid watch` and `evaluate` with the saved final policies. |
+| `scripts/` | Evidence tooling for the two-pellet runs: freeze and test evaluation, archive and summary, verification by full replay, and the results plot. |
+| `tests/`, `pyproject.toml` | The 28 test files and package metadata. |
+| [`reports/hybrid-learning.md`](reports/hybrid-learning.md), `reports/hybrid-55/` | The two-pellet experiment report and its evidence: five replicate directories with policies and compressed game records, `aggregate.json`, hashes, the test freeze, replay examples and the independent review. |
+| [`reports/results.md`](reports/results.md), `reports/results/` | The corner-game acceptance report against the original ghost, with the frozen policy, configuration and evaluation files it cites. |
+| `submission/` | The final report notebook and guide, the preserved intermediate notebook, write-up and builder, and the random-versus-random experiment. |
+| `AGENTS.md` | Git permissions for AI coding agents working in this checkout. |
+| `runs/` | Local training output, ignored by git. |
 
 ## Team
 
@@ -155,4 +207,8 @@ See the [foundation handoff](<Architecture/foundation-handoff.md>) for module ow
 2. ~~Requirements (PRD), reviewed and all questions answered~~
 3. ~~Architecture doc and implementation tickets~~
 4. ~~Build: environment, ghost, baselines, learned agent, training, evaluation and the commands~~
-5. ~~Final acceptance (#18): training, freeze, held-out evaluation, report and team table approval~~
+5. ~~Intermediate acceptance (#18): training, freeze, held-out evaluation, report and team table approval~~
+6. ~~Corner game revised: pathfinding ghost only, winnable games only (2026-11-13)~~
+7. ~~Two-pellet hybrid experiment: five training runs, frozen test, 66.91%, independent review~~
+8. ~~Final report notebook executed and committed~~
+9. Open: decide whether PR #25 and `feature/stronger-learner` merge, and whether the corner game gets a new acceptance run
