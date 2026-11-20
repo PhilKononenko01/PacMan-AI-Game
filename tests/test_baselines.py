@@ -146,3 +146,16 @@ def test_pathfinding_walks_into_a_still_ghost_on_the_nearest_corner(monkeypatch)
 def test_plan_needs_an_unvisited_corner():
     with pytest.raises(ValueError):
         plan(observation(pacman=(4, 4), visited=[(0, 0), (0, 4), (4, 0), (4, 4)]))
+
+
+def test_plan_heads_for_the_nearest_uncollected_pellet_when_targets_are_not_corners():
+    pellets = Observation((0, 0), (4, 4), frozenset({(0, 0)}), memory(), targets=((0, 0), (1, 3), (2, 1), (4, 2)))
+    result = plan(pellets)
+    assert result.target == (2, 1)        # 3 steps away; (1, 3) is 4 and (4, 2) is 6
+    assert result.step == RIGHT           # RIGHT and DOWN both start a shortest path; RIGHT comes first
+    assert result.remaining == 3
+
+
+def test_plan_breaks_equal_pellet_distances_in_reading_order():
+    pellets = Observation((2, 2), (4, 4), frozenset({(0, 0)}), memory(), targets=((0, 0), (1, 2), (3, 2)))
+    assert plan(pellets).target == (1, 2)  # both one step away; (1, 2) comes first top to bottom

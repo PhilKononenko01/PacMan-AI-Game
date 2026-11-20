@@ -139,3 +139,17 @@ def test_rendering_writes_nothing_to_standard_output(capsys):
     plain_frame(frame())
     pixel_frame(frame())
     assert capsys.readouterr() == ("", "")
+
+
+def test_pellets_are_drawn_where_they_are_and_empty_corners_as_memory():
+    observation = Observation((0, 0), (4, 4), frozenset({(0, 0), (1, 3)}), memory(),
+                              targets=((0, 0), (1, 3), (2, 1), (3, 4)))
+    text = plain_frame(Frame(observation, 2, None, 100))
+    assert grid_lines(text) == [
+        "P????",
+        "???*?",
+        "?o???",
+        "????o",
+        "????G",
+    ]
+    assert text.split("\n")[5] == "Move 2/100  Pellets 2/4"

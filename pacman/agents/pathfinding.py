@@ -26,13 +26,16 @@ class Plan:
 
 
 def plan(observation: Observation) -> Plan:
-    """The nearest unvisited corner on the remembered map and the first step towards it."""
+    """The nearest unvisited target on the remembered map and the first step towards it.
+
+    Equally near targets go in reading order, which for the corners is CORNER_ORDER.
+    """
     passable = remembered_open(observation)
     distances = bfs(observation.pacman, passable)
-    unvisited = [corner for corner in CORNER_ORDER if corner not in observation.visited]
+    unvisited = [cell for cell in observation.targets if cell not in observation.visited]
     if not unvisited:
-        raise ValueError("every corner is visited; there is nothing left to plan")
-    target = min(unvisited, key=lambda corner: distances[corner])
+        raise ValueError("every target is visited; there is nothing left to plan")
+    target = min(unvisited, key=lambda cell: distances[cell])
     return Plan(target, first_step(observation.pacman, target, passable), distances, len(unvisited))
 
 

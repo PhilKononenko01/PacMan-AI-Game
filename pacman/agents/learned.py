@@ -62,7 +62,8 @@ class LearnedAgent:
             next_state = state_index(observation)
             target = reward + settings.discount * float(numpy.max(self.q[next_state]))
         else:
-            target = reward  # WIN, LOSS or a terminal TIE: the final observation is never encoded
+            # WIN, LOSS or a terminal TIE: the final observation is never encoded.
+            target = reward + (settings.reward_tie if outcome is Outcome.TIE else 0.0)
         self.q[state, action] += settings.learning_rate * (target - self.q[state, action])
         self._next_state = next_state if outcome is None else None
         self._state = None

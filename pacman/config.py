@@ -45,6 +45,12 @@ class GameKnobs:
     max_walls: int = 6
     min_loops: int = 4
     max_steps: int = 100
+    # Where the three pellets Pac-Man collects lie: "corners", the accepted game, or "anywhere",
+    # three random open cells besides his start, drawn per game from the seed.
+    pellets: str = "corners"
+    # How many corners besides the start Pac-Man must visit; the rest are drawn at random each
+    # game and count as visited from the start. 3, every corner, is the accepted game.
+    corners_to_visit: int = 3
 
     def __post_init__(self) -> None:
         _number("ghost_move_prob", self.ghost_move_prob, 0, 1)
@@ -52,6 +58,11 @@ class GameKnobs:
         _integer("max_walls", self.max_walls, 0)
         _integer("min_loops", self.min_loops, 0)
         _integer("max_steps", self.max_steps, 1)
+        if not isinstance(self.pellets, str) or self.pellets not in ("corners", "anywhere"):
+            raise ValueError(f"pellets must be 'corners' or 'anywhere', got {self.pellets!r}")
+        _integer("corners_to_visit", self.corners_to_visit, 1, 3)
+        if self.corners_to_visit != 3 and self.pellets != "corners":
+            raise ValueError("corners_to_visit applies only when pellets is 'corners'")
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,9 +78,10 @@ class LearnerSettings:
     epsilon_decay_fraction: float = 0.5
     episodes: int = 50_000
     tie_update: str = "bootstrap"
+    reward_tie: float = 0.0  # added to a terminal tie's reward in training; ties carry nothing by default
 
     def __post_init__(self) -> None:
-        for name in ("reward_win", "reward_loss", "reward_corner", "reward_step"):
+        for name in ("reward_win", "reward_loss", "reward_corner", "reward_step", "reward_tie"):
             _number(name, getattr(self, name))
         _number("learning_rate", self.learning_rate, 0, 1, minimum_exclusive=True)
         _number("discount", self.discount, 0, 1)
@@ -84,6 +96,11 @@ class LearnerSettings:
             "bootstrap", "terminal",
         ):
             raise ValueError("tie_update must be 'bootstrap' or 'terminal'")
+        if self.reward_tie != 0 and self.tie_update != "terminal":
+            raise ValueError(
+                "reward_tie must be 0 unless tie_update is 'terminal':"
+                " a bootstrapped tie is a cut-off, not an outcome"
+            )
 
 
 def _reject_json_constant(value: str) -> None:

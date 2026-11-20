@@ -132,7 +132,7 @@ def test_summary_rows_reproduce_the_architecture_example():
 def test_header_and_comparison_lines_follow_the_layout():
     assert format_header(Split.VAL, 1000, 483, CONFIG.game) == (
         "split val, 483 winnable of the first 1000 seeds, knobs: ghost_move_prob=1.0 wall_density=0.2"
-        " max_walls=6 min_loops=4 max_steps=100"
+        " max_walls=6 min_loops=4 max_steps=100 pellets=corners corners_to_visit=3"
     )
     line = format_comparison(Comparison("learned", "pathfinding", 30, 10, 0.001))
     assert line.startswith("learned vs pathfinding:  b=30 c=10 one-sided exact McNemar p=")

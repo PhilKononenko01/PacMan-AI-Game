@@ -106,7 +106,7 @@ def pixel_frame(frame: Frame) -> str:
 
 
 def _base(observation: Observation, cell: Cell) -> str:
-    if cell in CORNERS:
+    if cell in observation.targets:
         return "visited" if cell in observation.visited else "unvisited"
     row, col = cell
     return MEMORY_KIND[observation.known[row * COLS + col]]
@@ -133,8 +133,10 @@ def _pixels(observation: Observation, cell: Cell) -> Sprite:
 
 
 def _status(frame: Frame) -> list[str]:
-    corners = sum(corner in frame.observation.visited for corner in CORNERS)
-    lines = [f"Move {frame.t}/{frame.max_steps}  Corners {corners}/4"]
+    targets = frame.observation.targets
+    label = "Corners" if targets == CORNERS else "Pellets"
+    done = sum(cell in frame.observation.visited for cell in targets)
+    lines = [f"Move {frame.t}/{frame.max_steps}  {label} {done}/{len(targets)}"]
     if frame.outcome is not None:
         lines.append(f"Outcome: {frame.outcome.value}")
     return lines

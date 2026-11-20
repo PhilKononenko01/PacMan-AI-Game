@@ -156,6 +156,22 @@ def test_a_tie_can_be_terminal_by_setting():
     assert agent.q[s, UP] == pytest.approx(0.1 * -0.05)
 
 
+def test_a_terminal_tie_adds_the_tie_reward():
+    agent = trainer(0.9, tie_update="terminal", reward_tie=-100.0)
+    s = state_index(START)
+    agent.act(START)
+    agent.observe(-0.05, NEXT, Outcome.TIE)
+    assert agent.q[s, UP] == pytest.approx(0.1 * (-0.05 - 100.0))
+
+
+def test_the_tie_reward_is_never_added_to_a_win():
+    agent = trainer(0.9, tie_update="terminal", reward_tie=-100.0)
+    s = state_index(START)
+    agent.act(START)
+    agent.observe(100.95, WON, Outcome.WIN)
+    assert agent.q[s, UP] == pytest.approx(0.1 * 100.95)
+
+
 def test_the_next_state_index_is_cached_while_the_game_continues(monkeypatch):
     calls = []
     real = learned_module.state_index

@@ -6,18 +6,54 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 
 ## Only winnable games count (PRD OQ-17)
 
-**Date:** 2026-11-13. Pushed to main at Christian's request, ahead of PR #25. Christian ruled: "All maps should be winnable to be counted in the tests."
+**Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options` (PR #25). Christian ruled: "All maps should be winnable to be counted in the tests." At his request the rule, with the pathfinding ghost, was also pushed to main first as `eff686b`, adapted to the corners-only game; this branch merges that main and keeps its own version, which also covers the options.
 
 **What changed:** `pacman/winnable.py` decides each seed exactly. The pathfinding ghost's move depends only on the true map, its cell, Pac-Man's cell and one move draw per step from `derive(seed, "ghost")`, so a game is a fixed puzzle once its seed is known. `winning_moves` searches Pac-Man's moves breadth first with the whole map known, mirroring `Environment.step`, and returns the shortest win or `None`; `is_winnable` caches the answer per game knobs and seed. The ghost's move rule moved into `ghost.chase_step`, which `Ghost.act` and the search share. `run_split` plays and counts only the winnable seeds among those requested, so evaluation, the difficulty check, simulation, the learning curve and a policy's stored validation all count winnable games; with none it raises. Training still plays every training seed. The report header now reads, for example, "483 winnable of the first 1000 seeds".
 
-**Verification:** for the default and for a ghost that moves half the time, every win the search finds wins the real game on its last move when replayed through `Environment`. The search reproduces the 48 winnable maps among the first 100 validation seeds from the earlier independent search. Re-scoring every experiment's policy left every agent's win count unchanged, as it must, since no game outside the search can be won; only the games counted fell, to 483. Suite: 473 tests, about 12 s.
+**Verification:** for the default, a half-moving ghost, pellets anywhere and two corners, every win the search finds wins the real game on its last move when replayed through `Environment`. The search reproduces the 48 winnable maps among the first 100 validation seeds from the earlier independent search. Re-scoring every experiment's policy left every agent's win count unchanged, as it must, since no game outside the search can be won; only the games counted fell, to 483, 602 and 716. Suite: 499 tests, about 12 s.
 
-**Re-scored** on the winnable validation maps, wins / losses / ties against the pathfinding ghost. The optional settings in PR #25 are re-scored there:
+**Re-scored** on the winnable validation maps, wins / losses / ties against the pathfinding ghost:
 
 | Policy | Counted | Random | Pathfinding | Learned | Learned win rate |
 |---|---|---|---|---|---|
 | Corners, 50,000 training games | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 88 / 70 / 325 | 18.2% |
 | Corners, 100,000 training games | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 126 / 99 / 258 | 26.1% |
+| Tie penalty, no discounting | 483 | 0 / 483 / 0 | 8 / 475 / 0 | 154 / 120 / 209 | 31.9% |
+| Two random corners | 602 | 0 / 602 / 0 | 14 / 588 / 0 | 233 / 105 / 264 | 38.7% |
+| Pellets anywhere | 716 | 1 / 715 / 0 | 111 / 605 / 0 | 278 / 83 / 355 | 38.8% |
+
+---
+
+## Combined for review: the pathfinding ghost and three opt-in options
+
+**Date:** 2026-11-13. Branch `feature/pathfinding-ghost-and-options`, for Phillip's review. It starts from `feature/pellets`, which holds the pathfinding ghost and pellets, and adds the tie-reward and two-corner commits. Those two were cut before the ghost switch was removed; their conflicts were resolved by dropping `ghost_mode`. The learning-ghost experiment is not included; Christian had it deleted.
+
+**One new rule:** `corners_to_visit` applies only with `pellets="corners"`, and `GameKnobs` refuses the combination. Otherwise a skipped corner, marked visited at reset, would count towards the pellets and end a game early.
+
+**Verification:** 489 tests pass. On the combined code, each experiment's policy replays its recorded validation games exactly: the pathfinding-ghost, two-corner and pellets runs, 3,000 games each. The tie-reward run reproduces its recorded 154 wins, 395 losses and 451 ties. A policy trained against the vision ghost is refused, by design.
+
+**For the team:** merging changes the game. The pathfinding ghost replaces the vision ghost that the accepted results, `reports/results/`, `reports/results.md` and the submitted report and notebook describe; none of those was edited. `submission/build_notebook.py` embeds the package source from `HEAD`, so a notebook rebuilt after merging would contain the new game. The three options are off by default.
+
+---
+
+## Pellets anywhere: an opt-in game knob
+
+**Date:** 2026-11-13. Branch `feature/pellets`, stacked on `feature/ghost-pathfinding`. Christian asked what happens if the pellets Pac-Man must collect could spawn anywhere instead of only in the corners.
+
+**What changed:** a game knob, `pellets` (default `"corners"`), chooses Pac-Man's targets. With `"anywhere"`, `Environment.reset` draws three distinct open cells other than his start from `derive(seed, "pellets")` with `pick`; the targets are the start plus those three, in reading order. A pellet may land on a corner or on the ghost's start. `Observation` gained `targets`, defaulting to the corners, so Pac-Man knows where the pellets are as he knows the corners. The environment's corner reward and win rule, the pathfinding plan and therefore the learned agent's features, and the renderer all follow `targets`. Equally near targets go in reading order, which for corners is the existing `CORNER_ORDER`, so the corner game is unchanged: a policy trained against the pathfinding ghost again replayed all 3,000 recorded validation games exactly. The status line reads "Pellets" instead of "Corners" when the targets are not the corners.
+
+**Measured** against the pathfinding ghost on the first 1,000 validation seeds, one 50,000-episode training run per row at default learner settings. Perfect play is the exact breadth-first search with Pac-Man knowing the whole map; it reproduces 483 for corners.
+
+| Targets | Learned win / loss / tie | Steps per win | Pathfinding wins | Random wins | Maps winnable with perfect play |
+|---|---|---|---|---|---|
+| Corners | 8.8% / 21.5% / 69.7% | 19.5 | 0.8% | 0.0% | 483 |
+| Pellets anywhere | 27.8% / 19.4% / 52.8% | 13.8 | 11.1% | 0.1% | 716 |
+
+On the first 100 seeds, pellets anywhere give learned 32/13/55, pathfinding 14/86/0 and random 0/100/0. The learner beats both baselines, b=277/c=0 and b=217/c=50, both p < 0.0001, and takes 278 of the 716 winnable maps against 88 of 483 with corners. Corners are dead ends with two ways in, and the ghost starts on one; pellets in the open are nearer, 6.4 steps per pathfinding win, and leave more room to dodge.
+
+**Limits:** one run, on validation seeds only; nothing tuned; no test seed played. The corner game and every result recorded for it are unchanged.
+
+**Tests:** `test_env.py` covers corner targets by default, three distinct open non-start pellets that vary by seed and repeat for the same seed, a pellet reward and win, and no reward for a corner that is not a pellet. `test_baselines.py` covers planning to the nearest pellet and reading-order ties. `test_render.py` draws pellets and the "Pellets" count; `test_config.py` and `test_evaluate.py` cover the knob. Suite: 473 tests.
 
 ---
 
@@ -30,6 +66,54 @@ Findings, rulings and version history for `prd.md` and `architecture.md`. The de
 **Verification:** a policy trained against the pathfinding ghost, `runs/pathfinding-ghost/policy.npz`, replays all 3,000 of its recorded validation games exactly, so the new ghost plays as the old pathfinding mode did. `test_ghost.py` is rewritten for the chase alone, and `test_evaluate.py`'s reproduction now expects the pathfinding ghost's baseline figures: random 0/1,000/0, pathfinding 8/992/0 with 14.25 steps per win. Suite: 465 tests.
 
 **Consequences:** the accepted results, `reports/results/`, `reports/results.md` and the submitted report and notebook all describe the vision ghost; none was edited. Against the pathfinding ghost the submitted policy wins 2.4% of the 1,000 validation games, loses 24.4% and ties 73.2%. The best policy trained against this ghost so far won 12.6% after 100,000 training games; the pathfinding baseline wins 0.8%; perfect play with the whole map could win 483 of the 1,000 maps. The test split was played once under v0.11. Any new acceptance, including whether and how held-out maps are used again, is a team decision.
+
+---
+
+## Fewer corners: an opt-in game knob
+
+**Date:** 2026-11-13. Branch `feature/corner-count`, stacked on `feature/ghost-pathfinding`. Christian asked what happens if Pac-Man needs only two random corners instead of the three beyond his start.
+
+**What changed:** a game knob, `corners_to_visit` (default 3, valid 1 to 3), is how many corners besides the start Pac-Man must visit. `Environment.reset` draws the others from `derive(seed, "corners")` with `pick` and marks them visited at step 0, so the features, the pathfinding baseline, the corner reward and the win rule work unchanged: they already chase unvisited corners. At the default no corner is skipped and no draw is taken; the frozen policy again reproduced all 3,000 recorded validation games.
+
+**Measured** on the first 1,000 validation seeds, one 50,000-episode training run per row at default learner settings. The three-corner rows are the submitted policy and the earlier pathfinding-ghost run. Perfect play is the exact breadth-first search with Pac-Man knowing the whole map; it reproduces 483 for three corners.
+
+| Ghost | Corners | Learned win / loss / tie | Pathfinding wins | Random wins | Maps winnable with perfect play |
+|---|---|---|---|---|---|
+| Vision | 3 | 69.1% / 26.7% / 4.2% | 14.2% | 0.0% | not computed |
+| Vision | 2 | 70.7% / 21.7% / 7.6% | 18.8% | 0.2% | not computed |
+| Pathfinding | 3 | 8.8% / 21.5% / 69.7% | 0.8% | 0.0% | 483 |
+| Pathfinding | 2 | 23.3% / 25.2% / 51.5% | 1.4% | 0.0% | 602 |
+
+Both two-corner learners beat both baselines, p < 0.0001. Against the vision ghost, two corners barely changes the learner's win rate, though its wins are shorter, 28.9 steps against 37.4: dodging the ghost, not route length, limits it. Its win rate is 78.2% when the ghost's corner is skipped and 65.8% to 68.5% otherwise. Against the pathfinding ghost the win rate rises 2.6-fold, and the learner takes 233 of 602 winnable maps, against 88 of 483 with three corners.
+
+**Limits:** one run per setting on validation seeds; nothing tuned; no test seed played. The defaults and every reported result are unchanged.
+
+**Tests:** `test_env.py` covers a random skipped corner per seed that every corner can be, repeatability, no reward for the skipped corner and a win on the two chosen ones. `test_config.py` covers the default, the range and type checks and the boundary 1. Suite: 493 tests.
+
+---
+
+## Tie reward: stopping the learner from settling for ties
+
+**Date:** 2026-11-13. Branch `feature/tie-penalty`, stacked on `feature/ghost-pathfinding`. Christian asked that the learner not prefer ties; against the pathfinding ghost about 70% of its games were ties.
+
+**Why it preferred them:** with the defaults a tie carries no reward. `tie_update=bootstrap` treats the turn limit as a cut-off, so running out the clock costs only the step penalties, about 5, against 100 for being caught.
+
+**What changed:** a new learner setting, `reward_tie` (default 0.0), is added to the target of a terminal tie in `LearnedAgent.observe`. A nonzero value requires `tie_update=terminal`, because a bootstrapped tie is not an outcome. It is a training signal only; recorded episode returns do not include it. `apply_sets` now applies every `--set` before the settings are checked, so dependent settings such as these two, or `epsilon_start` and `epsilon_end`, work in any order; a later `--set` of the same name still wins. At the defaults nothing changes: a 3,000-episode training run with the previous code and with this code gives byte-identical tables.
+
+**Measured** against the pathfinding ghost, 50,000 training games each, on the first 1,000 validation seeds (win / loss / tie):
+
+| Setting | Wins | Losses | Ties |
+|---|---|---|---|
+| Default: no tie reward, ties bootstrapped | 8.8% | 21.5% | 69.7% |
+| `reward_tie=-100`, terminal ties | 8.6% | 27.3% | 64.1% |
+| `reward_tie=-300`, terminal ties | 11.9% | 38.9% | 49.2% |
+| `reward_tie=-100`, terminal ties, `discount=1.0` | 15.4% | 39.5% | 45.1% |
+
+On the first 100 seeds the same four give 9/13/78, 7/28/65, 9/37/54 and 19/42/39. At 100,000 training games, `reward_tie=-100` alone gave 12.4% / 30.3% / 57.3% against 12.6% / 28.1% / 59.3% without it. A penalty equal to a loss barely helps at `discount=0.99`: the tie arrives at turn 100, so from early in a game it is discounted to about a third, and a distant tie still looks better than a likely capture soon. Pac-Man's state has no clock, so he cannot tell how near the tie is. With `discount=1.0` a tie is worth exactly a loss, so the learner has no reason to prefer it; wins nearly double and ties fall by a third. The remaining ties are games where his attempts run out of time, not a preference.
+
+**Limits:** one run per setting, against the pathfinding ghost only, on validation seeds; no test seed was played. The defaults, the frozen policy and every reported result are unchanged. Adopting these settings for the main game would be a team decision and would need a retrained policy and a new frozen evaluation.
+
+**Tests:** `test_learned.py` covers the tie reward on a terminal tie and its absence on a win. `test_config.py` covers the default, the type checks, the refusal with bootstrapped ties and a JSON round trip. `test_cli.py` covers the two settings in either order and a repeated `--set`. Suite: 496 tests.
 
 ---
 

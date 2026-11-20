@@ -38,22 +38,30 @@ CLEAR_SCREEN = "\x1b[H\x1b[2J"  # cursor home, then clear
 
 
 def apply_sets(config: Config, sets: list[str]) -> Config:
-    """Apply `--set name=value` overrides by bare field name, with type-checked values."""
+    """Apply `--set name=value` overrides by bare field name, with type-checked values.
+
+    All overrides are applied before the settings are checked, so settings that depend on
+    each other, such as reward_tie and tie_update, can be given in any order.
+    """
+    changes: dict[str, dict] = {"game": {}, "learner": {}}
     for setting in sets:
         name, separator, raw = setting.partition("=")
         if not separator or not name:
             raise ValueError(f"--set needs NAME=VALUE, got {setting!r}")
-        config = _apply_set(config, name, raw)
-    return config
+        section, value = _parse_set(config, name, raw)
+        changes[section][name] = value
+    parts = {
+        section: replace(getattr(config, section), **values)
+        for section, values in changes.items() if values
+    }
+    return replace(config, **parts) if parts else config
 
 
-def _apply_set(config: Config, name: str, raw: str) -> Config:
+def _parse_set(config: Config, name: str, raw: str) -> tuple[str, object]:
     for section in ("game", "learner"):
-        part = getattr(config, section)
-        for field in fields(part):
+        for field in fields(getattr(config, section)):
             if field.name == name:
-                value = _parse_value(field.type, raw, name)
-                return replace(config, **{section: replace(part, **{name: value})})
+                return section, _parse_value(field.type, raw, name)
     raise ValueError(f"unknown setting {name!r}")
 
 
